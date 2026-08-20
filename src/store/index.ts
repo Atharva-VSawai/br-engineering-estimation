@@ -50,6 +50,13 @@ interface AppState {
   resetConfig: () => void;
   loadSampleConfig: () => void;
 
+  // Undo/Redo
+  history: ProjectConfig[];
+  historyIndex: number;
+  undo: () => void;
+  redo: () => void;
+  pushHistory: () => void;
+
   // Products
   products: BRProduct[];
   toggleProductUsed: (name: string) => void;
@@ -230,7 +237,11 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({ projects: [project, ...state.projects] })),
   updateProject: (id, updates) =>
     set((state) => ({
-      projects: state.projects.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+      projects: state.projects.map((p) =>
+        p.id === id
+          ? { ...p, ...updates, updatedAt: new Date().toLocaleDateString() }
+          : p
+      ),
     })),
   deleteProject: (id) =>
     set((state) => ({ projects: state.projects.filter((p) => p.id !== id) })),
@@ -309,6 +320,39 @@ export const useAppStore = create<AppState>((set) => ({
     })),
   resetConfig: () => set({ config: createDefaultConfig(), wizardStep: 0 }),
   loadSampleConfig: () => set({ config: { ...SAMPLE_CONFIG } }),
+
+  // Undo/Redo
+  history: [],
+  historyIndex: -1,
+  pushHistory: () =>
+    set((state) => {
+      const snapshot = JSON.parse(JSON.stringify(state.config)) as ProjectConfig;
+      const newHistory = [...state.history.slice(0, state.historyIndex + 1), snapshot];
+      let newIndex = newHistory.length - 1;
+      if (newHistory.length > 50) {
+        newHistory.shift();
+        newIndex--;
+      }
+      return { history: newHistory, historyIndex: newIndex };
+    }),
+  undo: () =>
+    set((state) => {
+      if (state.historyIndex <= 0) return state;
+      const newIndex = state.historyIndex - 1;
+      return {
+        historyIndex: newIndex,
+        config: JSON.parse(JSON.stringify(state.history[newIndex])) as ProjectConfig,
+      };
+    }),
+  redo: () =>
+    set((state) => {
+      if (state.historyIndex >= state.history.length - 1) return state;
+      const newIndex = state.historyIndex + 1;
+      return {
+        historyIndex: newIndex,
+        config: JSON.parse(JSON.stringify(state.history[newIndex])) as ProjectConfig,
+      };
+    }),
 
   products: BR_PRODUCTS.map((p) => ({ ...p })),
   toggleProductUsed: (name) =>

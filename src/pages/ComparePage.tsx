@@ -97,28 +97,50 @@ export function ComparePage() {
     return projects.filter((p) => !usedIds.includes(p.id));
   };
 
-  const rows = useMemo(() => {
+  const comparisonSections = useMemo(() => {
     if (selectedProjects.length < 2) return [];
     return [
-      { label: 'Project Name', type: 'text' as const, getVal: (p: Project) => p.name },
-      { label: 'Customer', type: 'text' as const, getVal: (p: Project) => p.customer },
-      { label: 'Machine Type', type: 'text' as const, getVal: (p: Project) => p.machineType },
-      { label: 'Complexity', type: 'complexity' as const, getVal: (p: Project) => p.complexity },
-      { label: 'Status', type: 'status' as const, getVal: (p: Project) => p.status },
-      { label: 'I/O Total', type: 'number-best-lowest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.ioTotal ?? null },
-      { label: 'Motion Axes', type: 'number-best-lowest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.motionAxes ?? null },
-      { label: 'HMI Screens', type: 'number-highest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.hmiScreens ?? null },
-      { label: 'Vision', type: 'yes' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.vision ?? null },
-      { label: 'Safety', type: 'yes' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.safety ?? null },
-      { label: 'Controller Family', type: 'text' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.controllerFamily ?? null },
+      {
+        title: 'General',
+        rows: [
+          { label: 'Project Name', type: 'text' as const, getVal: (p: Project) => p.name },
+          { label: 'Customer', type: 'text' as const, getVal: (p: Project) => p.customer },
+          { label: 'Machine Type', type: 'text' as const, getVal: (p: Project) => p.machineType },
+          { label: 'Complexity', type: 'complexity' as const, getVal: (p: Project) => p.complexity },
+          { label: 'Status', type: 'status' as const, getVal: (p: Project) => p.status },
+        ],
+      },
+      {
+        title: 'I/O Configuration',
+        rows: [
+          { label: 'I/O Total', type: 'number-best-lowest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.ioTotal ?? null },
+          { label: 'Motion Axes', type: 'number-best-lowest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.motionAxes ?? null },
+          { label: 'HMI Screens', type: 'number-highest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.hmiScreens ?? null },
+        ],
+      },
+      {
+        title: 'System Features',
+        rows: [
+          { label: 'Vision', type: 'yes' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.vision ?? null },
+          { label: 'Safety', type: 'yes' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.safety ?? null },
+        ],
+      },
+      {
+        title: 'Controller',
+        rows: [
+          { label: 'Controller Family', type: 'text' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.controllerFamily ?? null },
+        ],
+      },
     ];
   }, [selectedProjects.length]);
+
+  const allRows = useMemo(() => comparisonSections.flatMap((s) => s.rows), [comparisonSections]);
 
   // Compute best counts per project (for Winner row)
   const winnerCounts = useMemo(() => {
     if (selectedProjects.length < 2) return [];
     const counts = new Array(selectedProjects.length).fill(0);
-    rows.forEach((row) => {
+    allRows.forEach((row) => {
       const values = selectedProjects.map((p, i) => {
         const cfg = configs[i];
         if (row.getVal.length === 1) return row.getVal(p);
@@ -139,7 +161,7 @@ export function ComparePage() {
       if (bestIdx >= 0) counts[bestIdx]++;
     });
     return counts;
-  }, [selectedProjects, configs, rows]);
+  }, [selectedProjects, configs, allRows]);
 
   const maxWinnerCount = Math.max(...winnerCounts, 0);
 
@@ -278,49 +300,61 @@ export function ComparePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row, rowIdx) => {
-                      const values = selectedProjects.map((p, i) => {
-                        const cfg = configs[i];
-                        if (row.getVal.length === 1) return row.getVal(p);
-                        return row.getVal(p, cfg);
-                      });
-
-                      let bestIdx = -1;
-                      if (row.type === 'complexity') {
-                        const nums = values.map((v) => (typeof v === 'string' ? (COMPLEXITY_ORDER[v] ?? -1) : -1));
-                        bestIdx = nums.indexOf(Math.min(...nums.filter((n) => n >= 0)));
-                      } else if (row.type === 'number-highest') {
-                        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'highest');
-                      } else if (row.type === 'number-best-lowest') {
-                        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'lowest');
-                      } else if (row.type === 'yes') {
-                        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'yes');
-                      }
-
-                      return (
-                        <tr
-                          key={row.label}
-                          className={`border-t border-border/50 hover:bg-primary/[0.03] transition-colors duration-150 ${rowIdx % 2 === 1 ? 'bg-muted/20' : ''}`}
-                        >
-                          <td className="py-2 px-3 font-medium text-muted-foreground whitespace-nowrap">
-                            {row.label}
+                    {comparisonSections.map((section) => (
+                      <React.Fragment key={section.title}>
+                        <tr className="bg-muted/20">
+                          <td colSpan={selectedProjects.length + 1} className="py-1.5 px-3 text-[11px] font-semibold text-muted-foreground">
+                            <span className="flex items-center gap-2">
+                              {section.title}
+                              <span className="rounded-full bg-muted text-[10px] px-1.5 py-0.5 font-medium">{section.rows.length}</span>
+                            </span>
                           </td>
-                          {selectedProjects.map((p, i) => {
-                            const val = values[i];
-                            const isBest = i === bestIdx;
-                            return (
-                              <td
-                                key={p.id}
-                                className={`py-2 px-3 ${isBest ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-l-2 border-l-emerald-400' : ''}`}
-                              >
-                                {isBest && <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 align-middle" />}
-                                {renderCell(row.type, val)}
-                              </td>
-                            );
-                          })}
                         </tr>
-                      );
-                    })}
+                        {section.rows.map((row, rowIdx) => {
+                          const values = selectedProjects.map((p, i) => {
+                            const cfg = configs[i];
+                            if (row.getVal.length === 1) return row.getVal(p);
+                            return row.getVal(p, cfg);
+                          });
+
+                          let bestIdx = -1;
+                          if (row.type === 'complexity') {
+                            const nums = values.map((v) => (typeof v === 'string' ? (COMPLEXITY_ORDER[v] ?? -1) : -1));
+                            bestIdx = nums.indexOf(Math.min(...nums.filter((n) => n >= 0)));
+                          } else if (row.type === 'number-highest') {
+                            bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'highest');
+                          } else if (row.type === 'number-best-lowest') {
+                            bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'lowest');
+                          } else if (row.type === 'yes') {
+                            bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'yes');
+                          }
+
+                          return (
+                            <tr
+                              key={row.label}
+                              className={`border-t border-border/50 hover:bg-primary/[0.03] hover:border-l-2 hover:border-l-primary/30 transition-all duration-150 ${rowIdx % 2 === 1 ? 'bg-muted/20' : ''}`}
+                            >
+                              <td className="py-2 px-3 font-medium text-muted-foreground whitespace-nowrap">
+                                {row.label}
+                              </td>
+                              {selectedProjects.map((p, i) => {
+                                const val = values[i];
+                                const isBest = i === bestIdx;
+                                return (
+                                  <td
+                                    key={p.id}
+                                    className={`py-2 px-3 ${isBest ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-l-2 border-l-emerald-400' : ''}`}
+                                  >
+                                    {isBest && <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 align-middle" />}
+                                    {renderCell(row.type, val)}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
+                    ))}
 
                     {/* Winner row */}
                     <tr className="border-t-2 border-border bg-muted/30">

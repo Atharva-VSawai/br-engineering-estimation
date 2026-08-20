@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Save, RotateCcw, Download, HeartPulse } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, RotateCcw, RotateCw, Download, HeartPulse } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,7 +50,7 @@ const STEP_COMPONENTS = [
 ];
 
 export function NewEstimatePage() {
-  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config } = useAppStore();
+  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config, undo, redo, pushHistory, history, historyIndex } = useAppStore();
   const [resetOpen, setResetOpen] = useState(false);
   const totalSteps = STEP_COMPONENTS.length;
   const isLastStep = wizardStep === totalSteps - 1;
@@ -99,6 +99,11 @@ export function NewEstimatePage() {
   const handleSaveDraft = () => {
     toast('Draft saved', { description: 'Configuration saved locally.' });
   };
+
+  // Push history snapshot on each step transition
+  useEffect(() => {
+    pushHistory();
+  }, [wizardStep, pushHistory]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -156,6 +161,29 @@ export function NewEstimatePage() {
           </Button>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            disabled={historyIndex <= 0}
+            onClick={undo}
+            title={`Undo (${historyIndex} steps)`}
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+          {history.length > 0 && (
+            <span className="text-[10px] text-muted-foreground">Step {historyIndex + 1}/{history.length}</span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            disabled={historyIndex >= history.length - 1}
+            onClick={redo}
+            title={`Redo (${history.length - 1 - historyIndex} steps)`}
+          >
+            <RotateCw className="h-3.5 w-3.5" />
+          </Button>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" disabled={isFirstStep} onClick={() => setWizardStep(wizardStep - 1)}>
             <ArrowLeft className="h-3.5 w-3.5" />
             Back

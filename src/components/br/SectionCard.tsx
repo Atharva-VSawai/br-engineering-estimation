@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface SectionCardProps {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   children: React.ReactNode;
   action?: React.ReactNode;

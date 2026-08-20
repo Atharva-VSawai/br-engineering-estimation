@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson } from 'lucide-react';
 import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
@@ -41,12 +41,12 @@ const COMPLEXITY_LEFT_BORDER: Record<ComplexityLevel, string> = {
   'Very High': 'border-l-red-400',
 };
 
-const ACTIVITY_DOT_COLORS: Record<string, string> = {
-  edit: 'bg-blue-400',
-  info: 'bg-amber-400',
-  create: 'bg-emerald-400',
-  complete: 'bg-emerald-500',
-  export: 'bg-purple-400',
+const ACTIVITY_AVATAR_CONFIG: Record<string, { icon: React.ElementType; iconColor: string; bgLight: string; bgDark: string }> = {
+  edit: { icon: Pencil, iconColor: 'text-blue-400', bgLight: 'bg-blue-50', bgDark: 'dark:bg-blue-950/40' },
+  info: { icon: Info, iconColor: 'text-amber-400', bgLight: 'bg-amber-50', bgDark: 'dark:bg-amber-950/40' },
+  create: { icon: Plus, iconColor: 'text-emerald-400', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+  complete: { icon: CheckCircle2, iconColor: 'text-emerald-500', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+  export: { icon: FileJson, iconColor: 'text-purple-400', bgLight: 'bg-purple-50', bgDark: 'dark:bg-purple-950/40' },
 };
 
 const ACTIVITY_BORDER_COLORS: Record<string, string> = {
@@ -67,6 +67,8 @@ const recentActivity = [
 
 export function DashboardPage() {
   const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+  const [hourlyRate, setHourlyRate] = useState(85);
+  const [contingency, setContingency] = useState(15);
 
   const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
   const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
@@ -227,6 +229,92 @@ export function DashboardPage() {
           </SectionCard>
         </motion.div>
 
+        {/* Cost Estimator */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+        >
+          <SectionCard title="Cost Estimator">
+            {(() => {
+              const hwHours = (config.io.digitalInputs + config.io.digitalOutputs + config.io.analogInputs + config.io.analogOutputs) * 0.5 + config.motion.totalAxes * 4;
+              const swHours = config.hmi.screens * 8 + (config.vision.enabled ? config.vision.cameras * 16 : 0) + 40;
+              const msHours = config.motion.totalAxes * 6 + (config.motion.electronicCamming ? 20 : 0) + (config.motion.coordinatedMotion ? 16 : 0) + (config.safety.enabled ? config.safety.safetyIOCount * 2 + 16 : 0);
+              const intHours = (hwHours + swHours + msHours) * 0.3;
+              const totalHours = hwHours + swHours + msHours + intHours;
+              const subtotal = totalHours * hourlyRate;
+              const contingencyAmount = subtotal * (contingency / 100);
+              const grandTotal = subtotal + contingencyAmount;
+
+              const fmt = (val: number) => val.toLocaleString('de-AT', { style: 'currency', currency: 'EUR' });
+
+              const costCards = [
+                { label: 'Hardware Engineering', hours: hwHours, color: 'border-l-blue-400' },
+                { label: 'Software Development', hours: swHours, color: 'border-l-violet-400' },
+                { label: 'Motion & Safety', hours: msHours, color: 'border-l-orange-400' },
+                { label: 'Integration & Testing', hours: intHours, color: 'border-l-emerald-400' },
+              ];
+
+              return (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">Hourly Rate (€)</label>
+                      <input
+                        type="number"
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(Number(e.target.value) || 0)}
+                        className="h-8 text-sm rounded-md border border-border bg-transparent px-2 w-24"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs text-muted-foreground whitespace-nowrap">Contingency %</label>
+                      <input
+                        type="number"
+                        value={contingency}
+                        min={0}
+                        max={50}
+                        onChange={(e) => setContingency(Math.min(50, Math.max(0, Number(e.target.value) || 0)))}
+                        className="h-8 text-sm rounded-md border border-border bg-transparent px-2 w-20"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {costCards.map((card) => (
+                      <div
+                        key={card.label}
+                        className={`rounded-lg border border-border border-l-2 ${card.color} bg-card p-3`}
+                      >
+                        <div className="text-xs text-muted-foreground">{card.label}</div>
+                        <div className="text-sm font-semibold text-foreground mt-1">{card.hours.toFixed(1)} hours</div>
+                        <div className="text-sm font-bold text-foreground mt-0.5">{fmt(card.hours * hourlyRate)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Total Hours</span>
+                      <span className="font-semibold text-foreground">{totalHours.toFixed(1)} h</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="font-semibold text-foreground">{fmt(subtotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Contingency ({contingency}%)</span>
+                      <span className="font-semibold text-foreground">{fmt(contingencyAmount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between border-t border-border pt-1.5">
+                      <span className="text-sm font-semibold text-foreground">Grand Total</span>
+                      <span className="text-lg font-bold text-primary">{fmt(grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </SectionCard>
+        </motion.div>
+
         {/* Quick Actions & Complexity Distribution */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Quick Actions */}
@@ -295,7 +383,7 @@ export function DashboardPage() {
         <SectionCard title="Project Templates" description="Start from a pre-configured template">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div
-              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
               onClick={() => {
                 resetConfig();
                 loadSampleConfig();
@@ -310,7 +398,7 @@ export function DashboardPage() {
               <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
             </div>
             <div
-              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
               onClick={() => {
                 resetConfig();
                 updateProjectInfo({ name: 'Assembly Cell', machineType: 'Assembly' });
@@ -328,7 +416,7 @@ export function DashboardPage() {
               <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
             </div>
             <div
-              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
               onClick={() => {
                 resetConfig();
                 updateProjectInfo({ name: 'Inspection System', machineType: 'Inspection' });
@@ -396,8 +484,15 @@ export function DashboardPage() {
                 initial={{ opacity: 0, x: -4 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.3 }}
-                className={`flex items-start gap-2 py-1.5 border-l-2 pl-3 ${ACTIVITY_BORDER_COLORS[item.type] || 'border-l-gray-400'} ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
+                className={`flex items-start gap-2.5 py-1.5 border-l-2 pl-3 ${ACTIVITY_BORDER_COLORS[item.type] || 'border-l-gray-400'} ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
               >
+                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgLight} ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgDark}`}>
+                  {(() => {
+                    const avatarCfg = ACTIVITY_AVATAR_CONFIG[item.type];
+                    const AvatarIcon = avatarCfg?.icon;
+                    return AvatarIcon ? <AvatarIcon className={`h-3 w-3 ${avatarCfg.iconColor}`} /> : null;
+                  })()}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-foreground">{item.action}</div>
                   <div className="text-[11px] text-muted-foreground truncate">{item.detail}</div>
@@ -415,7 +510,7 @@ export function DashboardPage() {
         </SectionCard>
 
         {/* Prototype Information */}
-        <SectionCard title="Prototype Information">
+        <SectionCard title={<span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary animate-pulse" />Prototype Information</span>}>
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <Info className="h-4 w-4" />

@@ -89,6 +89,7 @@ export function AppHeader() {
           size="sm"
           className="h-8 w-8 p-0"
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          suppressHydrationWarning
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>

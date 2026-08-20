@@ -1,0 +1,714 @@
+     1→'use client';
+     2→
+     3→import React from 'react';
+     4→import { AlertTriangle, ArrowRight, Check, Minus, Save, FileText, Share2 } from 'lucide-react';
+     5→import { motion } from 'framer-motion';
+     6→import { Button } from '@/components/ui/button';
+     7→import { SectionCard } from '@/components/br/SectionCard';
+     8→import { useAppStore } from '@/store';
+     9→import { EFFORT_AREAS } from '@/data';
+    10→import { toast } from 'sonner';
+    11→import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
+    12→
+    13→const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
+    14→  Low: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+    15→  Medium: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+    16→  High: 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+    17→  'Very High': 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
+    18→};
+    19→
+    20→const COMPLEXITY_DOT_COLORS: Record<ComplexityLevel, string> = {
+    21→  Low: 'bg-emerald-500',
+    22→  Medium: 'bg-amber-500',
+    23→  High: 'bg-orange-500',
+    24→  'Very High': 'bg-red-500',
+    25→};
+    26→
+    27→const COMPLEXITY_BAR_COLORS: Record<ComplexityLevel, string> = {
+    28→  Low: 'bg-emerald-400',
+    29→  Medium: 'bg-amber-400',
+    30→  High: 'bg-orange-400',
+    31→  'Very High': 'bg-red-400',
+    32→};
+    33→
+    34→const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
+    35→  Low: 'text-emerald-600',
+    36→  Medium: 'text-amber-600',
+    37→  High: 'text-orange-600',
+    38→  'Very High': 'text-red-600',
+    39→};
+    40→
+    41→const COMPLEXITY_WIDTH: Record<ComplexityLevel, string> = {
+    42→  Low: '25%',
+    43→  Medium: '50%',
+    44→  High: '75%',
+    45→  'Very High': '100%',
+    46→};
+    47→
+    48→const COMPLEXITY_DIMENSIONS: { key: keyof ProjectConfig['complexity']; label: string }[] = [
+    49→  { key: 'hardware', label: 'Hardware' },
+    50→  { key: 'motion', label: 'Motion' },
+    51→  { key: 'hmi', label: 'HMI' },
+    52→  { key: 'vision', label: 'Vision' },
+    53→  { key: 'safety', label: 'Safety' },
+    54→  { key: 'communication', label: 'Communication' },
+    55→  { key: 'software', label: 'Software' },
+    56→  { key: 'integration', label: 'Integration' },
+    57→  { key: 'requirement', label: 'Requirement' },
+    58→  { key: 'testing', label: 'Testing' },
+    59→];
+    60→
+    61→interface SectionCheck {
+    62→  label: string;
+    63→  configured: boolean;
+    64→}
+    65→
+    66→function checkCompleteness(config: ProjectConfig): SectionCheck[] {
+    67→  const ioTotal =
+    68→    config.io.digitalInputs + config.io.digitalOutputs +
+    69→    config.io.analogInputs + config.io.analogOutputs +
+    70→    config.io.safetyIO + config.io.encoderCounterModules +
+    71→    config.io.temperatureModules + config.io.communicationIO +
+    72→    config.io.specialModules;
+    73→
+    74→  const motionFeatures = [
+    75→    config.motion.homingRequired, config.motion.positioning,
+    76→    config.motion.velocityControl, config.motion.torqueControl,
+    77→    config.motion.synchronization, config.motion.masterSlave,
+    78→    config.motion.electronicGearing, config.motion.electronicCamming,
+    79→    config.motion.coordinatedMotion, config.motion.interpolation,
+    80→    config.motion.complexMotionProfiles, config.motion.axisDiagnostics,
+    81→  ].filter(Boolean).length;
+    82→
+    83→  const hmiFeatures = [
+    84→    config.hmi.alarmManagement, config.hmi.recipeManagement,
+    85→    config.hmi.trendVisualization, config.hmi.userManagement,
+    86→    config.hmi.machineDiagnostics, config.hmi.manualMode,
+    87→    config.hmi.automaticMode, config.hmi.maintenanceScreens,
+    88→    config.hmi.parameterManagement,
+    89→  ].filter(Boolean).length;
+    90→
+    91→  const commActive = config.communication.protocols.some((p) => p.enabled);
+    92→  const commIntegrations = [
+    93→    config.communication.plcToPlc, config.communication.mesIntegration,
+    94→    config.communication.scadaIntegration, config.communication.cloudIIoTIntegration,
+    95→  ].filter(Boolean).length;
+    96→
+    97→  const iiotFeatures = [
+    98→    config.iiot.ipcRequired, config.iiot.iiotRequired,
+    99→    config.iiot.iiotConnector, config.iiot.iiotServices,
+   100→    config.iiot.iiotEdgeDevice, config.iiot.cloudConnectivity,
+   101→    config.iiot.machineDataCollection, config.iiot.remoteMaintenance,
+   102→    config.iiot.opcUa, config.iiot.dataLogging, config.iiot.analyticsIntegration,
+   103→  ].filter(Boolean).length;
+   104→
+   105→  return [
+   106→    {
+   107→      label: 'Project',
+   108→      configured: !!(config.project.name && config.project.name.trim()),
+   109→    },
+   110→    {
+   111→      label: 'Controller',
+   112→      configured: config.controller.quantity > 1 || config.controller.performance !== 'Standard' || !!config.controller.communicationInterfaces,
+   113→    },
+   114→    {
+   115→      label: 'I/O',
+   116→      configured: ioTotal > 0,
+   117→    },
+   118→    {
+   119→      label: 'Motion',
+   120→      configured: config.motion.totalAxes > 0 || motionFeatures > 0,
+   121→    },
+   122→    {
+   123→      label: 'HMI',
+   124→      configured: config.hmi.screens > 0 || hmiFeatures > 0,
+   125→    },
+   126→    {
+   127→      label: 'Vision',
+   128→      configured: config.vision.enabled,
+   129→    },
+   130→    {
+   131→      label: 'Safety',
+   132→      configured: config.safety.enabled,
+   133→    },
+   134→    {
+   135→      label: 'Communication',
+   136→      configured: commActive || commIntegrations > 0,
+   137→    },
+   138→    {
+   139→      label: 'Mechatronics',
+   140→      configured: config.mechatronics.type !== 'None' && config.mechatronics.type !== '',
+   141→    },
+   142→    {
+   143→      label: 'Robotics',
+   144→      configured: config.robotics.enabled,
+   145→    },
+   146→    {
+   147→      label: 'IIoT',
+   148→      configured: iiotFeatures > 0,
+   149→    },
+   150→  ];
+   151→}
+   152→
+   153→export function EstimateSummaryPage() {
+   154→  const { config, setCurrentPage, setWizardStep, addProject } = useAppStore();
+   155→  const c = config;
+   156→
+   157→  // Determine overall complexity from the assessment
+   158→  const allComplexities = [
+   159→    c.complexity.hardware, c.complexity.motion, c.complexity.hmi, c.complexity.vision,
+   160→    c.complexity.safety, c.complexity.communication, c.complexity.software,
+   161→    c.complexity.integration, c.complexity.requirement, c.complexity.testing,
+   162→  ];
+   163→  const highCount = allComplexities.filter((x) => x === 'High' || x === 'Very High').length;
+   164→  const overallComplexity: ComplexityLevel = highCount >= 5 ? 'Very High' : highCount >= 3 ? 'High' : highCount >= 1 ? 'Medium' : 'Low';
+   165→
+   166→  // Map effort areas to complexity from config
+   167→  const areaComplexities: Record<string, ComplexityLevel> = {
+   168→    Motion: c.complexity.motion,
+   169→    HMI: c.complexity.hmi,
+   170→    'I/O': c.io.digitalInputs + c.io.digitalOutputs > 200 ? 'High' : 'Medium',
+   171→    Vision: c.vision.enabled ? c.complexity.vision : 'Low',
+   172→    Safety: c.safety.enabled ? c.complexity.safety : 'Low',
+   173→    Communication: c.complexity.communication,
+   174→    Software: c.complexity.software,
+   175→    Integration: c.complexity.integration,
+   176→    Testing: c.complexity.testing,
+   177→    Commissioning: c.complexity.testing,
+   178→  };
+   179→
+   180→  const completeness = checkCompleteness(c);
+   181→  const configuredCount = completeness.filter((s) => s.configured).length;
+   182→
+   183→  return (
+   184→    <motion.div
+   185→      className="space-y-6"
+   186→      initial={{ opacity: 0, y: 8 }}
+   187→      animate={{ opacity: 1, y: 0 }}
+   188→      transition={{ duration: 0.3 }}
+   189→    >
+   190→      {/* Header */}
+   191→      <div>
+   192→        <h1 className="text-lg font-bold text-foreground">Prototype Engineering Effort Analysis</h1>
+   193→        <p className="text-sm text-muted-foreground">
+   194→          Review the engineering complexity assessment for: <span className="font-medium text-foreground">{c.project.name || 'Untitled Project'}</span>
+   195→        </p>
+   196→      </div>
+   197→
+   198→      {/* Save as New Project */}
+   199→      <Button
+   200→        className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-sm font-semibold"
+   201→        onClick={() => {
+   202→          const now = new Date().toISOString().split('T')[0];
+   203→          const project: Project = {
+   204→            id: 'proj-' + Date.now(),
+   205→            name: c.project.name || 'Untitled Project',
+   206→            customer: c.project.customer || 'Unknown',
+   207→            machineType: c.project.machineType || 'General',
+   208→            industry: c.project.industry || '',
+   209→            description: c.project.description || '',
+   210→            requirementClarity: c.project.requirementClarity || 'Mostly Clear',
+   211→            customerInvolvement: c.project.customerInvolvement || 'Medium',
+   212→            projectVariants: c.project.projectVariants || 1,
+   213→            machineStations: c.project.machineStations || 1,
+   214→            complexity: c.complexity.hardware,
+   215→            status: 'Draft',
+   216→            createdAt: now,
+   217→            updatedAt: now,
+   218→            config: JSON.parse(JSON.stringify(c)),
+   219→          };
+   220→          addProject(project);
+   221→          toast('Project saved!', { description: project.name });
+   222→          setCurrentPage('projects');
+   223→        }}
+   224→      >
+   225→        <Save className="h-4 w-4" />
+   226→        Save as New Project
+   227→      </Button>
+   228→
+   229→      {/* Export / Share Buttons */}
+   230→      <motion.div
+   231→        className="flex gap-2"
+   232→        initial={{ opacity: 0, y: 4 }}
+   233→        animate={{ opacity: 1, y: 0 }}
+   234→        transition={{ delay: 0.1, duration: 0.3 }}
+   235→      >
+   236→        <Button
+   237→          variant="outline"
+   238→          size="sm"
+   239→          className="gap-1.5 text-xs"
+   240→          onClick={() => {
+   241→            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
+   242→            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
+   243→            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
+   244→            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
+   245→            const integrationHours = (hwHours + swHours + motionHours + safetyHours) * 0.3;
+   246→            const totalHours = hwHours + swHours + motionHours + safetyHours + integrationHours;
+   247→
+   248→            const hwDesignWeeks = 2;
+   249→            const swDevWeeks = Math.max(2, Math.ceil(c.hmi.screens / 3));
+   250→            const integrationWeeks = Math.max(2, Math.ceil(totalHours / 40));
+   251→            const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+   252→            const commissionWeeks = complexityMap[overallComplexity] || 2;
+   253→            const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
+   254→
+   255→            const report = [
+   256→              `B&R Engineering Estimation Report`,
+   257→              `${'='.repeat(50)}`,
+   258→              `Project: ${c.project.name || 'Untitled Project'}`,
+   259→              `Customer: ${c.project.customer || 'N/A'}`,
+   260→              `Machine Type: ${c.project.machineType || 'N/A'}`,
+   261→              `Industry: ${c.project.industry || 'N/A'}`,
+   262→              `Date: ${new Date().toLocaleDateString()}`,
+   263→              ``,
+   264→              `COMPLEXITY ASSESSMENT`,
+   265→              `${'-'.repeat(50)}`,
+   266→              `Overall: ${overallComplexity}`,
+   267→              `  ${highCount} of 10 dimensions rated High or Very High`,
+   268→              `  Hardware: ${c.complexity.hardware} | Motion: ${c.complexity.motion} | HMI: ${c.complexity.hmi}`,
+   269→              `  Vision: ${c.complexity.vision} | Safety: ${c.complexity.safety} | Communication: ${c.complexity.communication}`,
+   270→              `  Software: ${c.complexity.software} | Integration: ${c.complexity.integration} | Testing: ${c.complexity.testing}`,
+   271→              ``,
+   272→              `COST BREAKDOWN (Estimated Hours)`,
+   273→              `${'-'.repeat(50)}`,
+   274→              `  Hardware Engineering:     ${hwHours.toFixed(1)}h`,
+   275→              `  Software Development:     ${swHours.toFixed(1)}h`,
+   276→              `  Motion Configuration:     ${motionHours.toFixed(1)}h`,
+   277→              `  Safety Engineering:       ${safetyHours.toFixed(1)}h`,
+   278→              `  Integration & Testing:    ${integrationHours.toFixed(1)}h`,
+   279→              `${'-'.repeat(50)}`,
+   280→              `  TOTAL:                    ${totalHours.toFixed(1)}h`,
+   281→              ``,
+   282→              `TIMELINE SUMMARY`,
+   283→              `${'-'.repeat(50)}`,
+   284→              `  Hardware Design & Ordering:  ${hwDesignWeeks} weeks`,
+   285→              `  Software Development:          ${swDevWeeks} weeks`,
+   286→              `  Integration & Testing:         ${integrationWeeks} weeks`,
+   287→              `  Commissioning & Handover:      ${commissionWeeks} weeks`,
+   288→              `${'-'.repeat(50)}`,
+   289→              `  ESTIMATED TOTAL:               ${totalWeeks} weeks`,
+   290→              ``,
+   291→              `Generated by B&R Engineering Estimation Tool`,
+   292→            ].join('\n');
+   293→
+   294→            const blob = new Blob([report], { type: 'text/plain' });
+   295→            const url = URL.createObjectURL(blob);
+   296→            const a = document.createElement('a');
+   297→            a.href = url;
+   298→            a.download = `${(c.project.name || 'estimate').replace(/[^a-zA-Z0-9-_ ]/g, '')}_report.txt`;
+   299→            a.click();
+   300→            URL.revokeObjectURL(url);
+   301→          }}
+   302→        >
+   303→          <FileText className="h-3.5 w-3.5" />
+   304→          Export as PDF
+   305→        </Button>
+   306→        <Button
+   307→          variant="outline"
+   308→          size="sm"
+   309→          className="gap-1.5 text-xs"
+   310→          onClick={() => {
+   311→            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
+   312→            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
+   313→            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
+   314→            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
+   315→            const integrationHours = (hwHours + swHours + motionHours + safetyHours) * 0.3;
+   316→            const totalHours = hwHours + swHours + motionHours + safetyHours + integrationHours;
+   317→
+   318→            const hwDesignWeeks = 2;
+   319→            const swDevWeeks = Math.max(2, Math.ceil(c.hmi.screens / 3));
+   320→            const integrationWeeks = Math.max(2, Math.ceil(totalHours / 40));
+   321→            const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+   322→            const commissionWeeks = complexityMap[overallComplexity] || 2;
+   323→            const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
+   324→
+   325→            const report = [
+   326→              `B&R Engineering Estimation Report`,
+   327→              `${'='.repeat(50)}`,
+   328→              `Project: ${c.project.name || 'Untitled Project'}`,
+   329→              `Customer: ${c.project.customer || 'N/A'}`,
+   330→              `Machine Type: ${c.project.machineType || 'N/A'}`,
+   331→              `Industry: ${c.project.industry || 'N/A'}`,
+   332→              `Date: ${new Date().toLocaleDateString()}`,
+   333→              ``,
+   334→              `COMPLEXITY ASSESSMENT`,
+   335→              `${'-'.repeat(50)}`,
+   336→              `Overall: ${overallComplexity}`,
+   337→              `  ${highCount} of 10 dimensions rated High or Very High`,
+   338→              `  Hardware: ${c.complexity.hardware} | Motion: ${c.complexity.motion} | HMI: ${c.complexity.hmi}`,
+   339→              `  Vision: ${c.complexity.vision} | Safety: ${c.complexity.safety} | Communication: ${c.complexity.communication}`,
+   340→              `  Software: ${c.complexity.software} | Integration: ${c.complexity.integration} | Testing: ${c.complexity.testing}`,
+   341→              ``,
+   342→              `COST BREAKDOWN (Estimated Hours)`,
+   343→              `${'-'.repeat(50)}`,
+   344→              `  Hardware Engineering:     ${hwHours.toFixed(1)}h`,
+   345→              `  Software Development:     ${swHours.toFixed(1)}h`,
+   346→              `  Motion Configuration:     ${motionHours.toFixed(1)}h`,
+   347→              `  Safety Engineering:       ${safetyHours.toFixed(1)}h`,
+   348→              `  Integration & Testing:    ${integrationHours.toFixed(1)}h`,
+   349→              `${'-'.repeat(50)}`,
+   350→              `  TOTAL:                    ${totalHours.toFixed(1)}h`,
+   351→              ``,
+   352→              `TIMELINE SUMMARY`,
+   353→              `${'-'.repeat(50)}`,
+   354→              `  Hardware Design & Ordering:  ${hwDesignWeeks} weeks`,
+   355→              `  Software Development:          ${swDevWeeks} weeks`,
+   356→              `  Integration & Testing:         ${integrationWeeks} weeks`,
+   357→              `  Commissioning & Handover:      ${commissionWeeks} weeks`,
+   358→              `${'-'.repeat(50)}`,
+   359→              `  ESTIMATED TOTAL:               ${totalWeeks} weeks`,
+   360→              ``,
+   361→              `Generated by B&R Engineering Estimation Tool`,
+   362→            ].join('\n');
+   363→
+   364→            navigator.clipboard.writeText(report);
+   365→            toast('Report copied to clipboard');
+   366→          }}
+   367→        >
+   368→          <Share2 className="h-3.5 w-3.5" />
+   369→          Share Report
+   370→        </Button>
+   371→      </motion.div>
+   372→
+   373→      {/* Overall Complexity */}
+   374→      <SectionCard title="Overall Project Complexity">
+   375→        <div className="flex items-center gap-4">
+   376→          <span className={`text-base font-bold rounded-lg border-2 px-4 py-2 ${COMPLEXITY_COLORS[overallComplexity]} ${overallComplexity === 'Very High' ? 'animate-pulse' : ''}`}>
+   377→            {overallComplexity.toUpperCase()}
+   378→          </span>
+   379→          <div className="text-xs text-muted-foreground leading-relaxed">
+   380→            Based on the configured parameters, the overall engineering complexity is assessed as <strong className="text-foreground">{overallComplexity}</strong>.<br />
+   381→            {highCount} out of 10 complexity dimensions are rated High or Very High.
+   382→          </div>
+   383→        </div>
+   384→      </SectionCard>
+   385→
+   386→      {/* Configuration Completeness */}
+   387→      <SectionCard title="Configuration Completeness" description={`${configuredCount} of ${completeness.length} sections configured`}>
+   388→        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+   389→          {completeness.map((section) => (
+   390→            <div
+   391→              key={section.label}
+   392→              className="flex items-center gap-2 text-xs"
+   393→            >
+   394→              {section.configured ? (
+   395→                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+   396→                  <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+   397→                </div>
+   398→              ) : (
+   399→                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted">
+   400→                  <Minus className="h-3 w-3 text-muted-foreground" />
+   401→                </div>
+   402→              )}
+   403→              <span className={section.configured ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+   404→                {section.label}
+   405→              </span>
+   406→            </div>
+   407→          ))}
+   408→        </div>
+   409→      </SectionCard>
+   410→
+   411→      {/* Risk Assessment */}
+   412→      <SectionCard title="Risk Assessment" description="Key risk indicators for the current configuration.">
+   413→        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+   414→          {(() => {
+   415→            const clarity = c.project.requirementClarity || 'Mostly Clear';
+   416→            const clarityColorMap: Record<string, string> = {
+   417→              Clear: 'bg-emerald-500',
+   418→              'Mostly Clear': 'bg-amber-500',
+   419→              'Partially Clear': 'bg-orange-500',
+   420→              Unclear: 'bg-red-500',
+   421→            };
+   422→            const clarityTextMap: Record<string, string> = {
+   423→              Clear: 'text-emerald-600 dark:text-emerald-400',
+   424→              'Mostly Clear': 'text-amber-600 dark:text-amber-400',
+   425→              'Partially Clear': 'text-orange-600 dark:text-orange-400',
+   426→              Unclear: 'text-red-600 dark:text-red-400',
+   427→            };
+   428→            return (
+   429→              <div className="rounded-lg border border-border bg-card p-3">
+   430→                <div className="text-[11px] text-muted-foreground mb-2">Requirement Clarity</div>
+   431→                <div className="flex items-center gap-2">
+   432→                  <span className={`h-2.5 w-2.5 rounded-full ${clarityColorMap[clarity] || 'bg-muted-foreground'}`} />
+   433→                  <span className={`text-sm font-semibold ${clarityTextMap[clarity] || 'text-foreground'}`}>{clarity}</span>
+   434→                </div>
+   435→              </div>
+   436→            );
+   437→          })()}
+   438→          {(() => {
+   439→            const involvement = c.project.customerInvolvement || 'Medium';
+   440→            const involvementColorMap: Record<string, string> = {
+   441→              Low: 'bg-red-500',
+   442→              Medium: 'bg-amber-500',
+   443→              High: 'bg-emerald-500',
+   444→            };
+   445→            const involvementTextMap: Record<string, string> = {
+   446→              Low: 'text-red-600 dark:text-red-400',
+   447→              Medium: 'text-amber-600 dark:text-amber-400',
+   448→              High: 'text-emerald-600 dark:text-emerald-400',
+   449→            };
+   450→            return (
+   451→              <div className="rounded-lg border border-border bg-card p-3">
+   452→                <div className="text-[11px] text-muted-foreground mb-2">Customer Involvement</div>
+   453→                <div className="flex items-center gap-2">
+   454→                  <span className={`h-2.5 w-2.5 rounded-full ${involvementColorMap[involvement] || 'bg-muted-foreground'}`} />
+   455→                  <span className={`text-sm font-semibold ${involvementTextMap[involvement] || 'text-foreground'}`}>{involvement}</span>
+   456→                </div>
+   457→              </div>
+   458→            );
+   459→          })()}
+   460→          <div className="rounded-lg border border-border bg-card p-3">
+   461→            <div className="text-[11px] text-muted-foreground mb-2">Scope Complexity</div>
+   462→            <div className="text-sm font-semibold text-foreground mb-2">{highCount}/10 dimensions</div>
+   463→            <div className="h-2 bg-muted rounded-full overflow-hidden">
+   464→              <div
+   465→                className={`h-2 rounded-full transition-all duration-500 ${highCount >= 5 ? 'bg-red-400' : highCount >= 3 ? 'bg-orange-400' : highCount >= 1 ? 'bg-amber-400' : 'bg-emerald-400'}`}
+   466→                style={{ width: `${(highCount / 10) * 100}%` }}
+   467→              />
+   468→            </div>
+   469→            <div className="text-[10px] text-muted-foreground mt-1">High or Very High</div>
+   470→          </div>
+   471→        </div>
+   472→      </SectionCard>
+   473→
+   474→      {/* Complexity Profile */}
+   475→      <SectionCard title="Complexity Profile" description="Visual breakdown of complexity across all 10 engineering dimensions.">
+   476→        <div className="space-y-2">
+   477→          {COMPLEXITY_DIMENSIONS.map((dim, index) => {
+   478→            const level = c.complexity[dim.key];
+   479→            return (
+   480→              <motion.div
+   481→                key={dim.key}
+   482→                className="flex items-center gap-3"
+   483→                initial={{ opacity: 0, x: -8 }}
+   484→                animate={{ opacity: 1, x: 0 }}
+   485→                transition={{ delay: index * 0.04, duration: 0.3 }}
+   486→              >
+   487→                <div className="w-28 shrink-0 text-xs text-muted-foreground text-right pr-3">
+   488→                  {dim.label}
+   489→                </div>
+   490→                <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
+   491→                  <div
+   492→                    className={`h-5 rounded-full transition-all duration-500 ${COMPLEXITY_BAR_COLORS[level]}`}
+   493→                    style={{ width: COMPLEXITY_WIDTH[level] }}
+   494→                  />
+   495→                </div>
+   496→                <div className={`w-20 shrink-0 text-xs font-semibold ${COMPLEXITY_TEXT_COLORS[level]}`}>
+   497→                  {level}
+   498→                </div>
+   499→              </motion.div>
+   500→            );
+   501→          })}
+   502→        </div>
+   503→      </SectionCard>
+   504→
+   505→      {/* Cost Estimation Overview */}
+   506→      <SectionCard title="Cost Estimation Overview" description="Estimated engineering hours based on configuration.">
+   507→        <div className="space-y-3">
+   508→          {(() => {
+   509→            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
+   510→            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
+   511→            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
+   512→            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
+   513→            const integrationHours = (hwHours + swHours + motionHours + safetyHours) * 0.3;
+   514→            const totalHours = hwHours + swHours + motionHours + safetyHours + integrationHours;
+   515→            const maxHours = Math.max(totalHours, 1);
+   516→            const rows = [
+   517→              { name: 'Hardware Engineering', hours: hwHours, color: 'bg-blue-400' },
+   518→              { name: 'Software Development', hours: swHours, color: 'bg-violet-400' },
+   519→              { name: 'Motion Configuration', hours: motionHours, color: 'bg-orange-400' },
+   520→              { name: 'Safety Engineering', hours: safetyHours, color: 'bg-red-400' },
+   521→              { name: 'Integration & Testing', hours: integrationHours, color: 'bg-emerald-400' },
+   522→            ];
+   523→            return (
+   524→              <>
+   525→                {rows.map((row, index) => (
+   526→                  <motion.div
+   527→                    key={row.name}
+   528→                    className="flex items-center gap-3"
+   529→                    initial={{ opacity: 0, x: -8 }}
+   530→                    animate={{ opacity: 1, x: 0 }}
+   531→                    transition={{ delay: index * 0.06, duration: 0.3 }}
+   532→                  >
+   533→                    <div className="w-40 shrink-0 text-xs text-muted-foreground">{row.name}</div>
+   534→                    <div className="flex-1">
+   535→                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+   536→                        <div
+   537→                          className={`h-4 rounded-full ${row.color} transition-all duration-500`}
+   538→                          style={{ width: `${Math.max((row.hours / maxHours) * 100, 2)}%` }}
+   539→                        />
+   540→                      </div>
+   541→                      <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden mt-1">
+   542→                        <div
+   543→                          className={`h-1.5 rounded-full ${row.color} opacity-60 transition-all duration-500`}
+   544→                          style={{ width: `${Math.max((row.hours / maxHours) * 100, 2)}%` }}
+   545→                        />
+   546→                      </div>
+   547→                    </div>
+   548→                    <div className="w-16 shrink-0 text-xs font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
+   549→                  </motion.div>
+   550→                ))}
+   551→                <motion.div
+   552→                  className="flex items-center gap-3 border-t border-border pt-2 mt-1"
+   553→                  initial={{ opacity: 0 }}
+   554→                  animate={{ opacity: 1 }}
+   555→                  transition={{ delay: rows.length * 0.06, duration: 0.3 }}
+   556→                >
+   557→                  <div className="w-40 shrink-0 text-xs font-bold text-primary">Total</div>
+   558→                  <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+   559→                    <div
+   560→                      className="h-4 rounded-full bg-primary transition-all duration-500"
+   561→                      style={{ width: '100%' }}
+   562→                    />
+   563→                  </div>
+   564→                  <div className="w-16 shrink-0 text-xs font-bold text-right text-primary">{totalHours.toFixed(1)}h</div>
+   565→                </motion.div>
+   566→              </>
+   567→            );
+   568→          })()}
+   569→          <p className="text-[11px] text-muted-foreground mt-2">Estimated engineering hours based on configuration complexity. Actual effort may vary.</p>
+   570→        </div>
+   571→      </SectionCard>
+   572→
+   573→      {/* Estimated Project Timeline */}
+   574→      <SectionCard title="Estimated Project Timeline" description="Gantt-like view of project phases.">
+   575→        <div className="space-y-3">
+   576→          {(() => {
+   577→            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
+   578→            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
+   579→            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
+   580→            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
+   581→            const totalHours = hwHours + swHours + motionHours + safetyHours + (hwHours + swHours + motionHours + safetyHours) * 0.3;
+   582→
+   583→            const hwDesignWeeks = 2;
+   584→            const swDevWeeks = Math.max(2, Math.ceil(c.hmi.screens / 3));
+   585→            const integrationWeeks = Math.max(2, Math.ceil(totalHours / 40));
+   586→            const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+   587→            const commissionWeeks = complexityMap[overallComplexity] || 2;
+   588→            const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
+   589→            const maxWeeks = 8;
+   590→
+   591→            const phases = [
+   592→              { name: 'Hardware Design & Ordering', weeks: hwDesignWeeks, color: 'bg-blue-400', dotColor: 'bg-blue-400' },
+   593→              { name: 'Software Development', weeks: swDevWeeks, color: 'bg-amber-400', dotColor: 'bg-emerald-400' },
+   594→              { name: 'Integration & Testing', weeks: integrationWeeks, color: 'bg-orange-400', dotColor: 'bg-amber-400' },
+   595→              { name: 'Commissioning & Handover', weeks: commissionWeeks, color: 'bg-emerald-400', dotColor: 'bg-primary' },
+   596→            ];
+   597→
+   598→            return (
+   599→              <>
+   600→                {phases.map((phase, index) => (
+   601→                  <motion.div
+   602→                    key={phase.name}
+   603→                    className="relative flex items-center gap-3"
+   604→                    initial={{ opacity: 0, x: -8 }}
+   605→                    animate={{ opacity: 1, x: 0 }}
+   606→                    transition={{ delay: index * 0.08, duration: 0.3 }}
+   607→                  >
+   608→                    {index > 0 && (
+   609→                      <span className="absolute -top-2 left-40 text-[10px] text-muted-foreground/40 leading-none">◆</span>
+   610→                    )}
+   611→                    <div className="w-36 shrink-0 flex items-center gap-2 text-xs text-muted-foreground">
+   612→                      <span className={`w-2 h-2 rounded-full ${phase.dotColor} shrink-0`} />
+   613→                      {phase.name}
+   614→                    </div>
+   615→                    <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden">
+   616→                      <div
+   617→                        className={`h-5 rounded-sm ${phase.color} transition-all duration-500`}
+   618→                        style={{ width: `${(phase.weeks / maxWeeks) * 100}%` }}
+   619→                      />
+   620→                    </div>
+   621→                    <div className="w-16 shrink-0 text-xs font-medium text-right text-foreground">{phase.weeks} week{phase.weeks !== 1 ? 's' : ''}</div>
+   622→                  </motion.div>
+   623→                ))}
+   624→                <motion.div
+   625→                  className="flex items-center gap-3 border-t border-border pt-2 mt-1"
+   626→                  initial={{ opacity: 0 }}
+   627→                  animate={{ opacity: 1 }}
+   628→                  transition={{ delay: phases.length * 0.08, duration: 0.3 }}
+   629→                >
+   630→                  <div className="w-36 shrink-0 text-xs font-bold text-primary">Estimated Total</div>
+   631→                  <div className="flex-1" />
+   632→                  <div className="w-16 shrink-0 text-xs font-bold text-right text-primary">{totalWeeks} weeks</div>
+   633→                </motion.div>
+   634→              </>
+   635→            );
+   636→          })()}
+   637→        </div>
+   638→      </SectionCard>
+   639→
+   640→      {/* Effort Areas */}
+   641→      <SectionCard title="Engineering Areas" description="Potential effort drivers by engineering domain.">
+   642→        <div className="overflow-x-auto -mx-4 px-4">
+   643→          <table className="w-full">
+   644→            <thead>
+   645→              <tr className="border-b border-border">
+   646→                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pr-4">Area</th>
+   647→                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pr-4">Complexity</th>
+   648→                <th className="text-left text-xs font-semibold text-muted-foreground pb-2">Potential Effort Driver</th>
+   649→              </tr>
+   650→            </thead>
+   651→            <tbody>
+   652→              {EFFORT_AREAS.map((area) => {
+   653→                const complexity = areaComplexities[area.name] || 'Medium';
+   654→                return (
+   655→                  <tr key={area.name} className="border-b border-border/50 last:border-0">
+   656→                    <td className="py-2.5 pr-4 text-xs font-medium text-foreground">{area.name}</td>
+   657→                    <td className="py-2.5 pr-4">
+   658→                      <div className="flex items-center gap-2">
+   659→                        <div className={`w-[2px] h-5 rounded-full ${COMPLEXITY_DOT_COLORS[complexity]}`} />
+   660→                        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${COMPLEXITY_COLORS[complexity]}`}>
+   661→                          {complexity}
+   662→                        </span>
+   663→                      </div>
+   664→                    </td>
+   665→                    <td className="py-2.5 text-xs text-muted-foreground">{area.driver}</td>
+   666→                  </tr>
+   667→                );
+   668→              })}
+   669→            </tbody>
+   670→          </table>
+   671→        </div>
+   672→      </SectionCard>
+   673→
+   674→      {/* Domain Model */}
+   675→      <SectionCard title="Product Architecture Flow">
+   676→        <div className="flex flex-wrap items-center gap-2">
+   677→          {['B&R Product', 'Technology', 'Engineering Function', 'Configuration', 'Programming', 'Integration', 'Testing', 'Commissioning', 'Complexity', 'Engineering Effort'].map((item, idx, arr) => (
+   678→            <React.Fragment key={item}>
+   679→              <div className="rounded-md border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground">
+   680→                {item}
+   681→              </div>
+   682→              {idx < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+   683→            </React.Fragment>
+   684→          ))}
+   685→        </div>
+   686→      </SectionCard>
+   687→
+   688→      {/* Placeholder Notice */}
+   689→      <div className="flex items-start gap-3 rounded-md border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-4">
+   690→        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+   691→        <div className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed space-y-1">
+   692→          <p><strong>Engineering effort calculation will be connected to validated company data in a future version.</strong></p>
+   693→          <p>This prototype demonstrates technical configuration and complexity assessment. Actual engineering hours require backend integration with historical project data and validated estimation formulas.</p>
+   694→        </div>
+   695→      </div>
+   696→
+   697→      {/* Version Info */}
+   698→      <div className="flex items-center justify-between">
+   699→        <div className="text-xs text-muted-foreground">
+   700→          Current version: technical configuration prototype
+   701→        </div>
+   702→        <Button
+   703→          variant="outline"
+   704→          size="sm"
+   705→          className="h-8 gap-1.5 text-xs"
+   706→          onClick={() => { setWizardStep(13); setCurrentPage('new-estimate'); }}
+   707→        >
+   708→          Edit Configuration
+   709→        </Button>
+   710→      </div>
+   711→    </motion.div>
+   712→  );
+   713→}
+   714→

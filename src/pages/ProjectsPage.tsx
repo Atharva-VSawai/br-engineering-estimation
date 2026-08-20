@@ -4,10 +4,18 @@ import React, { useState, useMemo } from 'react';
 import { PlusCircle, Search, Copy, Trash2, FolderOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { SectionCard } from '@/components/br/SectionCard';
-import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
+import { ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
 import type { Project } from '@/types';
 import {
@@ -24,7 +32,7 @@ const STATUS_OPTIONS = ['All', 'Draft', 'In Review', 'Completed'] as const;
 type StatusOption = (typeof STATUS_OPTIONS)[number];
 
 export function ProjectsPage() {
-  const { projects, setCurrentPage, addProject, deleteProject, updateConfig } = useAppStore();
+  const { projects, setCurrentPage, addProject, deleteProject, updateProject, updateConfig } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
 
@@ -174,7 +182,34 @@ export function ProjectsPage() {
                     <TableCell className="text-xs text-muted-foreground py-2.5">{p.createdAt}</TableCell>
                     <TableCell className="text-xs text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
                     <TableCell className="py-2.5"><ComplexityBadge level={p.complexity} /></TableCell>
-                    <TableCell className="py-2.5"><StatusBadge status={p.status} /></TableCell>
+                    <TableCell className="py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            'inline-block h-2 w-2 rounded-full shrink-0',
+                            p.status === 'Draft' && 'bg-amber-500',
+                            p.status === 'In Review' && 'bg-blue-500',
+                            p.status === 'Completed' && 'bg-emerald-500'
+                          )}
+                        />
+                        <Select
+                          value={p.status}
+                          onValueChange={(value) => {
+                            updateProject(p.id, { status: value as 'Draft' | 'In Review' | 'Completed' });
+                            toast('Status updated', { description: `Project status changed to ${value}` });
+                          }}
+                        >
+                          <SelectTrigger className="h-7 text-xs w-[120px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Draft">Draft</SelectItem>
+                            <SelectItem value="In Review">In Review</SelectItem>
+                            <SelectItem value="Completed">Completed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableCell>
                     <TableCell className='py-2.5'>
                       <div className='flex items-center gap-1'>
                         <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-foreground' onClick={(e) => { e.stopPropagation(); handleDuplicate(p); }}>

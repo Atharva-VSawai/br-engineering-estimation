@@ -73,9 +73,9 @@ export function AppSidebar() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => setCurrentPage(page)}
-                        className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
+                        className={`relative flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
                           ${isActive
-                            ? 'bg-gradient-to-r from-primary/8 to-transparent text-sidebar-accent-foreground'
+                            ? 'bg-gradient-to-r from-primary/8 to-transparent text-sidebar-accent-foreground after:content-[\'\'] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[3px] after:rounded-full after:bg-primary'
                             : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                           }`}
                         aria-current={isActive ? 'page' : undefined}
@@ -123,7 +123,7 @@ export function AppSidebar() {
         <div className="text-[10px] text-muted-foreground/60 leading-tight">Frontend Prototype</div>
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 leading-tight">
           <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
-          v0.6
+          <span className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v0.7</span>
         </div>
       </div>
     </aside>
