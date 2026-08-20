@@ -22,7 +22,7 @@ export function StepController() {
       <SectionCard title="Step 2 — Controller / PLC Configuration" description="Select the B&R controller platform and configuration.">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1">
           <ParamRow label="Controller Family">
-            <SelectField value={c.family} onChange={(v) => updateController({ family: v })} options={CONTROLLER_FAMILIES} />
+            <SelectField value={c.family} onChange={(v) => updateController({ family: v })} options={CONTROLLER_FAMILIES} valid={true} />
           </ParamRow>
           <ParamRow label="CPU / Controller Configuration">
             <div className="flex flex-wrap gap-2">

@@ -10,6 +10,7 @@ import {
   Activity,
   Gauge,
   FileBarChart,
+  GitCompareArrows,
   Settings,
 } from 'lucide-react';
 import {
@@ -30,6 +31,7 @@ const NAV_ITEMS: { page: AppPage; label: string; icon: React.ElementType }[] = [
   { page: 'engineering-activities', label: 'Engineering Activities', icon: Activity },
   { page: 'complexity', label: 'Complexity', icon: Gauge },
   { page: 'estimate-summary', label: 'Estimate Summary', icon: FileBarChart },
+  { page: 'compare', label: 'Compare', icon: GitCompareArrows },
   { page: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -96,7 +98,7 @@ export function AppSidebar() {
         <div className="text-[10px] text-muted-foreground leading-tight">Frontend Prototype</div>
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground leading-tight">
           <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
-          v0.3
+          v0.4
         </div>
       </div>
     </aside>

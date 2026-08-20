@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight } from 'lucide-react';
 import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
@@ -40,6 +40,14 @@ const ACTIVITY_DOT_COLORS: Record<string, string> = {
   create: 'bg-emerald-400',
   complete: 'bg-emerald-500',
   export: 'bg-purple-400',
+};
+
+const ACTIVITY_BORDER_COLORS: Record<string, string> = {
+  edit: 'border-l-blue-400',
+  info: 'border-l-amber-400',
+  create: 'border-l-emerald-400',
+  complete: 'border-l-emerald-500',
+  export: 'border-l-purple-400',
 };
 
 const recentActivity = [
@@ -273,16 +281,19 @@ export function DashboardPage() {
                 initial={{ opacity: 0, x: -4 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05, duration: 0.3 }}
-                className={`flex items-start gap-3 py-2 ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
+                className={`flex items-start gap-2 py-1.5 border-l-2 pl-3 ${ACTIVITY_BORDER_COLORS[item.type] || 'border-l-gray-400'} ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
               >
-                <span className={`w-2 h-2 rounded-full mt-1 shrink-0 ${ACTIVITY_DOT_COLORS[item.type] || 'bg-gray-400'}`} />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-foreground">{item.action}</div>
                   <div className="text-[11px] text-muted-foreground truncate">{item.detail}</div>
                 </div>
-                <span className="text-[11px] text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
+                <span className="text-[11px] font-medium text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
               </motion.div>
             ))}
+            <button className="flex items-center gap-0.5 text-primary text-[11px] font-medium pt-2 hover:underline">
+              View All
+              <ChevronRight className="h-3 w-3" />
+            </button>
           </div>
         </SectionCard>
 

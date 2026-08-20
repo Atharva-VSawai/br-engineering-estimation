@@ -32,9 +32,9 @@ function ArchBlockItem({ item, index }: { item: ArchBlock; index: number }) {
       transition={{ duration: 0.3, delay: index * 0.05 }}
       className={`rounded-md px-6 py-2 font-sans text-sm ${
         item.isController
-          ? 'border-2 border-primary/40 bg-primary/5 font-semibold text-primary'
+          ? 'border-2 border-primary/40 bg-primary/10 font-semibold text-primary'
           : item.isPrimary
-          ? 'border-2 border-primary/40 bg-primary/5 font-semibold text-primary'
+          ? 'border-2 border-primary/40 bg-primary/10 font-semibold text-primary'
           : item.isSecondary
           ? 'border border-primary/30 bg-card font-medium text-foreground ring-1 ring-primary/20'
           : 'border border-border bg-card text-foreground'
@@ -124,14 +124,14 @@ export function ArchitecturePage() {
       {/* Connected Components */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'ACOPOStrak', desc: 'Linear transport system with independent movers', color: 'border-orange-200 bg-orange-50/50' },
-          { label: 'Robotics', desc: 'Delta, SCARA, 6-Axis robot integration', color: 'border-blue-200 bg-blue-50/50' },
-          { label: 'Industrial PC', desc: 'Automation PC for edge computing and IIoT', color: 'border-purple-200 bg-purple-50/50' },
-          { label: 'IIoT', desc: 'Cloud connectivity, data collection, analytics', color: 'border-teal-200 bg-teal-50/50' },
+          { label: 'ACOPOStrak', desc: 'Linear transport system with independent movers', color: 'border-orange-200 dark:border-orange-700/40 bg-orange-50/50 dark:bg-orange-950/30' },
+          { label: 'Robotics', desc: 'Delta, SCARA, 6-Axis robot integration', color: 'border-blue-200 dark:border-blue-700/40 bg-blue-50/50 dark:bg-blue-950/30' },
+          { label: 'Industrial PC', desc: 'Automation PC for edge computing and IIoT', color: 'border-purple-200 dark:border-purple-700/40 bg-purple-50/50 dark:bg-purple-950/30' },
+          { label: 'IIoT', desc: 'Cloud connectivity, data collection, analytics', color: 'border-teal-200 dark:border-teal-700/40 bg-teal-50/50 dark:bg-teal-950/30' },
         ].map((item) => (
-          <div key={item.label} className={`rounded-md border p-3 ${item.color}`}>
+          <div key={item.label} className={`rounded-md border p-3 hover:bg-muted/50 hover:border-primary/20 transition-all duration-150 ${item.color}`}>
             <div className="text-xs font-semibold text-foreground">{item.label}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">{item.desc}</div>
+            <div className="text-[11px] text-muted-foreground/80 mt-1">{item.desc}</div>
           </div>
         ))}
       </div>

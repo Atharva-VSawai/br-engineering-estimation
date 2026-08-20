@@ -43,7 +43,7 @@ export function SettingsPage() {
 
   const infoRows = [
     { label: 'Application', value: 'B&R Engineering Estimation Tool' },
-    { label: 'Version', value: 'v0.3' },
+    { label: 'Version', value: 'v0.4' },
     { label: 'Technology', value: 'Next.js, React, TypeScript, Tailwind CSS' },
     { label: 'Data Storage', value: 'Local (client-side state)' },
     { label: 'Backend', value: 'Not connected (planned)' },
@@ -219,7 +219,7 @@ export function SettingsPage() {
                 B&R Engineering Estimation Tool
               </h2>
               <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                v0.3 — Frontend Prototype
+                v0.4 — Frontend Prototype
               </span>
             </div>
             <p className="text-xs text-muted-foreground max-w-lg leading-relaxed">

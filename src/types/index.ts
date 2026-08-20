@@ -20,6 +20,7 @@ export type AppPage =
   | 'engineering-activities'
   | 'complexity'
   | 'estimate-summary'
+  | 'compare'
   | 'settings';
 
 // ===== Project =====

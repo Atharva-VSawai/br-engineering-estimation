@@ -15,13 +15,13 @@ export function StepProject() {
       <SectionCard title="Step 1 — Project Information" description="Enter the basic project details and scope.">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-1">
           <ParamRow label="Project Name *">
-            <TextField value={p.name} onChange={(v) => updateProjectInfo({ name: v })} placeholder="e.g. Automated Packaging Machine" className="w-full max-w-md" />
+            <TextField value={p.name} onChange={(v) => updateProjectInfo({ name: v })} placeholder="e.g. Automated Packaging Machine" className="w-full max-w-md" valid={p.name.trim().length > 0} />
           </ParamRow>
           <ParamRow label="Customer">
-            <TextField value={p.customer} onChange={(v) => updateProjectInfo({ customer: v })} placeholder="Customer name" className="w-full max-w-md" />
+            <TextField value={p.customer} onChange={(v) => updateProjectInfo({ customer: v })} placeholder="Customer name" className="w-full max-w-md" valid={p.customer.trim().length > 0} />
           </ParamRow>
           <ParamRow label="Machine Type *">
-            <SelectField value={p.machineType} onChange={(v) => updateProjectInfo({ machineType: v })} options={MACHINE_TYPES} placeholder="Select machine type" />
+            <SelectField value={p.machineType} onChange={(v) => updateProjectInfo({ machineType: v })} options={MACHINE_TYPES} placeholder="Select machine type" valid={p.machineType !== ''} />
           </ParamRow>
           <ParamRow label="Industry">
             <SelectField value={p.industry} onChange={(v) => updateProjectInfo({ industry: v })} options={INDUSTRIES} placeholder="Select industry" />

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Check, X } from 'lucide-react';
 
 interface ParamRowProps {
   label: string;
@@ -42,25 +43,35 @@ interface NumberFieldProps {
   unit?: string;
   className?: string;
   disabled?: boolean;
+  valid?: boolean;
 }
 
-export function NumberField({ value, onChange, min = 0, max = 9999, placeholder, unit, className = '', disabled }: NumberFieldProps) {
+export function NumberField({ value, onChange, min = 0, max = 9999, placeholder, unit, className = '', disabled, valid }: NumberFieldProps) {
+  const showIndicator = valid !== undefined;
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <Input
-        type="number"
-        value={value}
-        onChange={(e) => {
-          const v = parseInt(e.target.value, 10);
-          if (!isNaN(v) && v >= min && v <= max) onChange(v);
-          else if (e.target.value === '') onChange(min);
-        }}
-        min={min}
-        max={max}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="h-8 w-28 text-sm transition-colors duration-150"
-      />
+      <div className="relative">
+        <Input
+          type="number"
+          value={value}
+          onChange={(e) => {
+            const v = parseInt(e.target.value, 10);
+            if (!isNaN(v) && v >= min && v <= max) onChange(v);
+            else if (e.target.value === '') onChange(min);
+          }}
+          min={min}
+          max={max}
+          placeholder={placeholder}
+          disabled={disabled}
+          className={`h-8 w-28 text-sm transition-colors duration-150 ${showIndicator ? 'pr-8' : ''}`}
+        />
+        {valid === true && (
+          <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-500 pointer-events-none" />
+        )}
+        {valid === false && (
+          <X className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-400 pointer-events-none" />
+        )}
+      </div>
       {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
     </div>
   );
@@ -72,22 +83,31 @@ interface SelectFieldProps {
   options: readonly string[] | string[];
   placeholder?: string;
   className?: string;
+  valid?: boolean;
 }
 
-export function SelectField({ value, onChange, options, placeholder, className = '' }: SelectFieldProps) {
+export function SelectField({ value, onChange, options, placeholder, className = '', valid }: SelectFieldProps) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={`h-8 w-full max-w-xs text-sm transition-colors duration-150 ${className}`}>
-        <SelectValue placeholder={placeholder} />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((opt) => (
-          <SelectItem key={opt} value={opt} className="text-sm">
-            {opt}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex items-center gap-1.5">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className={`h-8 w-full max-w-xs text-sm transition-colors duration-150 ${className}`}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt} value={opt} className="text-sm">
+              {opt}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {valid === true && (
+        <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+      )}
+      {valid === false && (
+        <X className="h-3.5 w-3.5 text-red-400 shrink-0" />
+      )}
+    </div>
   );
 }
 
@@ -96,17 +116,27 @@ interface TextFieldProps {
   onChange: (v: string) => void;
   placeholder?: string;
   className?: string;
+  valid?: boolean;
 }
 
-export function TextField({ value, onChange, placeholder, className = '' }: TextFieldProps) {
+export function TextField({ value, onChange, placeholder, className = '', valid }: TextFieldProps) {
+  const showIndicator = valid !== undefined;
   return (
-    <Input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className={`h-8 text-sm transition-colors duration-150 ${className}`}
-    />
+    <div className="relative">
+      <Input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`h-8 text-sm transition-colors duration-150 ${showIndicator ? 'pr-8' : ''} ${className}`}
+      />
+      {valid === true && (
+        <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-500 pointer-events-none" />
+      )}
+      {valid === false && (
+        <X className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-400 pointer-events-none" />
+      )}
+    </div>
   );
 }
 
@@ -116,17 +146,27 @@ interface TextAreaFieldProps {
   placeholder?: string;
   rows?: number;
   className?: string;
+  valid?: boolean;
 }
 
-export function TextAreaField({ value, onChange, placeholder, rows = 3, className = '' }: TextAreaFieldProps) {
+export function TextAreaField({ value, onChange, placeholder, rows = 3, className = '', valid }: TextAreaFieldProps) {
+  const showIndicator = valid !== undefined;
   return (
-    <Textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      rows={rows}
-      className={`text-sm resize-none transition-colors duration-150 ${className}`}
-    />
+    <div className="relative">
+      <Textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className={`text-sm resize-none transition-colors duration-150 ${showIndicator ? 'pr-8' : ''} ${className}`}
+      />
+      {valid === true && (
+        <Check className="absolute right-2 top-3 h-3.5 w-3.5 text-emerald-500 pointer-events-none" />
+      )}
+      {valid === false && (
+        <X className="absolute right-2 top-3 h-3.5 w-3.5 text-red-400 pointer-events-none" />
+      )}
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Save, FileText, FileJson, Sun, Moon, ChevronRight, Copy } from 'lucide-react';
+import { Save, FileText, FileJson, Sun, Moon, ChevronRight, Copy, Bell } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
 import { toast } from 'sonner';
 import type { AppPage } from '@/types';
+import { NotificationCenter, useNotificationCenter } from '@/components/br/NotificationCenter';
 
 const PAGE_NAMES: Record<AppPage, string> = {
   dashboard: 'Dashboard',
@@ -19,12 +20,14 @@ const PAGE_NAMES: Record<AppPage, string> = {
   'engineering-activities': 'Engineering Activities',
   complexity: 'Complexity',
   'estimate-summary': 'Estimate Summary',
+  compare: 'Compare',
   settings: 'Settings',
 };
 
 export function AppHeader() {
   const { config, currentPage, wizardStep } = useAppStore();
   const { theme, setTheme } = useTheme();
+  const nc = useNotificationCenter();
   const projectName = config.project.name || 'Packaging Machine \u2013 Project 2026';
 
   const handleDownload = () => {
@@ -63,12 +66,12 @@ export function AppHeader() {
   }, []);
 
   return (
-    <header className="no-print flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm px-6 shadow-sm">
+    <header className="no-print flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-sm px-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       <div className="flex items-center gap-3">
         {currentPage !== 'new-estimate' ? (
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground">{PAGE_NAMES[currentPage]}</span>
-            <ChevronRight className="h-3 w-3 text-muted-foreground/50" />
+            <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
             <span className="text-xs font-medium text-foreground truncate max-w-[280px]">{projectName}</span>
           </div>
         ) : (
@@ -91,7 +94,7 @@ export function AppHeader() {
         </Button>
         <Badge
           variant="outline"
-          className="border-amber-300 bg-amber-50 text-amber-700 text-xs font-medium dark:border-amber-600/40 dark:bg-amber-900/20 dark:text-amber-400"
+          className={`border-amber-300 bg-amber-50 text-amber-700 text-xs font-medium dark:border-amber-600/40 dark:bg-amber-900/20 dark:text-amber-400 ${currentPage === 'new-estimate' ? 'animate-pulse' : ''}`}
         >
           Draft
         </Badge>
@@ -128,6 +131,17 @@ export function AppHeader() {
           );
         })()}
         <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 relative"
+          onClick={nc.toggle}
+        >
+          <Bell className="h-4 w-4" />
+          {nc.unreadCount > 0 && (
+            <span className="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />
+          )}
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           className="h-8 gap-1.5 text-xs"
@@ -158,6 +172,13 @@ export function AppHeader() {
           Save
         </Button>
       </div>
+      <NotificationCenter
+        open={nc.open}
+        onClose={nc.close}
+        unreadCount={nc.unreadCount}
+        notifications={nc.notifications}
+        onMarkAllRead={nc.markAllRead}
+      />
     </header>
   );
 }

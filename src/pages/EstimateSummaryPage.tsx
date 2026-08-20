@@ -11,10 +11,10 @@ import { toast } from 'sonner';
 import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
 
 const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
-  Low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  High: 'bg-orange-50 text-orange-700 border-orange-200',
-  'Very High': 'bg-red-50 text-red-700 border-red-200',
+  Low: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  Medium: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  High: 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+  'Very High': 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800',
 };
 
 const COMPLEXITY_DOT_COLORS: Record<ComplexityLevel, string> = {
@@ -248,8 +248,8 @@ export function EstimateSummaryPage() {
               className="flex items-center gap-2 text-xs"
             >
               {section.configured ? (
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                  <Check className="h-3 w-3 text-emerald-600" />
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                  <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                 </div>
               ) : (
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted">

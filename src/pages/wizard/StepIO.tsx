@@ -64,8 +64,38 @@ export function StepIO() {
     return max;
   }, [ioItems]);
 
+  // Inline I/O summary bars (DI, DO, AI, AO, Safety)
+  const summaryBars = [
+    { label: 'DI', value: io.digitalInputs, fillClass: 'bg-primary/70' },
+    { label: 'DO', value: io.digitalOutputs, fillClass: 'bg-primary/70' },
+    { label: 'AI', value: io.analogInputs, fillClass: 'bg-blue-400' },
+    { label: 'AO', value: io.analogOutputs, fillClass: 'bg-blue-400' },
+    { label: 'Safety', value: io.safetyIO, fillClass: 'bg-emerald-400' },
+  ];
+  const summaryMax = Math.max(...summaryBars.map(b => b.value), 1);
+
   return (
     <div className="space-y-4">
+      {/* Inline I/O Bar Summary */}
+      <div className="rounded-md border border-border bg-muted/30 p-3">
+        <div className="flex gap-4 items-end">
+          {summaryBars.map((bar) => (
+            <div key={bar.label} className="flex-1 min-w-0">
+              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-300 ${bar.fillClass}`}
+                  style={{ width: `${(bar.value / summaryMax) * 100}%`, minWidth: bar.value > 0 ? '4px' : '0' }}
+                />
+              </div>
+              <div className="mt-1 flex items-center justify-between">
+                <span className="text-[9px] text-muted-foreground">{bar.label}</span>
+                <span className="text-[9px] font-medium text-foreground tabular-nums">{bar.value}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <SectionCard title="Step 3 — I/O Configuration" description="Configure digital, analog, and special I/O modules.">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1">
           {ioItems.map(({ label, key, value }) => (
@@ -114,9 +144,9 @@ export function StepIO() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">I/O Complexity:</span>
               <span className={`text-xs font-semibold rounded-md px-2 py-0.5 border ${
-                ioComplexity === 'Simple' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                ioComplexity === 'Moderate' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                'bg-red-50 text-red-700 border-red-200'
+                ioComplexity === 'Simple' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
+                ioComplexity === 'Moderate' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' :
+                'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
               }`}>
                 {ioComplexity}
               </span>
@@ -124,9 +154,9 @@ export function StepIO() {
           </div>
         </SectionCard>
 
-        <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50/50 p-3 self-start">
-          <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 leading-relaxed">
+        <div className="flex items-start gap-2.5 rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/20 p-3 self-start">
+          <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
             Raw I/O count is not the only factor. Signal type, special modules, safety requirements, scaling and device integration can affect engineering complexity.
           </p>
         </div>

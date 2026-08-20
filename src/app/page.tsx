@@ -13,6 +13,7 @@ import { EstimateSummaryPage } from '@/pages/EstimateSummaryPage';
 import { TechnicalParamsPage } from '@/pages/TechnicalParamsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { ComplexityPage } from '@/pages/ComplexityPage';
+import { ComparePage } from '@/pages/ComparePage';
 import {
   useKeyboardShortcuts,
   KeyboardShortcutsDialog,
@@ -39,6 +40,8 @@ function PageRouter() {
         return <ComplexityPage />;
       case 'estimate-summary':
         return <EstimateSummaryPage />;
+      case 'compare':
+        return <ComparePage />;
       case 'settings':
         return <SettingsPage />;
       default:

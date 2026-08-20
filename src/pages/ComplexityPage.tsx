@@ -23,10 +23,10 @@ const HEATMAP_ITEMS: { key: ComplexityKey; short: string; label: string }[] = [
 ];
 
 const BG_COLORS: Record<ComplexityLevel, string> = {
-  Low: 'bg-emerald-100',
-  Medium: 'bg-amber-100',
-  High: 'bg-orange-100',
-  'Very High': 'bg-red-100',
+  Low: 'bg-emerald-100 dark:bg-emerald-900/40',
+  Medium: 'bg-amber-100 dark:bg-amber-900/40',
+  High: 'bg-orange-100 dark:bg-orange-900/40',
+  'Very High': 'bg-red-100 dark:bg-red-900/40',
 };
 
 const BORDER_COLORS: Record<ComplexityLevel, string> = {
@@ -141,17 +141,17 @@ export function ComplexityPage() {
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Dimensions</div>
           <div className="text-xl font-bold text-foreground mt-1">10</div>
         </div>
-        <div className="rounded-md border border-red-200 bg-red-50/50 p-3 text-center">
-          <div className="text-[10px] text-red-600 uppercase tracking-wide">High / Very High</div>
-          <div className="text-xl font-bold text-red-700 mt-1">{highCount}</div>
+        <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-950/20 p-3 text-center">
+          <div className="text-[10px] text-red-600 dark:text-red-400 uppercase tracking-wide">High / Very High</div>
+          <div className="text-xl font-bold text-red-700 dark:text-red-300 mt-1">{highCount}</div>
         </div>
-        <div className="rounded-md border border-amber-200 bg-amber-50/50 p-3 text-center">
-          <div className="text-[10px] text-amber-600 uppercase tracking-wide">Medium</div>
-          <div className="text-xl font-bold text-amber-700 mt-1">{allComplexities.filter((x) => x === 'Medium').length}</div>
+        <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-center">
+          <div className="text-[10px] text-amber-600 dark:text-amber-400 uppercase tracking-wide">Medium</div>
+          <div className="text-xl font-bold text-amber-700 dark:text-amber-300 mt-1">{allComplexities.filter((x) => x === 'Medium').length}</div>
         </div>
-        <div className="rounded-md border border-emerald-200 bg-emerald-50/50 p-3 text-center">
-          <div className="text-[10px] text-emerald-600 uppercase tracking-wide">Low</div>
-          <div className="text-xl font-bold text-emerald-700 mt-1">{allComplexities.filter((x) => x === 'Low').length}</div>
+        <div className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 p-3 text-center">
+          <div className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">Low</div>
+          <div className="text-xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{allComplexities.filter((x) => x === 'Low').length}</div>
         </div>
         <div className="rounded-md border border-border bg-card p-3 text-center">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Requirement Clarity</div>

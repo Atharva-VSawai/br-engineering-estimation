@@ -54,6 +54,37 @@ export function StepMotion() {
 
   return (
     <div className="space-y-4">
+      {/* Compact Axis Grid */}
+      {totalAxes > 0 && (
+        <div className="rounded-md border border-border bg-muted/30 p-3">
+          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-2">Axis Overview</div>
+          <div className="flex gap-2 flex-wrap">
+            {Array.from({ length: Math.min(totalAxes, 8) }).map((_, i) => {
+              const axisType = getAxisType(i);
+              return (
+                <div key={i} className="rounded-md border border-border p-2 w-16 shrink-0">
+                  <div className="text-[10px] font-semibold text-foreground">A{i + 1}</div>
+                  <div className="mt-0.5">
+                    <span className={`text-[8px] rounded px-1 inline-block ${
+                      axisType === 'linear' ? 'bg-blue-50 text-blue-600' :
+                      axisType === 'rotary' ? 'bg-purple-50 text-purple-600' :
+                      'bg-gray-50 text-gray-600'
+                    }`}>
+                      {axisType === 'linear' ? 'LINEAR' : axisType === 'rotary' ? 'ROTARY' : 'GENERIC'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+            {totalAxes > 8 && (
+              <div className="rounded-md border border-border p-2 w-16 shrink-0 flex items-center justify-center">
+                <span className="text-[10px] text-muted-foreground font-medium">+{totalAxes - 8} more</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <SectionCard title="Step 4 — Motion & Axis Configuration" description="Configure motion axes, drives, and motion functions.">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-1">
           <ParamRow label="Total Motion Axes">
