@@ -34,6 +34,22 @@ const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
 
 const ALL_LEVELS: ComplexityLevel[] = ['Low', 'Medium', 'High', 'Very High'];
 
+const ACTIVITY_DOT_COLORS: Record<string, string> = {
+  edit: 'bg-blue-400',
+  info: 'bg-amber-400',
+  create: 'bg-emerald-400',
+  complete: 'bg-emerald-500',
+  export: 'bg-purple-400',
+};
+
+const recentActivity = [
+  { time: '2 hours ago', action: 'Configuration updated', detail: 'Motion axes changed from 6 to 8', type: 'edit' },
+  { time: '5 hours ago', action: 'Sample data loaded', detail: 'Automated Packaging Machine configuration', type: 'info' },
+  { time: '1 day ago', action: 'New estimate created', detail: 'ACOPOStrak Transport System', type: 'create' },
+  { time: '2 days ago', action: 'Estimate completed', detail: 'Bottle Inspection Machine \u2013 Medium complexity', type: 'complete' },
+  { time: '3 days ago', action: 'Project exported', detail: 'Servo Press Machine configuration as JSON', type: 'export' },
+];
+
 export function DashboardPage() {
   const { projects, setCurrentPage, loadSampleConfig } = useAppStore();
 
@@ -173,7 +189,7 @@ export function DashboardPage() {
               {ALL_LEVELS.map((level) => (
                 <div key={level} className="flex items-center gap-1.5">
                   <span className={`h-2.5 w-2.5 rounded-sm ${COMPLEXITY_COLORS[level]}`} />
-                  <span className={`text-xs font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}>
+                  <span className={`text-xs font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}> 
                     {level}{complexityDist[level] > 0 ? ` (${complexityDist[level]})` : ''}
                   </span>
                 </div>
@@ -220,6 +236,25 @@ export function DashboardPage() {
               ))}
             </TableBody>
           </Table>
+        </div>
+      </SectionCard>
+
+      {/* Recent Activity */}
+      <SectionCard title="Recent Activity" description="Latest actions and events">
+        <div>
+          {recentActivity.map((item, idx) => (
+            <div
+              key={idx}
+              className={`flex items-start gap-3 py-2 ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
+            >
+              <span className={`w-2 h-2 rounded-full mt-1 shrink-0 ${ACTIVITY_DOT_COLORS[item.type] || 'bg-gray-400'}`} />
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-medium text-foreground">{item.action}</div>
+                <div className="text-[11px] text-muted-foreground truncate">{item.detail}</div>
+              </div>
+              <span className="text-[11px] text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
+            </div>
+          ))}
         </div>
       </SectionCard>
 

@@ -1,11 +1,41 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
 import { ComplexityBadge } from '@/components/br/ComplexityBadge';
 
 type ComplexityKey = 'hardware' | 'motion' | 'hmi' | 'vision' | 'safety' | 'communication' | 'software' | 'integration' | 'requirement' | 'testing';
+
+type ComplexityLevel = 'Low' | 'Medium' | 'High' | 'Very High';
+
+const HEATMAP_ITEMS: { key: ComplexityKey; short: string; label: string }[] = [
+  { key: 'hardware', short: 'HW', label: 'Hardware' },
+  { key: 'motion', short: 'MOT', label: 'Motion' },
+  { key: 'hmi', short: 'HMI', label: 'HMI' },
+  { key: 'vision', short: 'VIS', label: 'Vision' },
+  { key: 'safety', short: 'SAFE', label: 'Safety' },
+  { key: 'communication', short: 'COMM', label: 'Communication' },
+  { key: 'software', short: 'SW', label: 'Software' },
+  { key: 'integration', short: 'INT', label: 'Integration' },
+  { key: 'requirement', short: 'REQ', label: 'Requirement' },
+  { key: 'testing', short: 'TEST', label: 'Testing' },
+];
+
+const BG_COLORS: Record<ComplexityLevel, string> = {
+  Low: 'bg-emerald-100',
+  Medium: 'bg-amber-100',
+  High: 'bg-orange-100',
+  'Very High': 'bg-red-100',
+};
+
+const BORDER_COLORS: Record<ComplexityLevel, string> = {
+  Low: 'border-l-emerald-400',
+  Medium: 'border-l-amber-400',
+  High: 'border-l-orange-400',
+  'Very High': 'border-l-red-400',
+};
 
 export function ComplexityPage() {
   const { config } = useAppStore();
@@ -58,6 +88,26 @@ export function ComplexityPage() {
           <div className="text-sm font-bold text-foreground mt-1">{c.requirementClarity}</div>
         </div>
       </div>
+
+      <SectionCard title="Complexity Heatmap">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+          {HEATMAP_ITEMS.map((item, index) => {
+            const level = c[item.key] as ComplexityLevel;
+            return (
+              <motion.div
+                key={item.key}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.03, duration: 0.2 }}
+                className={`rounded-md p-2.5 border-l-[3px] ${BG_COLORS[level]} ${BORDER_COLORS[level]} hover:shadow-sm transition-shadow cursor-default`}
+              >
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.short}</div>
+                <div className="text-xs font-bold mt-1">{level}</div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </SectionCard>
 
       <SectionCard title="Complexity Dimensions">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">

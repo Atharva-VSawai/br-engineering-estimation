@@ -23,6 +23,40 @@ const COMPLEXITY_DOT_COLORS: Record<ComplexityLevel, string> = {
   'Very High': 'bg-red-500',
 };
 
+const COMPLEXITY_BAR_COLORS: Record<ComplexityLevel, string> = {
+  Low: 'bg-emerald-400',
+  Medium: 'bg-amber-400',
+  High: 'bg-orange-400',
+  'Very High': 'bg-red-400',
+};
+
+const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
+  Low: 'text-emerald-600',
+  Medium: 'text-amber-600',
+  High: 'text-orange-600',
+  'Very High': 'text-red-600',
+};
+
+const COMPLEXITY_WIDTH: Record<ComplexityLevel, string> = {
+  Low: '25%',
+  Medium: '50%',
+  High: '75%',
+  'Very High': '100%',
+};
+
+const COMPLEXITY_DIMENSIONS: { key: keyof ProjectConfig['complexity']; label: string }[] = [
+  { key: 'hardware', label: 'Hardware' },
+  { key: 'motion', label: 'Motion' },
+  { key: 'hmi', label: 'HMI' },
+  { key: 'vision', label: 'Vision' },
+  { key: 'safety', label: 'Safety' },
+  { key: 'communication', label: 'Communication' },
+  { key: 'software', label: 'Software' },
+  { key: 'integration', label: 'Integration' },
+  { key: 'requirement', label: 'Requirement' },
+  { key: 'testing', label: 'Testing' },
+];
+
 interface SectionCheck {
   label: string;
   configured: boolean;
@@ -195,6 +229,37 @@ export function EstimateSummaryPage() {
               </span>
             </div>
           ))}
+        </div>
+      </SectionCard>
+
+      {/* Complexity Profile */}
+      <SectionCard title="Complexity Profile" description="Visual breakdown of complexity across all 10 engineering dimensions.">
+        <div className="space-y-2">
+          {COMPLEXITY_DIMENSIONS.map((dim, index) => {
+            const level = c.complexity[dim.key];
+            return (
+              <motion.div
+                key={dim.key}
+                className="flex items-center gap-3"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.04, duration: 0.3 }}
+              >
+                <div className="w-28 shrink-0 text-xs text-muted-foreground text-right pr-3">
+                  {dim.label}
+                </div>
+                <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-5 rounded-full transition-all duration-500 ${COMPLEXITY_BAR_COLORS[level]}`}
+                    style={{ width: COMPLEXITY_WIDTH[level] }}
+                  />
+                </div>
+                <div className={`w-20 shrink-0 text-xs font-semibold ${COMPLEXITY_TEXT_COLORS[level]}`}>
+                  {level}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </SectionCard>
 

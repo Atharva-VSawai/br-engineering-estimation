@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { SectionCard } from '@/components/br/SectionCard';
 import { ParamRow, NumberField, CheckboxField } from '@/components/br/ParamRow';
 import { useAppStore } from '@/store';
@@ -39,6 +40,17 @@ export function StepMotion() {
 
   const activeFunctions = motionFunctions.filter((f) => m[f.key]);
   const motionComplexity = activeFunctions.length >= 8 ? 'High' : activeFunctions.length >= 4 ? 'Medium' : 'Low';
+
+  const totalAxes = m.totalAxes;
+  const linearAxes = m.linearAxes;
+  const rotaryAxes = m.rotaryAxes;
+
+  const getAxisType = (index: number) => {
+    const num = index + 1;
+    if (num <= linearAxes) return 'linear';
+    if (num <= linearAxes + rotaryAxes) return 'rotary';
+    return 'generic';
+  };
 
   return (
     <div className="space-y-4">
@@ -107,6 +119,57 @@ export function StepMotion() {
           </SectionCard>
         </div>
       </div>
+
+      <SectionCard title="Axis Overview" description="Visual overview of configured motion axes">
+        {totalAxes === 0 ? (
+          <div className="text-xs text-muted-foreground text-center py-6">
+            No axes configured. Set the Total Motion Axes above.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+            {Array.from({ length: totalAxes }).map((_, i) => {
+              const axisType = getAxisType(i);
+              const barWidth = 60 + (i * 7 % 40);
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.04, duration: 0.3 }}
+                  className="rounded-md border border-border bg-white p-2.5 w-full"
+                >
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Axis {i + 1}
+                  </div>
+                  <div className="mt-1.5">
+                    {axisType === 'linear' && (
+                      <span className="text-[10px] text-blue-600 bg-blue-50 rounded px-1.5 py-0.5 inline-block">
+                        LINEAR
+                      </span>
+                    )}
+                    {axisType === 'rotary' && (
+                      <span className="text-[10px] text-purple-600 bg-purple-50 rounded px-1.5 py-0.5 inline-block">
+                        ROTARY
+                      </span>
+                    )}
+                    {axisType === 'generic' && (
+                      <span className="text-[10px] text-gray-600 bg-gray-50 rounded px-1.5 py-0.5 inline-block">
+                        GENERIC
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2">
+                    <div
+                      className="h-1 rounded-full bg-primary/60"
+                      style={{ width: `${barWidth}%` }}
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </SectionCard>
 
       <SectionCard title="Motion Engineering Activities">
         <div className="flex flex-wrap gap-2">

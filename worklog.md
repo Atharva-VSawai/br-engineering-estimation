@@ -224,3 +224,150 @@ Stage Summary:
 - Architecture diagram has professional staggered entrance animations and animated connecting lines
 - Controller block features subtle pulsing glow effect to emphasize its central role
 - All existing functionality preserved across all three files
+
+---
+Task ID: 6a
+Agent: Main Developer
+Task: Visual Complexity Heatmap on ComplexityPage; Keyboard shortcuts + Reset confirmation for wizard
+
+Work Log:
+- TASK A — ComplexityPage.tsx: Added Complexity Heatmap SectionCard between stat cards and Complexity Dimensions card
+  - Created HEATMAP_ITEMS array with 10 dimensions and short names (HW, MOT, HMI, VIS, SAFE, COMM, SW, INT, REQ, TEST)
+  - Added BG_COLORS and BORDER_COLORS mappings for 4 complexity levels (Low=emerald, Medium=amber, High=orange, Very High=red)
+  - Grid layout: 2 cols on sm, 5 cols on lg with gap-2
+  - Each block: rounded-md with p-2.5, border-l-[3px] colored left border, bg color by level
+  - Short name at top in text-[10px] uppercase tracking-wide text-muted-foreground
+  - Full level name below in text-xs font-bold
+  - hover:shadow-sm transition-shadow on each block
+  - Imported motion from framer-motion; each block wrapped in motion.div with staggered delay (index * 0.03) and scale/opacity animation
+  - All existing content preserved (stat cards, Complexity Dimensions, Project Context)
+
+- TASK B — NewEstimatePage.tsx: Added keyboard navigation and reset confirmation dialog
+  - Added useEffect with keydown listener for ArrowLeft/ArrowRight navigation (skips when focused on input/textarea/select)
+  - Added keyboard hint div below ProgressStepper: text-[10px] text-muted-foreground showing 'Use ← → arrow keys to navigate steps', only visible when wizard is active (currentPage === 'new-estimate')
+  - Replaced Reset button onClick to open AlertDialog confirmation
+  - Imported AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+  - Dialog title: 'Reset Configuration', description: 'This will clear all fields and return to step 1. Continue?'
+  - Cancel button and destructive-styled Reset button that calls handleReset and closes dialog
+  - handleReset extracted to useCallback, sets wizardStep to 0, closes dialog, shows toast
+  - All other existing functionality preserved
+
+Stage Summary:
+- ComplexityPage now features a visual color-coded heatmap grid for at-a-glance complexity assessment
+- Wizard now supports arrow key navigation with visible hint text
+- Reset action is guarded by a confirmation dialog to prevent accidental data loss
+- All existing functionality preserved in both files
+
+---
+Task ID: 6b
+Agent: Main Developer
+Task: Motion axis visual grid, HMI screen preview, Dashboard activity timeline
+
+Work Log:
+- TASK A — StepMotion.tsx: Added Axis Overview SectionCard above Motion Engineering Activities
+  - Imports motion from framer-motion for staggered card animations
+  - If totalAxes === 0, shows centered empty state message in text-xs text-muted-foreground py-6
+  - If totalAxes > 0, renders grid of axis cards (grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5)
+  - Each card shows: Axis label (text-[10px] uppercase tracking-wide), type badge (LINEAR=blue, ROTARY=purple, GENERIC=gray), decorative load bar (h-1 bg-primary/60, width via 60+(i*7%40) formula)
+  - Each card wrapped in motion.div with opacity/y animation, delay staggered by i*0.04
+  - Axis type determined by comparing index+1 against linearAxes and rotaryAxes thresholds
+  - All existing content preserved
+
+- TASK B — StepHMI.tsx: Added Screen Preview SectionCard above HMI Engineering Preview
+  - Static HMI screen mockup with aspect-[16/10] and border-2 border-gray-300
+  - Top bar: bg-primary/90 with machine name and green running indicator
+  - Left sidebar: w-32 with 6 nav items, first one highlighted as active
+  - Main content: 2x2 widget grid with Machine Status (colored dots), Production Count (1,247 units), Alarm Status (no active), Temperature (42.3°C with bar)
+  - All text at text-[10px] and text-[9px] for realistic small-scale HMI look
+  - All existing content preserved
+
+- TASK C — DashboardPage.tsx: Added Recent Activity SectionCard below Recent Projects
+  - Static recentActivity array with 5 entries (edit, info, create, complete, export types)
+  - ACTIVITY_DOT_COLORS mapping for colored left dots per type
+  - Each row: colored dot (w-2 h-2), action text (text-xs font-medium), detail (text-[11px] text-muted-foreground), time on right (ml-auto shrink-0)
+  - Rows separated by border-b border-border/50, last row has no border
+  - All existing dashboard content preserved
+
+Stage Summary:
+- Motion step now has a visual axis grid that dynamically reflects configured axes with type badges and staggered animations
+- HMI step now has a realistic static HMI screen mockup preview
+- Dashboard now has a Recent Activity feed with color-coded event types
+- All existing functionality preserved across all three files
+
+---
+Task ID: 6c
+Agent: Main Developer
+Task: Enhanced Review page status indicators + Complexity Profile bar chart on Estimate Summary
+
+Work Log:
+- TASK A — StepReview.tsx: Enhanced review page with section status indicators
+  - Added `configured` boolean to each section with 13 specific rules (e.g. project.name not empty, I/O total > 0, vision.enabled, mechatronics.type !== 'None', complexity always configured)
+  - Added summary bar at top: 'X of Y sections configured' text with percentage, h-1.5 progress bar (bg-muted track, bg-primary filled portion proportional to ratio)
+  - Added 6px (w-1.5 h-1.5) rounded-full status dot on left of each section card: bg-emerald-500 if configured, bg-gray-300 if not
+  - Added border-l-2 left border to each section card: border-l-emerald-300 if configured, border-l-gray-200 if not
+  - Wrapped sections array in useMemo for performance
+  - All existing Edit buttons and content preserved
+
+- TASK B — EstimateSummaryPage.tsx: Added visual Complexity Profile bar chart
+  - Added COMPLEXITY_BAR_COLORS mapping (Low=bg-emerald-400, Medium=bg-amber-400, High=bg-orange-400, Very High=bg-red-400)
+  - Added COMPLEXITY_TEXT_COLORS mapping (Low=text-emerald-600, Medium=text-amber-600, High=text-orange-600, Very High=text-red-600)
+  - Added COMPLEXITY_WIDTH mapping (Low=25%, Medium=50%, High=75%, Very High=100%)
+  - Added COMPLEXITY_DIMENSIONS array with 10 entries (hardware, motion, hmi, vision, safety, communication, software, integration, requirement, testing) each with key and label
+  - New 'Complexity Profile' SectionCard placed between Configuration Completeness and Engineering Areas
+  - Each dimension row: w-28 right-aligned label (text-xs text-muted-foreground), h-5 horizontal bar (bg-muted track, colored rounded-full fill), w-20 level text (font-semibold, color-matched)
+  - Each row wrapped in motion.div with initial={{ opacity: 0, x: -8 }}, animate={{ opacity: 1, x: 0 }}, transition={{ delay: index * 0.04, duration: 0.3 }}
+  - All existing content preserved
+
+Stage Summary:
+- Review page now shows at-a-glance configuration status via colored dots, left borders, and a summary progress bar
+- Estimate Summary now features a visual horizontal bar chart for all 10 complexity dimensions with staggered entrance animation
+- All existing functionality preserved in both files
+
+---
+Task ID: 6d
+Agent: QA & Verification Round 3
+Task: Comprehensive browser testing of all new features
+
+Work Log:
+- Tested Dashboard: verified Recent Activity timeline renders with 5 entries, color-coded dots, timestamps
+- Tested Wizard step 1: verified keyboard hint 'Use \u2190 \u2192 arrow keys to navigate steps' visible
+- Tested Load Sample: data populates correctly, header updates to 'Automated Packaging Machine'
+- Tested arrow key navigation: ArrowRight moves from step 1 to step 2 (confirmed via Progress counter)
+- Tested Reset confirmation dialog: AlertDialog appears with title, description, Cancel and destructive Reset buttons
+- Tested Motion step (step 4): Axis Overview renders with 5 LINEAR + 3 ROTARY badges matching sample data
+- Tested HMI step (step 5): Screen Preview renders mockup with Overview/Production/Alarms nav, Machine Status widgets, Production Count 1,247, No Active Alarms, Temperature 42.3\u00b0C
+- Tested Complexity page: Heatmap renders with all 10 dimension blocks (HW, MOT, HMI, VIS, SAFE, COMM, SW, INT, REQ, TEST) with color-coded backgrounds
+- Tested Review step (step 14): Progress shows 14/14, 'X of Y sections configured' progress bar visible, 13 Edit buttons present with status dots
+- Tested Estimate Summary: Complexity Profile renders with all 10 dimension labels plus colored bars
+- ESLint: clean (0 errors)
+- Dev server: compiles successfully
+
+Stage Summary:
+- ALL new features verified working via agent-browser
+- No bugs found
+- Application is stable with rich visual content across all pages
+
+---
+Project Status: Polished working prototype (v0.2)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean
+- Browser QA: All pages verified across 3 rounds
+- Total features: 9 pages, 14 wizard steps, toast notifications, JSON export, page transitions, search/filter, visual I/O bars, complexity heatmap, axis overview grid, HMI screen mockup, activity timeline, configuration completeness, complexity profile bars, review status indicators, keyboard shortcuts, reset confirmation dialog, sidebar tooltips, product explorer badges, animated architecture diagram
+
+---
+Unresolved / Next Phase:
+- Future: Connect backend for real estimation, Excel export, Jira integration
+- Future: Add ML-based engineering effort prediction
+- Future: Persist data to database
+- Future: User authentication
+- Future: Add more B&R products to the product catalog
+- Future: Add print/PDF export for the review page
+- Future: Add dark mode toggle
+- Future: Responsive design improvements for tablet
+- Future: Add comparison view for multiple project estimates
+- Future: Add drag-and-drop reordering of wizard sections
+- Future: Add inline editing on the Review step
+- Future: Add real-time validation feedback (green checkmarks next to valid fields)
+- Future: Add export to Jira/Excel service integration
+- Risk: Page transition animations may cause brief flash on slow devices (0.2s duration is minimal)
+- Risk: HMI screen preview is static — will need updating when actual HMI data changes
