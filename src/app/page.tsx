@@ -9,11 +9,14 @@ import { NewEstimatePage } from '@/pages/NewEstimatePage';
 import { ProjectsPage } from '@/pages/ProjectsPage';
 import { ProductExplorerPage } from '@/pages/ProductExplorerPage';
 import { EngineeringActivitiesPage } from '@/pages/EngineeringActivitiesPage';
-import { ArchitecturePage } from '@/pages/ArchitecturePage';
 import { EstimateSummaryPage } from '@/pages/EstimateSummaryPage';
 import { TechnicalParamsPage } from '@/pages/TechnicalParamsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { ComplexityPage } from '@/pages/ComplexityPage';
+import {
+  useKeyboardShortcuts,
+  KeyboardShortcutsDialog,
+} from '@/components/br/KeyboardShortcutsDialog';
 
 function PageRouter() {
   const { currentPage } = useAppStore();
@@ -57,11 +60,14 @@ function PageRouter() {
 }
 
 export default function Home() {
+  const { open, setOpen } = useKeyboardShortcuts();
+
   return (
     <AppLayout>
       <AnimatePresence mode='wait'>
         <PageRouter />
       </AnimatePresence>
+      <KeyboardShortcutsDialog open={open} onOpenChange={setOpen} />
     </AppLayout>
   );
 }

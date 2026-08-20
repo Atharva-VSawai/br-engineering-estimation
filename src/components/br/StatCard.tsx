@@ -12,7 +12,7 @@ interface StatCardProps {
 
 export function StatCard({ label, value, sublabel, icon }: StatCardProps) {
   return (
-    <Card className="border-border bg-card">
+    <Card className="border-border bg-card group transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
@@ -23,7 +23,7 @@ export function StatCard({ label, value, sublabel, icon }: StatCardProps) {
             )}
           </div>
           {icon && (
-            <div className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <div className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-200">
               {icon}
             </div>
           )}

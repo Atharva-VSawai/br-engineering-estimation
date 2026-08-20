@@ -28,6 +28,7 @@ interface AppState {
   projects: Project[];
   addProject: (project: Project) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
+  deleteProject: (id: string) => void;
 
   // Current Configuration
   config: ProjectConfig;
@@ -231,6 +232,8 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       projects: state.projects.map((p) => (p.id === id ? { ...p, ...updates } : p)),
     })),
+  deleteProject: (id) =>
+    set((state) => ({ projects: state.projects.filter((p) => p.id !== id) })),
 
   config: createDefaultConfig(),
   updateConfig: (updates) =>

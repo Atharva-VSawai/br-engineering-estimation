@@ -14,7 +14,7 @@ interface SectionCardProps {
 
 export function SectionCard({ title, description, children, action, className = '', noPadding }: SectionCardProps) {
   return (
-    <Card className={`border-border bg-card ${className}`}>
+    <Card className={`border-border bg-card transition-all duration-200 hover:shadow-sm ${className}`}>
       <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-center justify-between">
           <div className="min-w-0">

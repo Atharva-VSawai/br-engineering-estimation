@@ -78,6 +78,40 @@
   --sidebar-ring: oklch(0.55 0.2 35);
 }
 
+.dark {
+  --background: oklch(0.14 0.01 250);
+  --foreground: oklch(0.93 0.005 250);
+  --card: oklch(0.17 0.01 250);
+  --card-foreground: oklch(0.93 0.005 250);
+  --popover: oklch(0.17 0.01 250);
+  --popover-foreground: oklch(0.93 0.005 250);
+  --primary: oklch(0.55 0.2 35);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.22 0.01 250);
+  --secondary-foreground: oklch(0.93 0.005 250);
+  --muted: oklch(0.22 0.01 250);
+  --muted-foreground: oklch(0.6 0.01 250);
+  --accent: oklch(0.22 0.03 35);
+  --accent-foreground: oklch(0.93 0.005 250);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.26 0.01 250);
+  --input: oklch(0.26 0.01 250);
+  --ring: oklch(0.55 0.2 35);
+  --chart-1: oklch(0.55 0.2 35);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.12 0.01 250);
+  --sidebar-foreground: oklch(0.93 0.005 250);
+  --sidebar-primary: oklch(0.55 0.2 35);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.22 0.03 35);
+  --sidebar-accent-foreground: oklch(0.93 0.005 250);
+  --sidebar-border: oklch(0.26 0.01 250);
+  --sidebar-ring: oklch(0.55 0.2 35);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -101,4 +135,42 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.7 0.005 250);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.01 250);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.01 250);
+}
+
+/* Focus visible ring for better accessibility */
+@layer base {
+  [data-radix-popper-content-wrapper] {
+    z-index: 50 !important;
+  }
+}
+
+/* Subtle gradient background for the main app */
+.app-bg-gradient {
+  background: linear-gradient(135deg, oklch(0.975 0.002 250) 0%, oklch(0.975 0.004 260) 50%, oklch(0.975 0.002 250) 100%);
+}
+.dark .app-bg-gradient {
+  background: linear-gradient(135deg, oklch(0.14 0.01 250) 0%, oklch(0.15 0.01 260) 50%, oklch(0.14 0.01 250) 100%);
+}
+
+/* Selection color */
+::selection {
+  background-color: oklch(0.55 0.2 35 / 0.2);
+}
+
+/* Print styles */
+@media print {
+  .no-print { display: none !important; }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .print-break {
+    page-break-before: always;
+  }
 }

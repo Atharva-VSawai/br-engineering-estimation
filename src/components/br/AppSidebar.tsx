@@ -38,14 +38,18 @@ export function AppSidebar() {
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-sidebar">
+      {/* B&R brand accent stripe */}
+      <div className="h-[3px] bg-primary" />
+
       {/* Logo area */}
-      <div className="flex h-14 items-center border-b border-border px-4">
+      <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
+        <div className="h-3 w-3 shrink-0 rotate-45 rounded-[2px] bg-primary/20 border border-primary/40" />
         <div className="flex flex-col">
-          <span className="text-sm font-bold text-sidebar-foreground leading-tight">
+          <span className="text-sm font-bold tracking-tight text-sidebar-foreground leading-tight">
             B&R Engineering
           </span>
-          <span className="text-[10px] text-muted-foreground leading-tight">
-            Industrial Automation Estimation
+          <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-muted-foreground leading-tight">
+            Estimation Tool
           </span>
         </div>
       </div>
@@ -65,14 +69,14 @@ export function AppSidebar() {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => setCurrentPage(page)}
-                        className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
+                        className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
                           ${isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                            ? 'bg-gradient-to-r from-primary/8 to-transparent text-sidebar-accent-foreground'
                             : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
                           }`}
                         aria-current={isActive ? 'page' : undefined}
                       >
-                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary drop-shadow-[0_0_4px_oklch(0.55_0.2_35/0.3)]' : ''}`} />
                         {label}
                       </button>
                     </TooltipTrigger>
@@ -88,9 +92,12 @@ export function AppSidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-sidebar-border px-4 py-3">
+      <div className="border-t border-border px-4 py-3">
         <div className="text-[10px] text-muted-foreground leading-tight">Frontend Prototype</div>
-        <div className="text-[10px] text-muted-foreground leading-tight">v0.1</div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground leading-tight">
+          <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
+          v0.2
+        </div>
       </div>
     </aside>
   );

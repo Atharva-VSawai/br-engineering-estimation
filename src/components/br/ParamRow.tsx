@@ -59,7 +59,7 @@ export function NumberField({ value, onChange, min = 0, max = 9999, placeholder,
         max={max}
         placeholder={placeholder}
         disabled={disabled}
-        className="h-8 w-28 text-sm"
+        className="h-8 w-28 text-sm transition-colors duration-150"
       />
       {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
     </div>
@@ -77,7 +77,7 @@ interface SelectFieldProps {
 export function SelectField({ value, onChange, options, placeholder, className = '' }: SelectFieldProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className={`h-8 w-full max-w-xs text-sm ${className}`}>
+      <SelectTrigger className={`h-8 w-full max-w-xs text-sm transition-colors duration-150 ${className}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
@@ -105,7 +105,7 @@ export function TextField({ value, onChange, placeholder, className = '' }: Text
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className={`h-8 text-sm ${className}`}
+      className={`h-8 text-sm transition-colors duration-150 ${className}`}
     />
   );
 }
@@ -125,7 +125,7 @@ export function TextAreaField({ value, onChange, placeholder, rows = 3, classNam
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       rows={rows}
-      className={`text-sm resize-none ${className}`}
+      className={`text-sm resize-none transition-colors duration-150 ${className}`}
     />
   );
 }
@@ -140,7 +140,7 @@ interface ToggleFieldProps {
 export function ToggleField({ checked, onChange, description }: ToggleFieldProps) {
   return (
     <div className="flex items-center gap-2">
-      <Switch checked={checked} onCheckedChange={onChange} className="data-[state=checked]:bg-primary" />
+      <Switch checked={checked} onCheckedChange={onChange} className="data-[state=checked]:bg-primary transition-colors duration-150" />
       {description && <span className="text-[11px] text-muted-foreground">{description}</span>}
     </div>
   );

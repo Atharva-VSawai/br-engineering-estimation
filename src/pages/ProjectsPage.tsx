@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { PlusCircle, Search } from 'lucide-react';
+import { PlusCircle, Search, Copy, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
+import type { Project } from '@/types';
 import {
   Table,
   TableBody,
@@ -21,7 +23,7 @@ const STATUS_OPTIONS = ['All', 'Draft', 'In Review', 'Completed'] as const;
 type StatusOption = (typeof STATUS_OPTIONS)[number];
 
 export function ProjectsPage() {
-  const { projects, setCurrentPage } = useAppStore();
+  const { projects, setCurrentPage, addProject, deleteProject } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
 
@@ -39,6 +41,27 @@ export function ProjectsPage() {
       return matchesSearch && matchesStatus;
     });
   }, [projects, searchTerm, statusFilter]);
+
+  const handleDuplicate = (project: Project) => {
+    const newProject: Project = {
+      ...project,
+      id: 'proj-' + Date.now(),
+      name: `${project.name} (Copy)`,
+      status: 'Draft',
+      createdAt: 'just now',
+      updatedAt: 'just now',
+    };
+    addProject(newProject);
+    toast('Project duplicated', {
+      description: `Created copy of ${project.name}`,
+    });
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    if (confirm(`Delete "${name}"? This cannot be undone.`)) {
+      deleteProject(id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -102,6 +125,7 @@ export function ProjectsPage() {
                 <TableHead className="text-xs font-semibold text-muted-foreground h-9">Updated</TableHead>
                 <TableHead className="text-xs font-semibold text-muted-foreground h-9">Complexity</TableHead>
                 <TableHead className="text-xs font-semibold text-muted-foreground h-9">Status</TableHead>
+                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -115,6 +139,18 @@ export function ProjectsPage() {
                   <TableCell className="text-xs text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
                   <TableCell className="py-2.5"><ComplexityBadge level={p.complexity} /></TableCell>
                   <TableCell className="py-2.5"><StatusBadge status={p.status} /></TableCell>
+                  <TableCell className='py-2.5'>
+                    <div className='flex items-center gap-1'>
+                      <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-foreground' onClick={(e) => { e.stopPropagation(); handleDuplicate(p); }}>
+                        <Copy className='h-3.5 w-3.5' />
+                      </Button>
+                      {!p.id.startsWith('sample-') && (
+                        <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-destructive' onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}>
+                          <Trash2 className='h-3.5 w-3.5' />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
