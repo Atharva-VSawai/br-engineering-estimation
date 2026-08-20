@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
-import { PlusCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { PlusCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
@@ -15,8 +16,29 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+const STATUS_OPTIONS = ['All', 'Draft', 'In Review', 'Completed'] as const;
+
+type StatusOption = (typeof STATUS_OPTIONS)[number];
+
 export function ProjectsPage() {
   const { projects, setCurrentPage } = useAppStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
+
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p) => {
+      const matchesSearch =
+        searchTerm === '' ||
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.machineType.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === 'All' || p.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [projects, searchTerm, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -35,6 +57,38 @@ export function ProjectsPage() {
         </Button>
       </div>
 
+      {/* Filter Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search projects..."
+            className="h-9 pl-8 text-sm"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {STATUS_OPTIONS.map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                statusFilter === status
+                  ? 'border-primary bg-primary/10 text-primary'
+                  : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Showing {filteredProjects.length} of {projects.length} projects
+      </p>
+
       <SectionCard title="Project History">
         <div className="overflow-x-auto -mx-4 px-4">
           <Table>
@@ -51,7 +105,7 @@ export function ProjectsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.map((p) => (
+              {filteredProjects.map((p) => (
                 <TableRow key={p.id} className="border-border hover:bg-muted/50 cursor-pointer">
                   <TableCell className="text-xs font-mono text-muted-foreground py-2.5">{p.id}</TableCell>
                   <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>

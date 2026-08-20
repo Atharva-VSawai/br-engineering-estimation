@@ -1,7 +1,66 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { SectionCard } from '@/components/br/SectionCard';
+
+interface ArchBlock {
+  label: string;
+  isPrimary?: boolean;
+  isSecondary?: boolean;
+  isController?: boolean;
+}
+
+const ARCH_ITEMS: ArchBlock[] = [
+  { label: 'HMI', isPrimary: true },
+  { label: 'Vision' },
+  { label: 'Controller', isController: true },
+  { label: 'Safety' },
+  { label: 'I/O' },
+  { label: 'Motion', isSecondary: true },
+  { label: 'Communication' },
+  { label: 'Drives' },
+  { label: 'Motors' },
+  { label: 'Machine Mechanics' },
+];
+
+function ArchBlockItem({ item, index }: { item: ArchBlock; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.05 }}
+      className={`rounded-md px-6 py-2 font-sans text-sm ${
+        item.isController
+          ? 'border-2 border-primary/40 bg-primary/5 font-semibold text-primary'
+          : item.isPrimary
+          ? 'border-2 border-primary/40 bg-primary/5 font-semibold text-primary'
+          : item.isSecondary
+          ? 'border border-primary/30 bg-white font-medium text-foreground ring-1 ring-primary/20'
+          : 'border border-border bg-white text-foreground'
+      }`}
+    >
+      {item.isController && (
+        <>
+          <div className="relative z-10">Controller</div>
+          <div className="absolute inset-0 rounded-md bg-primary/5 animate-pulse" />
+        </>
+      )}
+      {!item.isController && item.label}
+    </motion.div>
+  );
+}
+
+function ConnectingLine({ index }: { index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2, delay: index * 0.05 + 0.1 }}
+      className="border-l-2 border-border h-3"
+    />
+  );
+}
 
 export function ArchitecturePage() {
   return (
@@ -15,44 +74,49 @@ export function ArchitecturePage() {
 
       <SectionCard title="System Architecture Diagram" noPadding>
         <div className="py-8 px-4">
-          {/* ASCII-style architecture diagram using flex/grid */}
-          <div className="flex flex-col items-center gap-1.5 font-mono text-xs">
-            {/* Row 1: HMI */}
-            <div className="rounded-md border-2 border-primary/40 bg-primary/5 px-6 py-2 font-sans font-semibold text-primary text-sm">
-              HMI
-            </div>
-            <div className="text-muted-foreground">│</div>
+          <div className="flex flex-col items-center gap-1.5 text-xs">
+            {/* Row 1: HMI (index 0) */}
+            <ArchBlockItem item={ARCH_ITEMS[0]} index={0} />
+            <ConnectingLine index={0} />
 
-            {/* Row 2: Vision - Controller - Safety */}
-            <div className="flex items-center gap-8">
-              <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">Vision</div>
-              <div className="text-muted-foreground">──▶</div>
-              <div className="rounded-md border-2 border-primary/40 bg-primary/5 px-6 py-2 font-sans font-semibold text-primary text-sm">
-                Controller
-              </div>
-              <div className="text-muted-foreground">──▶</div>
-              <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">Safety</div>
-            </div>
-            <div className="text-muted-foreground">│</div>
+            {/* Row 2: Vision - Controller - Safety (index 1, 2, 3) */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 1 * 0.05 }}
+              className="flex items-center gap-8"
+            >
+              <ArchBlockItem item={ARCH_ITEMS[1]} index={1} />
+              <div className="text-muted-foreground font-mono">──▶</div>
+              <ArchBlockItem item={ARCH_ITEMS[2]} index={2} />
+              <div className="text-muted-foreground font-mono">──▶</div>
+              <ArchBlockItem item={ARCH_ITEMS[3]} index={3} />
+            </motion.div>
+            <ConnectingLine index={3} />
 
-            {/* Row 3: I/O, Motion, Communication */}
-            <div className="flex items-center gap-8">
-              <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">I/O</div>
-              <div className="rounded-md border border-primary/30 bg-white px-4 py-2 font-sans font-medium text-foreground ring-1 ring-primary/20">Motion</div>
-              <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">Communication</div>
-            </div>
-            <div className="text-muted-foreground">│</div>
+            {/* Row 3: I/O, Motion, Communication (index 4, 5, 6) */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3, delay: 4 * 0.05 }}
+              className="flex items-center gap-8"
+            >
+              <ArchBlockItem item={ARCH_ITEMS[4]} index={4} />
+              <ArchBlockItem item={ARCH_ITEMS[5]} index={5} />
+              <ArchBlockItem item={ARCH_ITEMS[6]} index={6} />
+            </motion.div>
+            <ConnectingLine index={6} />
 
-            {/* Row 4: Drives */}
-            <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">Drives</div>
-            <div className="text-muted-foreground">│</div>
+            {/* Row 4: Drives (index 7) */}
+            <ArchBlockItem item={ARCH_ITEMS[7]} index={7} />
+            <ConnectingLine index={7} />
 
-            {/* Row 5: Motors */}
-            <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">Motors</div>
-            <div className="text-muted-foreground">│</div>
+            {/* Row 5: Motors (index 8) */}
+            <ArchBlockItem item={ARCH_ITEMS[8]} index={8} />
+            <ConnectingLine index={8} />
 
-            {/* Row 6: Mechanics */}
-            <div className="rounded-md border border-border bg-white px-4 py-2 font-sans text-foreground">Machine Mechanics</div>
+            {/* Row 6: Machine Mechanics (index 9) */}
+            <ArchBlockItem item={ARCH_ITEMS[9]} index={9} />
           </div>
         </div>
       </SectionCard>

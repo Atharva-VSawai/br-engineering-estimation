@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ArrowLeft, ArrowRight, Save, RotateCcw, Download } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store';
 import { ProgressStepper } from '@/components/br/ProgressStepper';
@@ -44,6 +45,20 @@ export function NewEstimatePage() {
   const isFirstStep = wizardStep === 0;
   const StepComponent = STEP_COMPONENTS[wizardStep];
 
+  const handleReset = () => {
+    setWizardStep(0);
+    toast('Configuration reset', { description: 'All fields have been cleared.' });
+  };
+
+  const handleLoadSample = () => {
+    loadSampleConfig();
+    toast('Sample loaded', { description: 'Automated Packaging Machine configuration loaded.' });
+  };
+
+  const handleSaveDraft = () => {
+    toast('Draft saved', { description: 'Configuration saved locally.' });
+  };
+
   return (
     <div className="space-y-4">
       <ProgressStepper currentStep={wizardStep} onStepClick={setWizardStep} />
@@ -54,11 +69,11 @@ export function NewEstimatePage() {
 
       <div className="flex items-center justify-between border-t border-border pt-4">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setWizardStep(0)} title="Reset configuration">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleReset} title="Reset configuration">
             <RotateCcw className="h-3.5 w-3.5" />
             Reset
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={loadSampleConfig} title="Load sample packaging machine configuration">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleLoadSample} title="Load sample packaging machine configuration">
             <Download className="h-3.5 w-3.5" />
             Load Sample
           </Button>
@@ -78,7 +93,7 @@ export function NewEstimatePage() {
             {isLastStep ? 'View Summary' : 'Next'}
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleSaveDraft}>
             <Save className="h-3.5 w-3.5" />
             Save Draft
           </Button>

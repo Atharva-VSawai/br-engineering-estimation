@@ -1,12 +1,13 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Check, Minus } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
 import { EFFORT_AREAS } from '@/data';
-import type { ComplexityLevel } from '@/types';
+import type { ComplexityLevel, ProjectConfig } from '@/types';
 
 const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
   Low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -14,6 +15,105 @@ const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
   High: 'bg-orange-50 text-orange-700 border-orange-200',
   'Very High': 'bg-red-50 text-red-700 border-red-200',
 };
+
+const COMPLEXITY_DOT_COLORS: Record<ComplexityLevel, string> = {
+  Low: 'bg-emerald-500',
+  Medium: 'bg-amber-500',
+  High: 'bg-orange-500',
+  'Very High': 'bg-red-500',
+};
+
+interface SectionCheck {
+  label: string;
+  configured: boolean;
+}
+
+function checkCompleteness(config: ProjectConfig): SectionCheck[] {
+  const ioTotal =
+    config.io.digitalInputs + config.io.digitalOutputs +
+    config.io.analogInputs + config.io.analogOutputs +
+    config.io.safetyIO + config.io.encoderCounterModules +
+    config.io.temperatureModules + config.io.communicationIO +
+    config.io.specialModules;
+
+  const motionFeatures = [
+    config.motion.homingRequired, config.motion.positioning,
+    config.motion.velocityControl, config.motion.torqueControl,
+    config.motion.synchronization, config.motion.masterSlave,
+    config.motion.electronicGearing, config.motion.electronicCamming,
+    config.motion.coordinatedMotion, config.motion.interpolation,
+    config.motion.complexMotionProfiles, config.motion.axisDiagnostics,
+  ].filter(Boolean).length;
+
+  const hmiFeatures = [
+    config.hmi.alarmManagement, config.hmi.recipeManagement,
+    config.hmi.trendVisualization, config.hmi.userManagement,
+    config.hmi.machineDiagnostics, config.hmi.manualMode,
+    config.hmi.automaticMode, config.hmi.maintenanceScreens,
+    config.hmi.parameterManagement,
+  ].filter(Boolean).length;
+
+  const commActive = config.communication.protocols.some((p) => p.enabled);
+  const commIntegrations = [
+    config.communication.plcToPlc, config.communication.mesIntegration,
+    config.communication.scadaIntegration, config.communication.cloudIIoTIntegration,
+  ].filter(Boolean).length;
+
+  const iiotFeatures = [
+    config.iiot.ipcRequired, config.iiot.iiotRequired,
+    config.iiot.iiotConnector, config.iiot.iiotServices,
+    config.iiot.iiotEdgeDevice, config.iiot.cloudConnectivity,
+    config.iiot.machineDataCollection, config.iiot.remoteMaintenance,
+    config.iiot.opcUa, config.iiot.dataLogging, config.iiot.analyticsIntegration,
+  ].filter(Boolean).length;
+
+  return [
+    {
+      label: 'Project',
+      configured: !!(config.project.name && config.project.name.trim()),
+    },
+    {
+      label: 'Controller',
+      configured: config.controller.quantity > 1 || config.controller.performance !== 'Standard' || !!config.controller.communicationInterfaces,
+    },
+    {
+      label: 'I/O',
+      configured: ioTotal > 0,
+    },
+    {
+      label: 'Motion',
+      configured: config.motion.totalAxes > 0 || motionFeatures > 0,
+    },
+    {
+      label: 'HMI',
+      configured: config.hmi.screens > 0 || hmiFeatures > 0,
+    },
+    {
+      label: 'Vision',
+      configured: config.vision.enabled,
+    },
+    {
+      label: 'Safety',
+      configured: config.safety.enabled,
+    },
+    {
+      label: 'Communication',
+      configured: commActive || commIntegrations > 0,
+    },
+    {
+      label: 'Mechatronics',
+      configured: config.mechatronics.type !== 'None' && config.mechatronics.type !== '',
+    },
+    {
+      label: 'Robotics',
+      configured: config.robotics.enabled,
+    },
+    {
+      label: 'IIoT',
+      configured: iiotFeatures > 0,
+    },
+  ];
+}
 
 export function EstimateSummaryPage() {
   const { config, setCurrentPage, setWizardStep } = useAppStore();
@@ -42,8 +142,16 @@ export function EstimateSummaryPage() {
     Commissioning: c.complexity.testing,
   };
 
+  const completeness = checkCompleteness(c);
+  const configuredCount = completeness.filter((s) => s.configured).length;
+
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Header */}
       <div>
         <h1 className="text-lg font-bold text-foreground">Prototype Engineering Effort Analysis</h1>
@@ -65,6 +173,31 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
+      {/* Configuration Completeness */}
+      <SectionCard title="Configuration Completeness" description={`${configuredCount} of ${completeness.length} sections configured`}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {completeness.map((section) => (
+            <div
+              key={section.label}
+              className="flex items-center gap-2 text-xs"
+            >
+              {section.configured ? (
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                  <Check className="h-3 w-3 text-emerald-600" />
+                </div>
+              ) : (
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted">
+                  <Minus className="h-3 w-3 text-muted-foreground" />
+                </div>
+              )}
+              <span className={section.configured ? 'font-medium text-foreground' : 'text-muted-foreground'}>
+                {section.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
       {/* Effort Areas */}
       <SectionCard title="Engineering Areas" description="Potential effort drivers by engineering domain.">
         <div className="overflow-x-auto -mx-4 px-4">
@@ -83,9 +216,12 @@ export function EstimateSummaryPage() {
                   <tr key={area.name} className="border-b border-border/50 last:border-0">
                     <td className="py-2.5 pr-4 text-xs font-medium text-foreground">{area.name}</td>
                     <td className="py-2.5 pr-4">
-                      <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${COMPLEXITY_COLORS[complexity]}`}>
-                        {complexity}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-[2px] h-5 rounded-full ${COMPLEXITY_DOT_COLORS[complexity]}`} />
+                        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${COMPLEXITY_COLORS[complexity]}`}>
+                          {complexity}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-2.5 text-xs text-muted-foreground">{area.driver}</td>
                   </tr>
@@ -133,6 +269,6 @@ export function EstimateSummaryPage() {
           Edit Configuration
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }

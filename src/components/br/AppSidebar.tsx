@@ -12,6 +12,12 @@ import {
   FileBarChart,
   Settings,
 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAppStore } from '@/store';
 import type { AppPage } from '@/types';
 
@@ -33,7 +39,7 @@ export function AppSidebar() {
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-sidebar">
       {/* Logo area */}
-      <div className="flex h-14 items-center border-b border-sidebar-border px-4">
+      <div className="flex h-14 items-center border-b border-border px-4">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-sidebar-foreground leading-tight">
             B&R Engineering
@@ -46,27 +52,39 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-2 px-2" role="navigation" aria-label="Main navigation">
-        <ul className="space-y-0.5">
-          {NAV_ITEMS.map(({ page, label, icon: Icon }) => {
-            const isActive = currentPage === page;
-            return (
-              <li key={page}>
-                <button
-                  onClick={() => setCurrentPage(page)}
-                  className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
-                    ${isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-                    }`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />
-                  {label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+        <TooltipProvider delayDuration={300}>
+          <ul className="space-y-0.5">
+            {NAV_ITEMS.map(({ page, label, icon: Icon }) => {
+              const isActive = currentPage === page;
+              return (
+                <li key={page} className="relative">
+                  {isActive && (
+                    <span className="absolute left-0 top-0 h-full w-[2px] rounded-r bg-primary" />
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setCurrentPage(page)}
+                        className={`flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
+                          ${isActive
+                            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                          }`}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary' : ''}`} />
+                        {label}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={8}>
+                      <p className="text-xs font-medium">{label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </li>
+              );
+            })}
+          </ul>
+        </TooltipProvider>
       </nav>
 
       {/* Footer */}

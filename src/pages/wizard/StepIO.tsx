@@ -6,6 +6,31 @@ import { ParamRow, NumberField } from '@/components/br/ParamRow';
 import { useAppStore } from '@/store';
 import { Info } from 'lucide-react';
 
+const IO_BAR_COLORS = [
+  'bg-blue-gray-400/70',  // Digital Inputs - blue-gray
+  'bg-slate-400/70',       // Digital Outputs - slate
+  'bg-teal-400/70',       // Analog Inputs - teal
+  'bg-cyan-400/70',       // Analog Outputs - cyan
+  'bg-red-400/30',        // Safety I/O - red
+  'bg-purple-400/70',     // Encoder/Counter - purple
+  'bg-amber-400/70',      // Temperature - amber
+  'bg-indigo-400/70',     // Communication - indigo
+  'bg-rose-400/70',       // Special - rose
+] as const;
+
+// Tailwind doesn't have blue-gray, so we use inline styles for that one
+const IO_BAR_STYLES = [
+  'bg-[#8b9cb5]',   // Digital Inputs - blue-gray (muted)
+  'bg-slate-400',   // Digital Outputs - slate
+  'bg-teal-400',    // Analog Inputs - teal
+  'bg-cyan-400',    // Analog Outputs - cyan
+  'bg-red-400/30',  // Safety I/O - red-400/30
+  'bg-purple-400',  // Encoder/Counter - purple
+  'bg-amber-400',   // Temperature - amber
+  'bg-indigo-400',  // Communication - indigo
+  'bg-rose-400',    // Special - rose
+] as const;
+
 export function StepIO() {
   const { config, updateIO } = useAppStore();
   const io = config.io;
@@ -27,11 +52,17 @@ export function StepIO() {
     { label: 'Analog Inputs', key: 'analogInputs' as const, value: io.analogInputs },
     { label: 'Analog Outputs', key: 'analogOutputs' as const, value: io.analogOutputs },
     { label: 'Safety I/O', key: 'safetyIO' as const, value: io.safetyIO },
-    { label: 'Encoder / Counter Modules', key: 'encoderCounterModules' as const, value: io.encoderCounterModules },
-    { label: 'Temperature Modules', key: 'temperatureModules' as const, value: io.temperatureModules },
-    { label: 'Communication I/O', key: 'communicationIO' as const, value: io.communicationIO },
-    { label: 'Special Modules', key: 'specialModules' as const, value: io.specialModules },
+    { label: 'Encoder / Counter', key: 'encoderCounterModules' as const, value: io.encoderCounterModules },
+    { label: 'Temperature', key: 'temperatureModules' as const, value: io.temperatureModules },
+    { label: 'Communication', key: 'communicationIO' as const, value: io.communicationIO },
+    { label: 'Special', key: 'specialModules' as const, value: io.specialModules },
   ];
+
+  const maxValue = useMemo(() => {
+    const vals = ioItems.map(item => item.value);
+    const max = Math.max(...vals, 1);
+    return max;
+  }, [ioItems]);
 
   return (
     <div className="space-y-4">
@@ -41,6 +72,27 @@ export function StepIO() {
             <ParamRow key={key} label={label}>
               <NumberField value={value} onChange={(v) => updateIO({ [key]: v })} />
             </ParamRow>
+          ))}
+        </div>
+
+        {/* I/O Breakdown Bar Chart */}
+        <div className="mt-6 rounded-lg bg-muted/30 p-4 space-y-2.5">
+          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">I/O Breakdown</h4>
+          {ioItems.map((item, index) => (
+            <div key={item.key} className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground w-28 shrink-0 text-right truncate">
+                {item.label}
+              </span>
+              <div className="flex-1 h-5 rounded-sm bg-muted/50 overflow-hidden relative">
+                <div
+                  className={`h-full rounded-sm transition-all duration-300 ${IO_BAR_STYLES[index]}`}
+                  style={{ width: `${maxValue > 0 ? (item.value / maxValue) * 100 : 0}%`, minWidth: item.value > 0 ? '4px' : '0' }}
+                />
+              </div>
+              <span className="text-xs font-medium text-foreground w-10 text-right tabular-nums">
+                {item.value}
+              </span>
+            </div>
           ))}
         </div>
       </SectionCard>

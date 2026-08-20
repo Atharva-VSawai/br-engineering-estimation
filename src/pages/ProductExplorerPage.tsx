@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, Check } from 'lucide-react';
+import { Search, Check, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
@@ -11,6 +11,11 @@ export function ProductExplorerPage() {
   const { products, toggleProductUsed } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const usedCount = useMemo(
+    () => products.filter((p) => p.usedInProject).length,
+    [products]
+  );
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
@@ -28,6 +33,12 @@ export function ProductExplorerPage() {
     }
     return filtered;
   }, [products, selectedCategory, searchQuery]);
+
+  const handleClearSelection = () => {
+    products.forEach((p) => {
+      if (p.usedInProject) toggleProductUsed(p.name);
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -49,6 +60,22 @@ export function ProductExplorerPage() {
           className="h-9 pl-9 text-sm"
         />
       </div>
+
+      {/* Selected count badge */}
+      {usedCount > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary">
+            {usedCount} product(s) selected for project
+          </span>
+          <button
+            onClick={handleClearSelection}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive hover:bg-destructive/5"
+          >
+            <X className="h-3 w-3" />
+            Clear Selection
+          </button>
+        </div>
+      )}
 
       <div className="flex gap-6">
         {/* Categories sidebar */}
@@ -93,7 +120,7 @@ export function ProductExplorerPage() {
             {filteredProducts.map((product) => (
               <div
                 key={product.name}
-                className={`rounded-md border p-3 transition-colors ${
+                className={`rounded-md border p-3 transition-all duration-150 hover:scale-[1.01] ${
                   product.usedInProject
                     ? 'border-primary/30 bg-primary/5'
                     : 'border-border bg-white hover:border-primary/20'

@@ -239,6 +239,7 @@ export const WIZARD_STEPS = [
   'Industrial PC / IIoT',
   'Additional Features',
   'Complexity',
+  'Review',
 ] as const;
 
 // ===== Sample Projects =====

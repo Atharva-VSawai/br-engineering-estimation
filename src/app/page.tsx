@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { AppLayout } from '@/components/br/AppLayout';
 import { useAppStore } from '@/store';
 import { DashboardPage } from '@/pages/DashboardPage';
@@ -17,34 +18,50 @@ import { ComplexityPage } from '@/pages/ComplexityPage';
 function PageRouter() {
   const { currentPage } = useAppStore();
 
-  switch (currentPage) {
-    case 'dashboard':
-      return <DashboardPage />;
-    case 'new-estimate':
-      return <NewEstimatePage />;
-    case 'projects':
-      return <ProjectsPage />;
-    case 'product-explorer':
-      return <ProductExplorerPage />;
-    case 'technical-params':
-      return <TechnicalParamsPage />;
-    case 'engineering-activities':
-      return <EngineeringActivitiesPage />;
-    case 'complexity':
-      return <ComplexityPage />;
-    case 'estimate-summary':
-      return <EstimateSummaryPage />;
-    case 'settings':
-      return <SettingsPage />;
-    default:
-      return <DashboardPage />;
-  }
+  const page = (() => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <DashboardPage />;
+      case 'new-estimate':
+        return <NewEstimatePage />;
+      case 'projects':
+        return <ProjectsPage />;
+      case 'product-explorer':
+        return <ProductExplorerPage />;
+      case 'technical-params':
+        return <TechnicalParamsPage />;
+      case 'engineering-activities':
+        return <EngineeringActivitiesPage />;
+      case 'complexity':
+        return <ComplexityPage />;
+      case 'estimate-summary':
+        return <EstimateSummaryPage />;
+      case 'settings':
+        return <SettingsPage />;
+      default:
+        return <DashboardPage />;
+    }
+  })();
+
+  return (
+    <motion.div
+      key={currentPage}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.2 }}
+    >
+      {page}
+    </motion.div>
+  );
 }
 
 export default function Home() {
   return (
     <AppLayout>
-      <PageRouter />
+      <AnimatePresence mode='wait'>
+        <PageRouter />
+      </AnimatePresence>
     </AppLayout>
   );
 }
