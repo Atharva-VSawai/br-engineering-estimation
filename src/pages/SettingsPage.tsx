@@ -43,7 +43,7 @@ export function SettingsPage() {
 
   const infoRows = [
     { label: 'Application', value: 'B&R Engineering Estimation Tool' },
-    { label: 'Version', value: 'v0.5' },
+    { label: 'Version', value: 'v0.6' },
     { label: 'Technology', value: 'Next.js, React, TypeScript, Tailwind CSS' },
     { label: 'Data Storage', value: 'Local (client-side state)' },
     { label: 'Backend', value: 'Not connected (planned)' },
@@ -65,6 +65,9 @@ export function SettingsPage() {
     { name: 'Complexity Gauge (SVG)', status: 'Completed' as const },
     { name: 'Animated Counters', status: 'Completed' as const },
     { name: 'Dark Mode Full Support', status: 'Completed' as const },
+    { name: 'Project Templates', status: 'Completed' as const },
+    { name: 'Configuration Health Score', status: 'Completed' as const },
+    { name: 'Project Comparison (Winner Row)', status: 'Completed' as const },
     { name: 'Excel Export', status: 'Planned' as const },
     { name: 'Jira Integration', status: 'Planned' as const },
     { name: 'ML-based Estimation', status: 'Planned' as const },
@@ -219,7 +222,7 @@ export function SettingsPage() {
                 B&R Engineering Estimation Tool
               </h2>
               <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                v0.5 — Frontend Prototype
+                v0.6 — Frontend Prototype
               </span>
             </div>
             <p className="text-xs text-muted-foreground max-w-lg leading-relaxed">

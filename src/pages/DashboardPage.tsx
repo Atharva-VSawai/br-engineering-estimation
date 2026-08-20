@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch } from 'lucide-react';
 import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
@@ -66,7 +66,7 @@ const recentActivity = [
 ];
 
 export function DashboardPage() {
-  const { projects, config, setCurrentPage, loadSampleConfig } = useAppStore();
+  const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
 
   const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
   const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
@@ -182,7 +182,7 @@ export function DashboardPage() {
           transition={{ delay: 0.15, duration: 0.3 }}
         >
           <SectionCard title="Quick Configuration Overview">
-            <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
               {(() => {
                 const totalIO =
                   config.io.digitalInputs + config.io.digitalOutputs +
@@ -191,20 +191,37 @@ export function DashboardPage() {
                   config.io.temperatureModules + config.io.communicationIO +
                   config.io.specialModules;
                 const estHours = totalIO * 0.5 + config.motion.totalAxes * 6 + config.hmi.screens * 8 + 40;
+                const isAllZero = totalIO === 0 && config.motion.totalAxes === 0 && config.hmi.screens === 0 && config.safety.safetyIOCount === 0 && estHours === 40;
                 const quickStats = [
-                  { icon: Cable, label: 'Total I/O Points', value: String(totalIO) },
-                  { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes) },
-                  { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens) },
-                  { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount) },
-                  { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1) },
+                  { icon: Cable, label: 'Total I/O Points', value: String(totalIO), accent: 'border-l-blue-400', iconBg: 'text-blue-400' },
+                  { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes), accent: 'border-l-amber-400', iconBg: 'text-amber-400' },
+                  { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens), accent: 'border-l-cyan-400', iconBg: 'text-cyan-400' },
+                  { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount), accent: 'border-l-emerald-400', iconBg: 'text-emerald-400' },
+                  { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1), accent: 'border-l-primary', iconBg: 'text-primary' },
                 ];
-                return quickStats.map((stat) => (
-                  <div key={stat.label} className="flex flex-col items-center gap-1">
-                    <stat.icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-[11px] text-muted-foreground">{stat.label}</span>
-                    <span className="text-sm font-bold text-foreground">{stat.value}</span>
-                  </div>
-                ));
+                return (
+                  <>
+                    {quickStats.map((stat) => (
+                      <div
+                        key={stat.label}
+                        className={`flex items-center gap-3 bg-muted/30 rounded-lg p-3 border-l-2 ${stat.accent}`}
+                      >
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
+                          <stat.icon className={`h-3.5 w-3.5 ${stat.iconBg}`} />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-[11px] text-muted-foreground leading-tight">{stat.label}</span>
+                          <span className={`text-sm font-bold leading-tight ${isAllZero ? 'text-muted-foreground' : 'text-foreground'}`}>
+                            {isAllZero ? '—' : stat.value}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {isAllZero && (
+                      <p className="w-full text-[11px] text-muted-foreground/70 text-center pt-1">Load a configuration to see live stats</p>
+                    )}
+                  </>
+                );
               })()}
             </div>
           </SectionCard>
@@ -273,6 +290,62 @@ export function DashboardPage() {
             </div>
           </SectionCard>
         </div>
+
+        {/* Project Templates */}
+        <SectionCard title="Project Templates" description="Start from a pre-configured template">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div
+              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => {
+                resetConfig();
+                loadSampleConfig();
+                setCurrentPage('new-estimate');
+              }}
+            >
+              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+                <Package className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">Packaging Line</span>
+              <span className="text-[11px] text-muted-foreground">Automated packaging with multi-station layout</span>
+              <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
+            </div>
+            <div
+              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => {
+                resetConfig();
+                updateProjectInfo({ name: 'Assembly Cell', machineType: 'Assembly' });
+                updateMotion({ totalAxes: 12 });
+                updateRobotics({ enabled: true });
+                updateVision({ enabled: true });
+                setCurrentPage('new-estimate');
+              }}
+            >
+              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+                <Wrench className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">Assembly Cell</span>
+              <span className="text-[11px] text-muted-foreground">Robot-assisted assembly with vision</span>
+              <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
+            </div>
+            <div
+              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => {
+                resetConfig();
+                updateProjectInfo({ name: 'Inspection System', machineType: 'Inspection' });
+                updateVision({ enabled: true, cameras: 4 });
+                updateHMI({ screens: 3 });
+                setCurrentPage('new-estimate');
+              }}
+            >
+              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+                <ScanSearch className="h-5 w-5 text-primary" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">Inspection System</span>
+              <span className="text-[11px] text-muted-foreground">Quality inspection with camera systems</span>
+              <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
+            </div>
+          </div>
+        </SectionCard>
 
         {/* Recent Projects Table */}
         <SectionCard title="Recent Projects" description="All B&R automation estimation projects">

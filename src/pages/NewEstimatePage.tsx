@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { ArrowLeft, ArrowRight, Save, RotateCcw, Download } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, RotateCcw, Download, HeartPulse } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,7 +50,7 @@ const STEP_COMPONENTS = [
 ];
 
 export function NewEstimatePage() {
-  const { wizardStep, setWizardStep, loadSampleConfig, currentPage } = useAppStore();
+  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config } = useAppStore();
   const [resetOpen, setResetOpen] = useState(false);
   const totalSteps = STEP_COMPONENTS.length;
   const isLastStep = wizardStep === totalSteps - 1;
@@ -58,6 +58,32 @@ export function NewEstimatePage() {
   const StepComponent = STEP_COMPONENTS[wizardStep];
   const isWizardActive = currentPage === 'new-estimate';
   const progressPct = Math.round(((wizardStep + 1) / totalSteps) * 100);
+
+  // Configuration Health Score
+  const healthScore = (() => {
+    const ioTotal =
+      config.io.digitalInputs + config.io.digitalOutputs +
+      config.io.analogInputs + config.io.analogOutputs +
+      config.io.safetyIO + config.io.encoderCounterModules +
+      config.io.temperatureModules + config.io.communicationIO +
+      config.io.specialModules;
+    const checks = [
+      !!(config.project.name && config.project.name.trim()),
+      config.controller.family !== 'None',
+      ioTotal > 0,
+      config.motion.totalAxes > 0,
+      config.hmi.screens > 0,
+      config.vision.enabled,
+      config.safety.enabled,
+      config.communication.protocols.some((p) => p.enabled),
+      config.mechatronics.type !== 'None',
+      config.robotics.enabled,
+      config.iiot.ipcRequired,
+    ];
+    return checks.filter(Boolean).length;
+  })();
+  const totalSections = 11;
+  const healthColor = healthScore >= 8 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : healthScore >= 5 ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' : 'bg-muted text-muted-foreground';
 
   const handleReset = useCallback(() => {
     setWizardStep(0);
@@ -113,8 +139,12 @@ export function NewEstimatePage() {
 
       <div className="flex items-center justify-between pt-2">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground mr-2">
+          <span className="text-[11px] text-muted-foreground mr-1">
             Step {wizardStep + 1} of {totalSteps} — {progressPct}% complete
+          </span>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor}`}>
+            <HeartPulse className="h-3 w-3" />
+            Health: {healthScore}/{totalSections} sections
           </span>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setResetOpen(true)} title="Reset configuration">
             <RotateCcw className="h-3.5 w-3.5" />

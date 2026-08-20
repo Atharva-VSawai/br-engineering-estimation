@@ -12,6 +12,7 @@ import {
   FileBarChart,
   GitCompareArrows,
   Settings,
+  Pencil,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -36,7 +37,8 @@ const NAV_ITEMS: { page: AppPage; label: string; icon: React.ElementType }[] = [
 ];
 
 export function AppSidebar() {
-  const { currentPage, setCurrentPage } = useAppStore();
+  const { currentPage, setCurrentPage, config, wizardStep } = useAppStore();
+  const configName = config.project.name || '';
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-sidebar">
@@ -80,6 +82,11 @@ export function AppSidebar() {
                       >
                         <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary drop-shadow-[0_0_4px_oklch(0.55_0.2_35/0.3)]' : ''}`} />
                         {label}
+                        {page === 'new-estimate' && currentPage === 'new-estimate' && (
+                          <span className="ml-auto rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5 leading-none">
+                            {wizardStep + 1}
+                          </span>
+                        )}
                       </button>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={8}>
@@ -93,12 +100,30 @@ export function AppSidebar() {
         </TooltipProvider>
       </nav>
 
+      {/* Current Config */}
+      {configName && (
+        <>
+          <div className="border-t border-border" />
+          <div className="px-4 py-2">
+            <button
+              onClick={() => setCurrentPage('new-estimate')}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-sidebar-accent/50 transition-colors duration-150 group"
+            >
+              <Pencil className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground shrink-0" />
+              <span className="text-[11px] text-muted-foreground/70 group-hover:text-muted-foreground truncate font-medium">
+                {configName}
+              </span>
+            </button>
+          </div>
+        </>
+      )}
+
       {/* Footer */}
       <div className="border-t border-border px-4 py-3">
-        <div className="text-[10px] text-muted-foreground leading-tight">Frontend Prototype</div>
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground leading-tight">
+        <div className="text-[10px] text-muted-foreground/60 leading-tight">Frontend Prototype</div>
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 leading-tight">
           <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
-          v0.5
+          v0.6
         </div>
       </div>
     </aside>

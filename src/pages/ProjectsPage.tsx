@@ -24,7 +24,7 @@ const STATUS_OPTIONS = ['All', 'Draft', 'In Review', 'Completed'] as const;
 type StatusOption = (typeof STATUS_OPTIONS)[number];
 
 export function ProjectsPage() {
-  const { projects, setCurrentPage, addProject, deleteProject } = useAppStore();
+  const { projects, setCurrentPage, addProject, deleteProject, updateConfig } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
 
@@ -53,8 +53,12 @@ export function ProjectsPage() {
       updatedAt: 'just now',
     };
     addProject(newProject);
+    if (project.config) {
+      updateConfig(project.config);
+    }
+    setCurrentPage('new-estimate');
     toast('Project duplicated', {
-      description: `Created copy of ${project.name}`,
+      description: `Created copy of ${project.name} — editing in wizard`,
     });
   };
 

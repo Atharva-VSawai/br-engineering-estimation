@@ -1033,3 +1033,200 @@ Unresolved Issues / Risks / Next Phase Recommendations:
 - **Priority 4**: HMI screen preview could reflect actual HMI configuration
 - **Risk**: Cost estimation formulas are simplified placeholders
 - **Risk**: Export report is plain text, not formatted PDF
+
+---
+Task ID: 11a
+Agent: Styling Sub-agent
+Task: Styling polish round v0.6
+
+Work Log:
+- **ComparePage.tsx — Major visual overhaul**:
+  - Replaced plain empty state with animated background (6 framer-motion circles pulsing in/out), larger icon in rounded-2xl container, descriptive heading + subtext
+  - Added color-coded project header cards above table: one card per project with name, ComplexityBadge, StatusBadge, and left border matching complexity color (emerald/amber/orange/red)
+  - Added zebra striping: odd rows get `bg-muted/20`
+  - Header row gets `bg-muted/30`
+  - Best-value cells now show emerald dot (h-1.5 w-1.5 rounded-full bg-emerald-500) before text, plus `border-l-2 border-l-emerald-400` left border
+  - Added Winner row at bottom: Trophy icon, counts best-value wins per project, highlights winner with emerald badge
+  - Table rows get `hover:bg-primary/[0.03] transition-colors duration-150`
+  - Wrapped comparison in AnimatePresence for smooth enter/exit
+- **DashboardPage.tsx — Quick Stats visual enhancement**:
+  - Wrapped each stat in mini card: `bg-muted/30 rounded-lg p-3 border-l-2` with accent color matching icon (Cable=blue-400, Zap=amber-400, Monitor=cyan-400, Shield=emerald-400, Clock=primary)
+  - Stat icons now wrapped in `bg-muted rounded-lg p-1.5` (7x7) container with colored icon text
+  - When all values zero: shows "—" in muted-foreground, plus "Load a configuration to see live stats" text below
+  - Changed layout from flex-col centered to flex-row horizontal with icon+label+value
+- **EstimateSummaryPage.tsx — Visual polish**:
+  - Cost rows: added thin proportional progress bar (h-1.5, 60% opacity) below existing bar showing hours proportion to total
+  - Timeline: added diamond marker (◆) at each phase boundary (between rows) positioned above the bar start
+  - Overall complexity badge: conditional `animate-pulse` when complexity is "Very High"
+- **AppSidebar.tsx — Bottom config section**:
+  - Added separator line (`border-t border-border`) before new config section
+  - Shows current config name from store (`config.project.name`) with Pencil icon
+  - Clicking navigates to new-estimate page
+  - Footer text made more muted: `text-muted-foreground/60`
+- **StatCard.tsx — Sparkline micro-chart capability**:
+  - Added optional `sparkline` prop (number[])
+  - Renders tiny SVG sparkline (20x12px) below the value using computed polyline path
+  - Uses `stroke="currentColor"` with `stroke-width="1.5"` and `fill="none"` via SVG attributes
+  - Path computed via useMemo normalizing values to 20x12 viewport
+
+Stage Summary:
+- 5 files edited for visual polish
+- All existing functionality preserved
+- `bun run lint` passes with zero errors
+
+---
+Project Status: Feature-rich working prototype (v0.6)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+- Total features: Dark/light mode, keyboard shortcuts (⌘K/⌘S/⌘D/⌘Shift+C/Alt+1-9/←→), toast notifications, JSON export, clipboard copy, page transitions, search/filter, visual I/O bars, complexity heatmap, axis overview grid, HMI screen mockup, activity timeline with colored borders, configuration completeness, complexity profile bars, review status indicators, sidebar tooltips, product explorer with category icons and border accents, animated architecture diagram with numbered blocks, project duplicate/delete, frosted glass header, B&R brand stripe, sticky footer, print styles, gradient background, card hover effects, form field transitions, animated counters, welcome banner, cost estimation engine, project timeline, header circular progress, step validation dots, save as new project, empty states, effort summary card, SVG complexity gauge, I/O summary bar chart, notification center with slide-out panel, project comparison page, real-time field validation indicators, inline editing on review step, quick configuration overview dashboard row, export/share report functionality, zebra-striped activity matrix, architecture numbered blocks, product card category border accents, comparison animated empty state, comparison project header cards, comparison zebra striping, comparison best-value emerald dots, comparison winner row, quick stats mini cards with accent borders, cost estimation proportional progress bars, timeline diamond markers, very-high complexity pulse animation, sidebar current config section, statcard sparkline capability
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Compare page animated empty state with pulsing circles
+- ✅ Compare page color-coded project header cards with complexity left borders
+- ✅ Compare page zebra striping + header bg-muted/30 + hover effects
+- ✅ Compare page best-value emerald dot + border-l-emerald-400 indicators
+- ✅ Compare page Winner row with trophy icon and best-count badges
+- ✅ Dashboard quick stats mini cards with accent borders and icon wrappers
+- ✅ Dashboard quick stats muted placeholder state when all values zero
+- ✅ Estimate Summary cost rows with proportional thin progress bars
+- ✅ Estimate Summary timeline diamond markers at phase boundaries
+- ✅ Estimate Summary Very High complexity badge animate-pulse
+- ✅ Sidebar current config name section with edit icon and separator
+- ✅ Sidebar footer text more muted
+- ✅ StatCard sparkline prop for future use
+- ✅ ESLint clean, zero errors
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: None — all identified issues resolved
+- **Priority 2**: Inline editing could be expanded to all wizard fields (currently 3-5 key fields per section)
+- **Priority 2**: Export uses plain text — upgrade to proper PDF with a library (e.g. @react-pdf/renderer or jspdf)
+- **Priority 2**: Notification center uses static data — connect to real app events
+- **Priority 3**: Persist project data to database via Prisma
+- **Priority 3**: Add user authentication via NextAuth
+- **Priority 3**: Field validation indicators could expand to all 14 wizard steps
+- **Priority 4**: Responsive design improvements for mobile viewports
+- **Priority 4**: Comparison page could show radar chart overlay for complexity dimensions
+- **Priority 4**: HMI screen preview could reflect actual HMI configuration
+- **Risk**: Cost estimation formulas are simplified placeholders
+- **Risk**: Export report is plain text, not formatted PDF
+
+---
+Task ID: 11b
+Agent: Features Sub-agent
+Task: New features round v0.6
+
+Work Log:
+- **DashboardPage.tsx — Project Templates section**:
+  - Added 3 template cards in responsive grid (1 col mobile, 3 col md+): Packaging Line (Package icon, loads sample config), Assembly Cell (Wrench icon, applies partial config with robotics+vision+12 axes), Inspection System (ScanSearch icon, applies vision+cameras+HMI)
+  - Each card has: colored icon container (bg-muted/50 rounded-lg p-2.5), name, description, hover:bg-muted/50 transition, and "Quick Start" outline button
+  - Uses resetConfig() then updateProjectInfo/updateMotion/updateRobotics/updateVision/updateHMI from store
+  - Imports added: Package, Wrench, ScanSearch from lucide-react; resetConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI from store
+- **NewEstimatePage.tsx — Configuration Health Score**:
+  - Added HeartPulse icon import from lucide-react
+  - Added config to store destructure
+  - Computes health score: 11 sections checked (Project name not empty, Controller family !== 'None', I/O total > 0, Motion totalAxes > 0, HMI screens > 0, Vision enabled, Safety enabled, Communication any protocol enabled, Mechatronics type !== 'None', Robotics enabled, IIoT ipcRequired)
+  - Shows colored pill next to step text: emerald if >= 8, amber if >= 5, muted if < 5
+  - Format: "Health: X/11 sections" with HeartPulse icon
+- **ProjectsPage.tsx — Duplicate Config to New Project**:
+  - Added updateConfig to store destructure
+  - handleDuplicate now: creates project copy, loads project.config into store via updateConfig(), navigates to new-estimate page
+  - Updated toast description to indicate editing in wizard
+  - Only loads config if project.config exists (graceful fallback)
+- **AppSidebar.tsx — Step indicator badge**:
+  - Added wizardStep to store destructure
+  - When currentPage === 'new-estimate', shows a small badge (rounded-full bg-primary text-primary-foreground text-[9px] font-bold px-1.5 py-0.5) with current step number next to "New Estimate" nav item
+  - Badge uses ml-auto to push to right side of nav item
+
+Stage Summary:
+- 4 files edited for new features
+- All existing functionality preserved
+- `bun run lint` passes with zero errors
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Dashboard: 3 Project Template cards (Packaging Line, Assembly Cell, Inspection System)
+- ✅ New Estimate: Configuration Health Score pill (11-section check, color-coded)
+- ✅ Projects: Duplicate now loads config into store and navigates to wizard
+- ✅ Sidebar: Step number badge on New Estimate nav item when on wizard page
+- ✅ ESLint clean, zero errors
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: None — all identified issues resolved
+- **Priority 2**: Inline editing could be expanded to all wizard fields
+- **Priority 2**: Export uses plain text — upgrade to proper PDF
+- **Priority 2**: Notification center uses static data — connect to real app events
+- **Priority 3**: Persist project data to database via Prisma
+- **Priority 3**: Add user authentication via NextAuth
+- **Priority 3**: Field validation indicators could expand to all 14 wizard steps
+- **Priority 4**: Responsive design improvements for mobile viewports
+- **Priority 4**: Comparison page could show radar chart overlay for complexity dimensions
+- **Priority 4**: HMI screen preview could reflect actual HMI configuration
+- **Risk**: Cost estimation formulas are simplified placeholders
+- **Risk**: Export report is plain text, not formatted PDF
+
+---
+Task ID: 11
+Agent: Main Orchestrator (Round 11)
+Task: QA, styling improvements, new features, version bump to v0.6
+
+Work Log:
+- **Initial QA**: Read worklog.md, assessed v0.5 status. Opened app via agent-browser — all pages render with HTTP 200, zero console errors, zero runtime errors.
+- **Parallel Task 11a (Styling)**: Launched sub-agent for 5 styling improvements (ComparePage overhaul, Dashboard quick stats mini cards, Estimate Summary visual polish, Sidebar config section, StatCard sparkline prop)
+- **Parallel Task 11b (Features)**: Launched sub-agent for 4 new features (Project Templates on Dashboard, Configuration Health Score in wizard, Duplicate config to store, Sidebar step indicator badge)
+- **Bug Fix**: Found nested `<button>` hydration error in DashboardPage template cards (sub-agent used `<button>` wrapping `<Button>`). Fixed by changing outer elements from `<button>` to `<div className="... cursor-pointer">`.
+- **Dark Mode Fix**: Health Score pill colors lacked dark: variants. Added `dark:bg-emerald-950/40 dark:text-emerald-300` and `dark:bg-amber-950/40 dark:text-amber-300`.
+- **Version Bump**: v0.5 → v0.6 across AppSidebar, AppLayout, SettingsPage.
+- **Settings Update**: Added 3 new Completed items to plannedIntegrations list (Project Templates, Configuration Health Score, Project Comparison Winner Row).
+- **Final QA**: Verified Dashboard (templates render, quick stats mini cards visible), New Estimate (health score pill shows sections), Compare (winner row with trophy, emerald best-value indicators, project header cards), dark mode toggle, sidebar step badge. Zero runtime errors.
+
+Stage Summary:
+- Version bumped to v0.6 with 5 styling improvements and 4 new features
+- 1 hydration bug fixed (nested button in template cards)
+- 1 dark mode fix (health score colors)
+- 9 files modified total
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully
+- All pages verified via agent-browser QA
+
+---
+Project Status: Feature-rich working prototype (v0.6)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Browser QA: Verified across 7 rounds
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ QA testing — all 10 pages verified including new features (0 runtime errors)
+- ✅ Compare page — animated empty state, project header cards, zebra striping, winner row, best-value emerald dots
+- ✅ Dashboard — project templates (3), quick stats mini cards with accent borders, muted placeholder state
+- ✅ New Estimate — configuration health score pill (11 sections, color-coded with dark mode support)
+- ✅ Projects — duplicate now loads config into store and navigates to wizard
+- ✅ Sidebar — step number badge on wizard nav, current config name section
+- ✅ Estimate Summary — cost proportional progress bars, timeline diamond markers, Very High pulse
+- ✅ StatCard — sparkline prop capability added
+- ✅ Hydration bug fixed (nested button → div)
+- ✅ Version bumped to v0.6
+- ✅ ESLint clean, dev server compiles successfully
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: None — all identified issues resolved
+- **Priority 2**: Inline editing could be expanded to all wizard fields
+- **Priority 2**: Export uses plain text — upgrade to proper PDF
+- **Priority 2**: Notification center uses static data — connect to real app events
+- **Priority 2**: Project templates currently only set a few fields — could pre-configure full sample data per template
+- **Priority 3**: Persist project data to database via Prisma
+- **Priority 3**: Add user authentication via NextAuth
+- **Priority 3**: Field validation indicators could expand to all 14 wizard steps
+- **Priority 3**: Sparkline data could be connected to project history for real trend visualization
+- **Priority 4**: Responsive design improvements for mobile viewports
+- **Priority 4**: Comparison page could show radar chart overlay for complexity dimensions
+- **Priority 4**: HMI screen preview could reflect actual HMI configuration
+- **Risk**: Cost estimation formulas are simplified placeholders
+- **Risk**: Export report is plain text, not formatted PDF

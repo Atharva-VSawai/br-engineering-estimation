@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface StatCardProps {
@@ -9,9 +9,10 @@ interface StatCardProps {
   sublabel?: string;
   icon?: React.ReactNode;
   accentColor?: string;
+  sparkline?: number[];
 }
 
-export function StatCard({ label, value, sublabel, icon, accentColor }: StatCardProps) {
+export function StatCard({ label, value, sublabel, icon, accentColor, sparkline }: StatCardProps) {
   const isNumeric = typeof value === 'number';
   const [displayValue, setDisplayValue] = useState(isNumeric ? 0 : 0);
   const rafRef = useRef<number | null>(null);
@@ -53,6 +54,21 @@ export function StatCard({ label, value, sublabel, icon, accentColor }: StatCard
     ? (Number.isInteger(displayValue) ? displayValue.toFixed(0) : displayValue.toFixed(1))
     : value;
 
+  const sparklinePath = useMemo(() => {
+    if (!sparkline || sparkline.length < 2) return '';
+    const min = Math.min(...sparkline);
+    const max = Math.max(...sparkline);
+    const range = max - min || 1;
+    const width = 20;
+    const height = 12;
+    const points = sparkline.map((v, i) => {
+      const x = (i / (sparkline.length - 1)) * width;
+      const y = height - ((v - min) / range) * (height - 2) - 1;
+      return `${x},${y}`;
+    });
+    return `M${points.join(' L')}`;
+  }, [sparkline]);
+
   return (
     <Card className="relative border-border bg-card group transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 overflow-hidden">
       {/* Accent border */}
@@ -68,6 +84,19 @@ export function StatCard({ label, value, sublabel, icon, accentColor }: StatCard
             <p className="mt-1 text-2xl font-bold text-foreground leading-tight">{renderedValue}</p>
             {sublabel && (
               <p className="mt-0.5 text-xs text-muted-foreground truncate">{sublabel}</p>
+            )}
+            {sparkline && sparkline.length >= 2 && sparklinePath && (
+              <svg
+                width="20"
+                height="12"
+                viewBox="0 0 20 12"
+                className="mt-1 text-current opacity-40"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                <path d={sparklinePath} />
+              </svg>
             )}
           </div>
           {icon && (

@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { GitCompareArrows, Check, X as XIcon } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { GitCompareArrows, Check, X as XIcon, Trophy } from 'lucide-react';
 import { useAppStore } from '@/store';
-import type { Project, ProjectConfig } from '@/types';
+import type { Project, ProjectConfig, ComplexityLevel } from '@/types';
 import { SectionCard } from '@/components/br/SectionCard';
 import { ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { StatusBadge } from '@/components/br/ComplexityBadge';
@@ -18,6 +18,13 @@ import {
 import { Button } from '@/components/ui/button';
 
 const COMPLEXITY_ORDER: Record<string, number> = { Low: 0, Medium: 1, High: 2, 'Very High': 3 };
+
+const COMPLEXITY_LEFT_BORDER: Record<ComplexityLevel, string> = {
+  Low: 'border-l-emerald-400',
+  Medium: 'border-l-amber-400',
+  High: 'border-l-orange-400',
+  'Very High': 'border-l-red-400',
+};
 
 function getConfigSummary(cfg: ProjectConfig) {
   const ioTotal =
@@ -98,14 +105,43 @@ export function ComparePage() {
       { label: 'Machine Type', type: 'text' as const, getVal: (p: Project) => p.machineType },
       { label: 'Complexity', type: 'complexity' as const, getVal: (p: Project) => p.complexity },
       { label: 'Status', type: 'status' as const, getVal: (p: Project) => p.status },
-      { label: 'I/O Total', type: 'number-best-lowest' as const, getVal: (p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.ioTotal ?? null },
-      { label: 'Motion Axes', type: 'number-best-lowest' as const, getVal: (p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.motionAxes ?? null },
-      { label: 'HMI Screens', type: 'number-highest' as const, getVal: (p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.hmiScreens ?? null },
-      { label: 'Vision', type: 'yes' as const, getVal: (p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.vision ?? null },
-      { label: 'Safety', type: 'yes' as const, getVal: (p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.safety ?? null },
-      { label: 'Controller Family', type: 'text' as const, getVal: (p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.controllerFamily ?? null },
+      { label: 'I/O Total', type: 'number-best-lowest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.ioTotal ?? null },
+      { label: 'Motion Axes', type: 'number-best-lowest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.motionAxes ?? null },
+      { label: 'HMI Screens', type: 'number-highest' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.hmiScreens ?? null },
+      { label: 'Vision', type: 'yes' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.vision ?? null },
+      { label: 'Safety', type: 'yes' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.safety ?? null },
+      { label: 'Controller Family', type: 'text' as const, getVal: (_p: Project, cfg: ReturnType<typeof getConfigSummary> | null) => cfg?.controllerFamily ?? null },
     ];
   }, [selectedProjects.length]);
+
+  // Compute best counts per project (for Winner row)
+  const winnerCounts = useMemo(() => {
+    if (selectedProjects.length < 2) return [];
+    const counts = new Array(selectedProjects.length).fill(0);
+    rows.forEach((row) => {
+      const values = selectedProjects.map((p, i) => {
+        const cfg = configs[i];
+        if (row.getVal.length === 1) return row.getVal(p);
+        return row.getVal(p, cfg);
+      });
+
+      let bestIdx = -1;
+      if (row.type === 'complexity') {
+        const nums = values.map((v) => (typeof v === 'string' ? (COMPLEXITY_ORDER[v] ?? -1) : -1));
+        bestIdx = nums.indexOf(Math.min(...nums.filter((n) => n >= 0)));
+      } else if (row.type === 'number-highest') {
+        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'highest');
+      } else if (row.type === 'number-best-lowest') {
+        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'lowest');
+      } else if (row.type === 'yes') {
+        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'yes');
+      }
+      if (bestIdx >= 0) counts[bestIdx]++;
+    });
+    return counts;
+  }, [selectedProjects, configs, rows]);
+
+  const maxWinnerCount = Math.max(...winnerCounts, 0);
 
   return (
     <motion.div
@@ -163,74 +199,156 @@ export function ComparePage() {
       {/* Empty state */}
       {selectedProjects.length < 2 && (
         <SectionCard>
-          <div className="flex flex-col items-center justify-center py-12">
-            <GitCompareArrows className="h-10 w-10 text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">Select at least 2 projects to compare</p>
+          <div className="relative flex flex-col items-center justify-center py-16 overflow-hidden">
+            {/* Animated background dots */}
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute rounded-full bg-muted-foreground/[0.04] dark:bg-muted-foreground/[0.06]"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{
+                  opacity: [0.3, 0.6, 0.3],
+                  scale: [0.8, 1.1, 0.8],
+                }}
+                transition={{
+                  duration: 4 + i * 0.8,
+                  repeat: Infinity,
+                  delay: i * 0.5,
+                  ease: 'easeInOut',
+                }}
+                style={{
+                  width: 60 + i * 30,
+                  height: 60 + i * 30,
+                  top: `${10 + (i % 3) * 30}%`,
+                  left: `${15 + (i % 2) * 50}%`,
+                }}
+              />
+            ))}
+            <div className="relative z-10 flex flex-col items-center gap-3">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50 text-muted-foreground/40">
+                <GitCompareArrows className="h-8 w-8" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium text-muted-foreground">No projects selected for comparison</p>
+                <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                  Choose at least 2 projects from the dropdown above. You can compare up to 3 projects side by side to evaluate scope, complexity, and technical parameters.
+                </p>
+              </div>
+            </div>
           </div>
         </SectionCard>
       )}
 
       {/* Comparison table */}
-      {selectedProjects.length >= 2 && (
-        <SectionCard title="Comparison Table" description={`${selectedProjects.length} projects selected`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr>
-                  <th className="text-left py-2 px-3 font-medium text-muted-foreground w-36">Property</th>
-                  {selectedProjects.map((p) => (
-                    <th key={p.id} className="text-left py-2 px-3 font-semibold text-foreground">
-                      {p.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const values = selectedProjects.map((p, i) => {
-                    const cfg = configs[i];
-                    if (row.getVal.length === 1) return row.getVal(p);
-                    return row.getVal(p, cfg);
-                  });
+      <AnimatePresence>
+        {selectedProjects.length >= 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Project header cards */}
+            <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: `repeat(${selectedProjects.length}, minmax(0, 1fr))` }}>
+              {selectedProjects.map((p) => (
+                <div
+                  key={p.id}
+                  className={`rounded-lg border border-border bg-card p-3 border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || 'border-l-primary'}`}
+                >
+                  <p className="text-sm font-semibold text-foreground truncate">{p.name}</p>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <ComplexityBadge level={p.complexity} />
+                    <StatusBadge status={p.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
 
-                  let bestIdx = -1;
-                  if (row.type === 'complexity') {
-                    // For complexity, highest is the worst - highlight the lowest
-                    const nums = values.map((v) => (typeof v === 'string' ? (COMPLEXITY_ORDER[v] ?? -1) : -1));
-                    bestIdx = nums.indexOf(Math.min(...nums.filter((n) => n >= 0)));
-                  } else if (row.type === 'number-highest') {
-                    bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'highest');
-                  } else if (row.type === 'number-best-lowest') {
-                    bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'lowest');
-                  } else if (row.type === 'yes') {
-                    bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'yes');
-                  }
+            <SectionCard title="Comparison Table" description={`${selectedProjects.length} projects selected`}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-muted/30">
+                      <th className="text-left py-2 px-3 font-medium text-muted-foreground w-36">Property</th>
+                      {selectedProjects.map((p) => (
+                        <th key={p.id} className="text-left py-2 px-3 font-semibold text-foreground">
+                          {p.name}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, rowIdx) => {
+                      const values = selectedProjects.map((p, i) => {
+                        const cfg = configs[i];
+                        if (row.getVal.length === 1) return row.getVal(p);
+                        return row.getVal(p, cfg);
+                      });
 
-                  return (
-                    <tr key={row.label} className="border-t border-border/50">
-                      <td className="py-2 px-3 font-medium text-muted-foreground whitespace-nowrap">
-                        {row.label}
+                      let bestIdx = -1;
+                      if (row.type === 'complexity') {
+                        const nums = values.map((v) => (typeof v === 'string' ? (COMPLEXITY_ORDER[v] ?? -1) : -1));
+                        bestIdx = nums.indexOf(Math.min(...nums.filter((n) => n >= 0)));
+                      } else if (row.type === 'number-highest') {
+                        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'highest');
+                      } else if (row.type === 'number-best-lowest') {
+                        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'lowest');
+                      } else if (row.type === 'yes') {
+                        bestIdx = getBestIndex(values as (string | number | boolean | null)[], 'yes');
+                      }
+
+                      return (
+                        <tr
+                          key={row.label}
+                          className={`border-t border-border/50 hover:bg-primary/[0.03] transition-colors duration-150 ${rowIdx % 2 === 1 ? 'bg-muted/20' : ''}`}
+                        >
+                          <td className="py-2 px-3 font-medium text-muted-foreground whitespace-nowrap">
+                            {row.label}
+                          </td>
+                          {selectedProjects.map((p, i) => {
+                            const val = values[i];
+                            const isBest = i === bestIdx;
+                            return (
+                              <td
+                                key={p.id}
+                                className={`py-2 px-3 ${isBest ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-l-2 border-l-emerald-400' : ''}`}
+                              >
+                                {isBest && <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5 align-middle" />}
+                                {renderCell(row.type, val)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
+
+                    {/* Winner row */}
+                    <tr className="border-t-2 border-border bg-muted/30">
+                      <td className="py-2.5 px-3 font-bold text-foreground whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                          Winner
+                        </span>
                       </td>
                       {selectedProjects.map((p, i) => {
-                        const val = values[i];
-                        const isBest = i === bestIdx;
+                        const count = winnerCounts[i] || 0;
+                        const isWinner = count === maxWinnerCount && count > 0;
                         return (
-                          <td
-                            key={p.id}
-                            className={`py-2 px-3 ${isBest ? 'bg-emerald-50/50 dark:bg-emerald-950/20' : ''}`}
-                          >
-                            {renderCell(row.type, val)}
+                          <td key={p.id} className="py-2.5 px-3">
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${isWinner ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
+                              {count} best
+                            </span>
                           </td>
                         );
                       })}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </SectionCard>
-      )}
+                  </tbody>
+                </table>
+              </div>
+            </SectionCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

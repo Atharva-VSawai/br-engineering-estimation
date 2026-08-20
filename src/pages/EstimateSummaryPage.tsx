@@ -373,7 +373,7 @@ export function EstimateSummaryPage() {
       {/* Overall Complexity */}
       <SectionCard title="Overall Project Complexity">
         <div className="flex items-center gap-4">
-          <span className={`text-base font-bold rounded-lg border-2 px-4 py-2 ${COMPLEXITY_COLORS[overallComplexity]}`}>
+          <span className={`text-base font-bold rounded-lg border-2 px-4 py-2 ${COMPLEXITY_COLORS[overallComplexity]} ${overallComplexity === 'Very High' ? 'animate-pulse' : ''}`}>
             {overallComplexity.toUpperCase()}
           </span>
           <div className="text-xs text-muted-foreground leading-relaxed">
@@ -468,11 +468,19 @@ export function EstimateSummaryPage() {
                     transition={{ delay: index * 0.06, duration: 0.3 }}
                   >
                     <div className="w-40 shrink-0 text-xs text-muted-foreground">{row.name}</div>
-                    <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-4 rounded-full ${row.color} transition-all duration-500`}
-                        style={{ width: `${Math.max((row.hours / maxHours) * 100, 2)}%` }}
-                      />
+                    <div className="flex-1">
+                      <div className="h-4 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-4 rounded-full ${row.color} transition-all duration-500`}
+                          style={{ width: `${Math.max((row.hours / maxHours) * 100, 2)}%` }}
+                        />
+                      </div>
+                      <div className="h-1.5 bg-muted/50 rounded-full overflow-hidden mt-1">
+                        <div
+                          className={`h-1.5 rounded-full ${row.color} opacity-60 transition-all duration-500`}
+                          style={{ width: `${Math.max((row.hours / maxHours) * 100, 2)}%` }}
+                        />
+                      </div>
                     </div>
                     <div className="w-16 shrink-0 text-xs font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
                   </motion.div>
@@ -529,11 +537,14 @@ export function EstimateSummaryPage() {
                 {phases.map((phase, index) => (
                   <motion.div
                     key={phase.name}
-                    className="flex items-center gap-3"
+                    className="relative flex items-center gap-3"
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.08, duration: 0.3 }}
                   >
+                    {index > 0 && (
+                      <span className="absolute -top-2 left-40 text-[10px] text-muted-foreground/40 leading-none">◆</span>
+                    )}
                     <div className="w-36 shrink-0 text-xs text-muted-foreground">{phase.name}</div>
                     <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden">
                       <div
