@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { Save, FileText, FileJson, Sun, Moon, ChevronRight, Copy } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppStore } from '@/store';
@@ -22,7 +23,7 @@ const PAGE_NAMES: Record<AppPage, string> = {
 };
 
 export function AppHeader() {
-  const { config, currentPage } = useAppStore();
+  const { config, currentPage, wizardStep } = useAppStore();
   const { theme, setTheme } = useTheme();
   const projectName = config.project.name || 'Packaging Machine \u2013 Project 2026';
 
@@ -94,6 +95,38 @@ export function AppHeader() {
         >
           Draft
         </Badge>
+        {currentPage === 'new-estimate' && (() => {
+          const pct = Math.round(((wizardStep + 1) / 14) * 100);
+          const radius = 10;
+          const circumference = 2 * Math.PI * radius;
+          const offset = circumference * (1 - pct / 100);
+          return (
+            <div className="relative flex items-center justify-center" style={{ width: 28, height: 28 }}>
+              <svg width="28" height="28" className="-rotate-90">
+                <circle
+                  cx="14" cy="14" r={radius}
+                  fill="none"
+                  strokeWidth="2.5"
+                  className="stroke-muted"
+                />
+                <motion.circle
+                  cx="14" cy="14" r={radius}
+                  fill="none"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  className="stroke-primary"
+                  strokeDasharray={circumference}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: offset }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                />
+              </svg>
+              <span className="absolute text-[9px] font-bold text-foreground">
+                {pct}
+              </span>
+            </div>
+          );
+        })()}
         <Button
           variant="outline"
           size="sm"

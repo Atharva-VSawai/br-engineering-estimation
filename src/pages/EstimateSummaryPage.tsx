@@ -1,13 +1,14 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, ArrowRight, Check, Minus } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Check, Minus, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
 import { EFFORT_AREAS } from '@/data';
-import type { ComplexityLevel, ProjectConfig } from '@/types';
+import { toast } from 'sonner';
+import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
 
 const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
   Low: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -150,7 +151,7 @@ function checkCompleteness(config: ProjectConfig): SectionCheck[] {
 }
 
 export function EstimateSummaryPage() {
-  const { config, setCurrentPage, setWizardStep } = useAppStore();
+  const { config, setCurrentPage, setWizardStep, addProject } = useAppStore();
   const c = config;
 
   // Determine overall complexity from the assessment
@@ -193,6 +194,37 @@ export function EstimateSummaryPage() {
           Review the engineering complexity assessment for: <span className="font-medium text-foreground">{c.project.name || 'Untitled Project'}</span>
         </p>
       </div>
+
+      {/* Save as New Project */}
+      <Button
+        className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 gap-2 text-sm font-semibold"
+        onClick={() => {
+          const now = new Date().toISOString().split('T')[0];
+          const project: Project = {
+            id: 'proj-' + Date.now(),
+            name: c.project.name || 'Untitled Project',
+            customer: c.project.customer || 'Unknown',
+            machineType: c.project.machineType || 'General',
+            industry: c.project.industry || '',
+            description: c.project.description || '',
+            requirementClarity: c.project.requirementClarity || 'Mostly Clear',
+            customerInvolvement: c.project.customerInvolvement || 'Medium',
+            projectVariants: c.project.projectVariants || 1,
+            machineStations: c.project.machineStations || 1,
+            complexity: c.complexity.hardware,
+            status: 'Draft',
+            createdAt: now,
+            updatedAt: now,
+            config: JSON.parse(JSON.stringify(c)),
+          };
+          addProject(project);
+          toast('Project saved!', { description: project.name });
+          setCurrentPage('projects');
+        }}
+      >
+        <Save className="h-4 w-4" />
+        Save as New Project
+      </Button>
 
       {/* Overall Complexity */}
       <SectionCard title="Overall Project Complexity">
@@ -263,6 +295,127 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
+      {/* Cost Estimation Overview */}
+      <SectionCard title="Cost Estimation Overview" description="Estimated engineering hours based on configuration.">
+        <div className="space-y-3">
+          {(() => {
+            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
+            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
+            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
+            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
+            const integrationHours = (hwHours + swHours + motionHours + safetyHours) * 0.3;
+            const totalHours = hwHours + swHours + motionHours + safetyHours + integrationHours;
+            const maxHours = Math.max(totalHours, 1);
+            const rows = [
+              { name: 'Hardware Engineering', hours: hwHours, color: 'bg-blue-400' },
+              { name: 'Software Development', hours: swHours, color: 'bg-violet-400' },
+              { name: 'Motion Configuration', hours: motionHours, color: 'bg-orange-400' },
+              { name: 'Safety Engineering', hours: safetyHours, color: 'bg-red-400' },
+              { name: 'Integration & Testing', hours: integrationHours, color: 'bg-emerald-400' },
+            ];
+            return (
+              <>
+                {rows.map((row, index) => (
+                  <motion.div
+                    key={row.name}
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.06, duration: 0.3 }}
+                  >
+                    <div className="w-40 shrink-0 text-xs text-muted-foreground">{row.name}</div>
+                    <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-4 rounded-full ${row.color} transition-all duration-500`}
+                        style={{ width: `${Math.max((row.hours / maxHours) * 100, 2)}%` }}
+                      />
+                    </div>
+                    <div className="w-16 shrink-0 text-xs font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
+                  </motion.div>
+                ))}
+                <motion.div
+                  className="flex items-center gap-3 border-t border-border pt-2 mt-1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: rows.length * 0.06, duration: 0.3 }}
+                >
+                  <div className="w-40 shrink-0 text-xs font-bold text-primary">Total</div>
+                  <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-4 rounded-full bg-primary transition-all duration-500"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div className="w-16 shrink-0 text-xs font-bold text-right text-primary">{totalHours.toFixed(1)}h</div>
+                </motion.div>
+              </>
+            );
+          })()}
+          <p className="text-[11px] text-muted-foreground mt-2">Estimated engineering hours based on configuration complexity. Actual effort may vary.</p>
+        </div>
+      </SectionCard>
+
+      {/* Estimated Project Timeline */}
+      <SectionCard title="Estimated Project Timeline" description="Gantt-like view of project phases.">
+        <div className="space-y-3">
+          {(() => {
+            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
+            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
+            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
+            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
+            const totalHours = hwHours + swHours + motionHours + safetyHours + (hwHours + swHours + motionHours + safetyHours) * 0.3;
+
+            const hwDesignWeeks = 2;
+            const swDevWeeks = Math.max(2, Math.ceil(c.hmi.screens / 3));
+            const integrationWeeks = Math.max(2, Math.ceil(totalHours / 40));
+            const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+            const commissionWeeks = complexityMap[overallComplexity] || 2;
+            const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
+            const maxWeeks = 8;
+
+            const phases = [
+              { name: 'Hardware Design & Ordering', weeks: hwDesignWeeks, color: 'bg-blue-400' },
+              { name: 'Software Development', weeks: swDevWeeks, color: 'bg-amber-400' },
+              { name: 'Integration & Testing', weeks: integrationWeeks, color: 'bg-orange-400' },
+              { name: 'Commissioning & Handover', weeks: commissionWeeks, color: 'bg-emerald-400' },
+            ];
+
+            return (
+              <>
+                {phases.map((phase, index) => (
+                  <motion.div
+                    key={phase.name}
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.08, duration: 0.3 }}
+                  >
+                    <div className="w-36 shrink-0 text-xs text-muted-foreground">{phase.name}</div>
+                    <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden">
+                      <div
+                        className={`h-5 rounded-sm ${phase.color} transition-all duration-500`}
+                        style={{ width: `${(phase.weeks / maxWeeks) * 100}%` }}
+                      />
+                    </div>
+                    <div className="w-16 shrink-0 text-xs font-medium text-right text-foreground">{phase.weeks} week{phase.weeks !== 1 ? 's' : ''}</div>
+                  </motion.div>
+                ))}
+                <motion.div
+                  className="flex items-center gap-3 border-t border-border pt-2 mt-1"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: phases.length * 0.08, duration: 0.3 }}
+                >
+                  <div className="w-36 shrink-0 text-xs font-bold text-primary">Estimated Total</div>
+                  <div className="flex-1" />
+                  <div className="w-16 shrink-0 text-xs font-bold text-right text-primary">{totalWeeks} weeks</div>
+                </motion.div>
+              </>
+            );
+          })()}
+        </div>
+      </SectionCard>
+
       {/* Effort Areas */}
       <SectionCard title="Engineering Areas" description="Potential effort drivers by engineering domain.">
         <div className="overflow-x-auto -mx-4 px-4">
@@ -302,7 +455,7 @@ export function EstimateSummaryPage() {
         <div className="flex flex-wrap items-center gap-2">
           {['B&R Product', 'Technology', 'Engineering Function', 'Configuration', 'Programming', 'Integration', 'Testing', 'Commissioning', 'Complexity', 'Engineering Effort'].map((item, idx, arr) => (
             <React.Fragment key={item}>
-              <div className="rounded-md border border-border bg-white px-3 py-1.5 text-[11px] font-medium text-foreground">
+              <div className="rounded-md border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground">
                 {item}
               </div>
               {idx < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
@@ -312,9 +465,9 @@ export function EstimateSummaryPage() {
       </SectionCard>
 
       {/* Placeholder Notice */}
-      <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50/50 p-4">
-        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-        <div className="text-xs text-amber-800 leading-relaxed space-y-1">
+      <div className="flex items-start gap-3 rounded-md border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-4">
+        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed space-y-1">
           <p><strong>Engineering effort calculation will be connected to validated company data in a future version.</strong></p>
           <p>This prototype demonstrates technical configuration and complexity assessment. Actual engineering hours require backend integration with historical project data and validated estimation formulas.</p>
         </div>

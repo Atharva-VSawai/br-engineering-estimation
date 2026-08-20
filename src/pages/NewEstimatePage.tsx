@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useAppStore } from '@/store';
+import { cn } from '@/lib/utils';
 import { ProgressStepper } from '@/components/br/ProgressStepper';
 import { StepProject } from './wizard/StepProject';
 import { StepController } from './wizard/StepController';
@@ -56,6 +57,7 @@ export function NewEstimatePage() {
   const isFirstStep = wizardStep === 0;
   const StepComponent = STEP_COMPONENTS[wizardStep];
   const isWizardActive = currentPage === 'new-estimate';
+  const progressPct = Math.round(((wizardStep + 1) / totalSteps) * 100);
 
   const handleReset = useCallback(() => {
     setWizardStep(0);
@@ -106,8 +108,14 @@ export function NewEstimatePage() {
         <StepComponent />
       </div>
 
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      {/* Gradient divider */}
+      <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <div className="flex items-center justify-between pt-2">
         <div className="flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground mr-2">
+            Step {wizardStep + 1} of {totalSteps} — {progressPct}% complete
+          </span>
           <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setResetOpen(true)} title="Reset configuration">
             <RotateCcw className="h-3.5 w-3.5" />
             Reset
@@ -122,13 +130,23 @@ export function NewEstimatePage() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Back
           </Button>
-          <Button variant="default" size="sm" className="h-8 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => {
-            if (isLastStep) {
-              useAppStore.getState().setCurrentPage('estimate-summary');
-            } else {
-              setWizardStep(wizardStep + 1);
-            }
-          }}>
+          <Button
+            variant="default"
+            size="sm"
+            className={cn(
+              'h-8 gap-1.5 text-xs',
+              isLastStep
+                ? 'bg-emerald-600 text-white hover:bg-emerald-600/90'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90'
+            )}
+            onClick={() => {
+              if (isLastStep) {
+                useAppStore.getState().setCurrentPage('estimate-summary');
+              } else {
+                setWizardStep(wizardStep + 1);
+              }
+            }}
+          >
             {isLastStep ? 'View Summary' : 'Next'}
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
@@ -137,6 +155,12 @@ export function NewEstimatePage() {
             Save Draft
           </Button>
         </div>
+      </div>
+
+      {/* Keyboard shortcuts hint */}
+      <div className="flex items-center justify-center gap-4 pb-2">
+        <span className="text-[10px] text-muted-foreground">⌘S Save</span>
+        <span className="text-[10px] text-muted-foreground">← → Navigate</span>
       </div>
 
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>

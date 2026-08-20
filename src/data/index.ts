@@ -188,19 +188,19 @@ export const PRODUCT_CATEGORIES = [
 
 // ===== Engineering Activities =====
 export const ENGINEERING_ACTIVITIES: EngineeringActivity[] = [
-  { technology: 'Motion', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High' },
-  { technology: 'HMI', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium' },
-  { technology: 'Vision', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High' },
-  { technology: 'Safety', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Very High' },
-  { technology: 'I/O', configuration: true, programming: true, integration: true, testing: true, commissioning: false, potentialComplexity: 'Low' },
-  { technology: 'Communication', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium' },
-  { technology: 'Mechatronics', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High' },
-  { technology: 'Robotics', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High' },
-  { technology: 'IIoT', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium' },
-  { technology: 'PLC Logic', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium' },
-  { technology: 'Alarm Mgmt', configuration: true, programming: true, integration: false, testing: true, commissioning: false, potentialComplexity: 'Low' },
-  { technology: 'Recipe Mgmt', configuration: true, programming: true, integration: false, testing: true, commissioning: false, potentialComplexity: 'Low' },
-  { technology: 'Data Logging', configuration: true, programming: true, integration: true, testing: true, commissioning: false, potentialComplexity: 'Low' },
+  { technology: 'Motion', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High', estimatedHours: 24 },
+  { technology: 'HMI', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium', estimatedHours: 16 },
+  { technology: 'Vision', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High', estimatedHours: 20 },
+  { technology: 'Safety', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Very High', estimatedHours: 32 },
+  { technology: 'I/O', configuration: true, programming: true, integration: true, testing: true, commissioning: false, potentialComplexity: 'Low', estimatedHours: 4 },
+  { technology: 'Communication', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium', estimatedHours: 12 },
+  { technology: 'Mechatronics', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High', estimatedHours: 24 },
+  { technology: 'Robotics', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High', estimatedHours: 20 },
+  { technology: 'IIoT', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium', estimatedHours: 12 },
+  { technology: 'PLC Logic', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium', estimatedHours: 16 },
+  { technology: 'Alarm Mgmt', configuration: true, programming: true, integration: false, testing: true, commissioning: false, potentialComplexity: 'Low', estimatedHours: 3 },
+  { technology: 'Recipe Mgmt', configuration: true, programming: true, integration: false, testing: true, commissioning: false, potentialComplexity: 'Low', estimatedHours: 3 },
+  { technology: 'Data Logging', configuration: true, programming: true, integration: true, testing: true, commissioning: false, potentialComplexity: 'Low', estimatedHours: 2 },
 ];
 
 // ===== Additional Features List =====

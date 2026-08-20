@@ -55,7 +55,7 @@ export function StepHMI() {
                   className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                     h.screenComplexity === level
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                   }`}
                 >
                   {level}
@@ -79,7 +79,7 @@ export function StepHMI() {
           {/* Body */}
           <div className="flex" style={{ height: 'calc(100% - 2rem)' }}>
             {/* Left sidebar */}
-            <div className="w-32 bg-white border-r border-gray-200 p-1.5 shrink-0">
+            <div className="w-32 bg-card border-r border-gray-200 p-1.5 shrink-0">
               {HMI_NAV_ITEMS.map((item, idx) => (
                 <div
                   key={item}
@@ -97,7 +97,7 @@ export function StepHMI() {
             <div className="flex-1 p-3">
               <div className="grid grid-cols-2 gap-2 h-full">
                 {/* Machine Status widget */}
-                <div className="rounded border border-gray-200 bg-white p-2">
+                <div className="rounded border border-gray-200 bg-card p-2">
                   <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Machine Status</div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5">
@@ -115,18 +115,18 @@ export function StepHMI() {
                   </div>
                 </div>
                 {/* Production Count widget */}
-                <div className="rounded border border-gray-200 bg-white p-2">
+                <div className="rounded border border-gray-200 bg-card p-2">
                   <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Production Count</div>
                   <div className="text-lg font-bold text-foreground leading-none mt-2">1,247</div>
                   <div className="text-[9px] text-gray-400 mt-0.5">units</div>
                 </div>
                 {/* Alarm Status widget */}
-                <div className="rounded border border-gray-200 bg-white p-2">
+                <div className="rounded border border-gray-200 bg-card p-2">
                   <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Alarm Status</div>
                   <div className="text-[10px] text-green-600 font-medium mt-1.5">No Active Alarms</div>
                 </div>
                 {/* Temperature widget */}
-                <div className="rounded border border-gray-200 bg-white p-2">
+                <div className="rounded border border-gray-200 bg-card p-2">
                   <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Temperature</div>
                   <div className="text-sm font-bold text-foreground mt-1.5">42.3°C</div>
                   <div className="mt-1.5 h-1 rounded-full bg-gray-100 overflow-hidden">

@@ -35,7 +35,7 @@ export function StepIIoT() {
                   className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                     i.ipcRequired === val
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                   }`}
                 >
                   {val ? 'Yes' : 'No'}
@@ -63,7 +63,7 @@ export function StepIIoT() {
                   className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                     i.iiotRequired === val
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                   }`}
                 >
                   {val ? 'Yes' : 'No'}

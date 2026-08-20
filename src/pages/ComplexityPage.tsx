@@ -1,14 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
 import { ComplexityBadge } from '@/components/br/ComplexityBadge';
+import type { ComplexityLevel } from '@/types';
 
 type ComplexityKey = 'hardware' | 'motion' | 'hmi' | 'vision' | 'safety' | 'communication' | 'software' | 'integration' | 'requirement' | 'testing';
-
-type ComplexityLevel = 'Low' | 'Medium' | 'High' | 'Very High';
 
 const HEATMAP_ITEMS: { key: ComplexityKey; short: string; label: string }[] = [
   { key: 'hardware', short: 'HW', label: 'Hardware' },
@@ -37,6 +36,27 @@ const BORDER_COLORS: Record<ComplexityLevel, string> = {
   'Very High': 'border-l-red-400',
 };
 
+const LEVEL_MAP: Record<ComplexityLevel, number> = {
+  Low: 1,
+  Medium: 2,
+  High: 3,
+  'Very High': 4,
+};
+
+function getScoreColor(score: number): string {
+  if (score <= 25) return '#10b981'; // emerald
+  if (score <= 50) return '#f59e0b'; // amber
+  if (score <= 75) return '#f97316'; // orange
+  return '#ef4444'; // red
+}
+
+function getScoreLabel(score: number): string {
+  if (score <= 25) return 'Low';
+  if (score <= 50) return 'Moderate';
+  if (score <= 75) return 'High';
+  return 'Critical';
+}
+
 export function ComplexityPage() {
   const { config } = useAppStore();
   const c = config.complexity;
@@ -57,6 +77,56 @@ export function ComplexityPage() {
   const allComplexities = categories.map((cat) => c[cat.key]);
   const highCount = allComplexities.filter((x) => x === 'High' || x === 'Very High').length;
 
+  const { overallScore, highestDim, lowestDim } = useMemo(() => {
+    const values = categories.map((cat) => ({
+      label: cat.label.replace(' Complexity', ''),
+      level: c[cat.key] as ComplexityLevel,
+      numeric: LEVEL_MAP[c[cat.key] as ComplexityLevel],
+    }));
+
+    const avg = values.reduce((sum, v) => sum + v.numeric, 0) / values.length;
+    const score = Math.round(avg * 25);
+
+    const sorted = [...values].sort((a, b) => b.numeric - a.numeric);
+    return {
+      overallScore: score,
+      highestDim: sorted[0],
+      lowestDim: sorted[sorted.length - 1],
+    };
+  }, [c, categories]);
+
+  const scoreColor = getScoreColor(overallScore);
+  const scoreLabel = getScoreLabel(overallScore);
+
+  // SVG gauge math: 120 degree sweep from 150deg to 390deg (i.e. -210 to -30 in standard SVG angles)
+  const startAngle = 150; // degrees, clockwise from top
+  const endAngle = 390;
+  const sweepAngle = endAngle - startAngle; // 240 degrees
+  const scoreAngle = startAngle + (overallScore / 100) * sweepAngle;
+
+  // Convert degrees to radians for SVG arc
+  const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) => {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  };
+
+  const radius = 54;
+  const cx = 70;
+  const cy = 70;
+  const strokeW = 10;
+
+  const bgStart = polarToCartesian(cx, cy, radius, startAngle);
+  const bgEnd = polarToCartesian(cx, cy, radius, endAngle);
+  const largeArcBg = sweepAngle > 180 ? 1 : 0;
+  const bgPath = `M ${bgStart.x} ${bgStart.y} A ${radius} ${radius} 0 ${largeArcBg} 1 ${bgEnd.x} ${bgEnd.y}`;
+
+  const fgEnd = polarToCartesian(cx, cy, radius, scoreAngle);
+  const fgSweep = scoreAngle - startAngle;
+  const largeArcFg = fgSweep > 180 ? 1 : 0;
+  const fgPath = fgSweep > 0.5
+    ? `M ${bgStart.x} ${bgStart.y} A ${radius} ${radius} 0 ${largeArcFg} 1 ${fgEnd.x} ${fgEnd.y}`
+    : '';
+
   return (
     <div className="space-y-6">
       <div>
@@ -67,7 +137,7 @@ export function ComplexityPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <div className="rounded-md border border-border bg-white p-3 text-center">
+        <div className="rounded-md border border-border bg-card p-3 text-center">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Dimensions</div>
           <div className="text-xl font-bold text-foreground mt-1">10</div>
         </div>
@@ -83,7 +153,7 @@ export function ComplexityPage() {
           <div className="text-[10px] text-emerald-600 uppercase tracking-wide">Low</div>
           <div className="text-xl font-bold text-emerald-700 mt-1">{allComplexities.filter((x) => x === 'Low').length}</div>
         </div>
-        <div className="rounded-md border border-border bg-white p-3 text-center">
+        <div className="rounded-md border border-border bg-card p-3 text-center">
           <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Requirement Clarity</div>
           <div className="text-sm font-bold text-foreground mt-1">{c.requirementClarity}</div>
         </div>
@@ -106,6 +176,84 @@ export function ComplexityPage() {
               </motion.div>
             );
           })}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Overall Complexity Assessment">
+        <div className="flex flex-col sm:flex-row items-center gap-8">
+          {/* Gauge */}
+          <div className="flex flex-col items-center shrink-0">
+            <div className="relative">
+              <svg width={140} height={140} viewBox="0 0 140 140">
+                {/* Background arc */}
+                <path
+                  d={bgPath}
+                  fill="none"
+                  stroke="hsl(var(--muted))"
+                  strokeWidth={strokeW}
+                  strokeLinecap="round"
+                />
+                {/* Foreground arc */}
+                {fgPath && (
+                  <motion.path
+                    d={fgPath}
+                    fill="none"
+                    stroke={scoreColor}
+                    strokeWidth={strokeW}
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                  />
+                )}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <motion.div
+                  className="text-2xl font-bold text-foreground"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5, duration: 0.3 }}
+                >
+                  {overallScore}
+                </motion.div>
+                <div className="text-xs text-muted-foreground">Complexity Score</div>
+              </div>
+            </div>
+            <div
+              className="mt-2 rounded-full px-3 py-0.5 text-[11px] font-medium"
+              style={{ backgroundColor: scoreColor + '18', color: scoreColor }}
+            >
+              {scoreLabel}
+            </div>
+          </div>
+
+          {/* Summary table */}
+          <div className="flex-1 w-full">
+            <div className="rounded-md border border-border overflow-hidden">
+              <table className="w-full">
+                <tbody>
+                  <tr className="border-b border-border">
+                    <td className="text-[11px] text-muted-foreground py-2.5 px-3 bg-muted/30 font-medium">Highest Complexity</td>
+                    <td className="text-xs font-semibold text-foreground py-2.5 px-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span>{highestDim.label}</span>
+                        <ComplexityBadge level={highestDim.level} />
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="text-[11px] text-muted-foreground py-2.5 px-3 bg-muted/30 font-medium">Lowest Complexity</td>
+                    <td className="text-xs font-semibold text-foreground py-2.5 px-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <span>{lowestDim.label}</span>
+                        <ComplexityBadge level={lowestDim.level} />
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </SectionCard>
 

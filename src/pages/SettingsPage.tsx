@@ -43,7 +43,7 @@ export function SettingsPage() {
 
   const infoRows = [
     { label: 'Application', value: 'B&R Engineering Estimation Tool' },
-    { label: 'Version', value: 'v0.2' },
+    { label: 'Version', value: 'v0.3' },
     { label: 'Technology', value: 'Next.js, React, TypeScript, Tailwind CSS' },
     { label: 'Data Storage', value: 'Local (client-side state)' },
     { label: 'Backend', value: 'Not connected (planned)' },
@@ -54,16 +54,23 @@ export function SettingsPage() {
   ];
 
   const plannedIntegrations = [
-    { name: 'Theme System', status: 'Completed' as const },
-    { name: 'Keyboard Shortcuts', status: 'Completed' as const },
-    { name: 'Project Duplicate', status: 'Completed' as const },
-    { name: 'Clipboard Export', status: 'Completed' as const },
+    { name: 'Theme System (Light/Dark)', status: 'Completed' as const },
+    { name: 'Keyboard Shortcuts System', status: 'Completed' as const },
+    { name: 'Project Save & Duplicate', status: 'Completed' as const },
+    { name: 'Clipboard & JSON Export', status: 'Completed' as const },
+    { name: 'Cost Estimation Engine', status: 'Completed' as const },
+    { name: 'Project Timeline Generator', status: 'Completed' as const },
+    { name: 'Step Validation Indicators', status: 'Completed' as const },
+    { name: 'I/O Summary Visualization', status: 'Completed' as const },
+    { name: 'Complexity Gauge (SVG)', status: 'Completed' as const },
+    { name: 'Animated Counters', status: 'Completed' as const },
+    { name: 'Dark Mode Full Support', status: 'Completed' as const },
     { name: 'Excel Export', status: 'Planned' as const },
     { name: 'Jira Integration', status: 'Planned' as const },
     { name: 'ML-based Estimation', status: 'Planned' as const },
     { name: 'Historical Data', status: 'Planned' as const },
     { name: 'User Authentication', status: 'Planned' as const },
-    { name: 'Database Storage', status: 'Planned' as const },
+    { name: 'Database Storage (Prisma)', status: 'Planned' as const },
   ];
 
   const techBadges = [
@@ -212,7 +219,7 @@ export function SettingsPage() {
                 B&R Engineering Estimation Tool
               </h2>
               <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                v0.2 — Frontend Prototype
+                v0.3 — Frontend Prototype
               </span>
             </div>
             <p className="text-xs text-muted-foreground max-w-lg leading-relaxed">

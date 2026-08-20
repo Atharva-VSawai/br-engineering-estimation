@@ -1,16 +1,42 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, Check, X } from 'lucide-react';
+import { Search, Check, X, Cpu, Cable, Zap, Monitor, Shield, Server, Code2, Wrench, Eye, Cog, Wifi, Smartphone, Settings2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
 import { PRODUCT_CATEGORIES } from '@/data';
+import type { LucideIcon } from 'lucide-react';
+
+const CATEGORY_ICONS: Record<string, LucideIcon> = {
+  'Controllers': Cpu,
+  'I/O Modules': Cable,
+  'Motion Systems': Zap,
+  'HMI Panels': Monitor,
+  'Safety': Shield,
+  'Industrial PCs': Server,
+  'Software': Code2,
+  'Accessories': Wrench,
+  'PLC Systems': Cpu,
+  'I/O Systems': Cable,
+  'Vision Systems': Eye,
+  'Safety Technology': Shield,
+  'Motion Control': Zap,
+  'Mechatronic Systems': Cog,
+  'Robotics': Cog,
+  'Network & Fieldbus': Cable,
+  'Industrial IoT': Wifi,
+  'Process Control': Settings2,
+  'Mobile Automation': Smartphone,
+  'HMI': Monitor,
+};
 
 export function ProductExplorerPage() {
   const { products, toggleProductUsed } = useAppStore();
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [recentlyToggled, setRecentlyToggled] = useState<Set<string>>(new Set());
 
   const usedCount = useMemo(
     () => products.filter((p) => p.usedInProject).length,
@@ -34,6 +60,22 @@ export function ProductExplorerPage() {
     return filtered;
   }, [products, selectedCategory, searchQuery]);
 
+  const handleToggle = (name: string) => {
+    toggleProductUsed(name);
+    setRecentlyToggled((prev) => {
+      const next = new Set(prev);
+      next.add(name);
+      return next;
+    });
+    setTimeout(() => {
+      setRecentlyToggled((prev) => {
+        const next = new Set(prev);
+        next.delete(name);
+        return next;
+      });
+    }, 300);
+  };
+
   const handleClearSelection = () => {
     products.forEach((p) => {
       if (p.usedInProject) toggleProductUsed(p.name);
@@ -42,11 +84,16 @@ export function ProductExplorerPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-lg font-bold text-foreground">B&R Product Explorer</h1>
-        <p className="text-sm text-muted-foreground">
-          Explore the B&R product ecosystem for industrial automation.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-foreground">B&R Product Explorer</h1>
+          <p className="text-sm text-muted-foreground">
+            Explore the B&R product ecosystem for industrial automation.
+          </p>
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          {usedCount} of {products.length} selected
+        </span>
       </div>
 
       {/* Search */}
@@ -93,17 +140,19 @@ export function ProductExplorerPage() {
             </button>
             {PRODUCT_CATEGORIES.map((cat) => {
               const count = products.filter((p) => p.category === cat).length;
+              const IconComponent = CATEGORY_ICONS[cat];
               return (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`w-full flex items-center justify-between text-left rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`w-full flex items-center gap-2 text-left rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                     selectedCategory === cat
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
-                  <span>{cat}</span>
+                  {IconComponent && <IconComponent className="h-3.5 w-3.5 shrink-0" />}
+                  <span className="flex-1 truncate">{cat}</span>
                   <span className="text-[10px] opacity-60">{count}</span>
                 </button>
               );
@@ -118,12 +167,14 @@ export function ProductExplorerPage() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {filteredProducts.map((product) => (
-              <div
+              <motion.div
                 key={product.name}
-                className={`rounded-md border p-3 transition-all duration-150 hover:scale-[1.01] ${
+                animate={recentlyToggled.has(product.name) ? { scale: [0.95, 1] } : { scale: 1 }}
+                transition={{ duration: 0.3 }}
+                className={`rounded-md border p-3 transition-colors duration-150 ${
                   product.usedInProject
                     ? 'border-primary/30 bg-primary/5'
-                    : 'border-border bg-white hover:border-primary/20'
+                    : 'border-border bg-card hover:border-primary/20'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -136,18 +187,18 @@ export function ProductExplorerPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => toggleProductUsed(product.name)}
+                    onClick={() => handleToggle(product.name)}
                     className={`shrink-0 flex h-6 w-6 items-center justify-center rounded border transition-colors ${
                       product.usedInProject
                         ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border bg-white text-transparent hover:border-primary/50 hover:text-primary/50'
+                        : 'border-border bg-card text-transparent hover:border-primary/50 hover:text-primary/50'
                     }`}
                     title={product.usedInProject ? 'Remove from project' : 'Add to project'}
                   >
                     <Check className="h-3.5 w-3.5" />
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
           {filteredProducts.length === 0 && (

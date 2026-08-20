@@ -38,6 +38,7 @@ export interface Project {
   complexity: ComplexityLevel;
   createdAt: string;
   updatedAt: string;
+  config?: ProjectConfig;
 }
 
 // ===== Controller =====
@@ -258,4 +259,5 @@ export interface EngineeringActivity {
   testing: boolean;
   commissioning: boolean;
   potentialComplexity: ComplexityLevel;
+  estimatedHours: number;
 }

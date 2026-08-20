@@ -34,7 +34,7 @@ export function StepMechatronics() {
                 className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                   m.type === type
                     ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                    : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                 }`}
               >
                 {type}

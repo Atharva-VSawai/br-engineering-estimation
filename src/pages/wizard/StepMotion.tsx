@@ -94,7 +94,7 @@ export function StepMotion() {
             <div className="flex flex-col items-center gap-0 py-3 px-4">
               {['Controller', 'Motion Control', 'Axis', 'Drive', 'Motor', 'Mechanical System'].map((item, idx, arr) => (
                 <React.Fragment key={item}>
-                  <div className="rounded-md border border-border bg-white px-4 py-1.5 text-xs font-medium text-foreground">
+                  <div className="rounded-md border border-border bg-card px-4 py-1.5 text-xs font-medium text-foreground">
                     {item}
                   </div>
                   {idx < arr.length - 1 && (
@@ -136,7 +136,7 @@ export function StepMotion() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04, duration: 0.3 }}
-                  className="rounded-md border border-border bg-white p-2.5 w-full"
+                  className="rounded-md border border-border bg-card p-2.5 w-full"
                 >
                   <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Axis {i + 1}
@@ -181,7 +181,7 @@ export function StepMotion() {
                 className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[11px] font-medium ${
                   isActive
                     ? 'border-primary/30 bg-primary/10 text-primary'
-                    : 'border-border bg-white text-muted-foreground'
+                    : 'border-border bg-card text-muted-foreground'
                 }`}
               >
                 {isActive && <span className="mr-1">✓</span>}{activity}

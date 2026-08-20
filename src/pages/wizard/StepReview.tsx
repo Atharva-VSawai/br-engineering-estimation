@@ -256,7 +256,7 @@ export function StepReview() {
           {sections.map(({ title, step, content, configured }) => (
             <div
               key={title}
-              className={`flex items-start justify-between rounded-md border bg-white p-3 border-l-2 ${configured ? 'border-l-emerald-300' : 'border-l-gray-200'}`}
+              className={`flex items-start justify-between rounded-md border bg-card p-3 border-l-2 ${configured ? 'border-l-emerald-300' : 'border-l-gray-200'}`}
             >
               <div className="min-w-0 flex-1 flex items-start gap-2.5">
                 <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${configured ? 'bg-emerald-500' : 'bg-gray-300'}`} />

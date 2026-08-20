@@ -39,7 +39,7 @@ export function StepComplexity() {
                     className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
                       c[key] === level
                         ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                     }`}
                   >
                     {level}
@@ -64,7 +64,7 @@ export function StepComplexity() {
                     className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
                       c.requirementClarity === level
                         ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                     }`}
                   >
                     {level}
@@ -83,7 +83,7 @@ export function StepComplexity() {
                     className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
                       c.customerChangeFrequency === level
                         ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                     }`}
                   >
                     {level}
@@ -102,7 +102,7 @@ export function StepComplexity() {
                     className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
                       c.reuseLevel === level
                         ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                        : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                     }`}
                   >
                     {level}

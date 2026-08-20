@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { PlusCircle, Search, Copy, Trash2 } from 'lucide-react';
+import { PlusCircle, Search, Copy, Trash2, FolderOpen } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,8 @@ export function ProjectsPage() {
     }
   };
 
+  const isSearching = searchTerm !== '' || statusFilter !== 'All';
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -99,7 +102,7 @@ export function ProjectsPage() {
               className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                 statusFilter === status
                   ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                  : 'border-border bg-card text-muted-foreground hover:border-primary/50'
               }`}
             >
               {status}
@@ -108,55 +111,85 @@ export function ProjectsPage() {
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Showing {filteredProjects.length} of {projects.length} projects
-      </p>
+      {filteredProjects.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          Showing {filteredProjects.length} of {projects.length} projects
+        </p>
+      )}
 
-      <SectionCard title="Project History">
-        <div className="overflow-x-auto -mx-4 px-4">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Project ID</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Project Name</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Customer</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Machine Type</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Created</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Updated</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Complexity</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Status</TableHead>
-                <TableHead className="text-xs font-semibold text-muted-foreground h-9">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProjects.map((p) => (
-                <TableRow key={p.id} className="border-border hover:bg-muted/50 cursor-pointer">
-                  <TableCell className="text-xs font-mono text-muted-foreground py-2.5">{p.id}</TableCell>
-                  <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground py-2.5">{p.createdAt}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
-                  <TableCell className="py-2.5"><ComplexityBadge level={p.complexity} /></TableCell>
-                  <TableCell className="py-2.5"><StatusBadge status={p.status} /></TableCell>
-                  <TableCell className='py-2.5'>
-                    <div className='flex items-center gap-1'>
-                      <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-foreground' onClick={(e) => { e.stopPropagation(); handleDuplicate(p); }}>
-                        <Copy className='h-3.5 w-3.5' />
-                      </Button>
-                      {!p.id.startsWith('sample-') && (
-                        <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-destructive' onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}>
-                          <Trash2 className='h-3.5 w-3.5' />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
+      {filteredProjects.length === 0 ? (
+        <SectionCard title="Project History">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center justify-center py-16"
+          >
+            <FolderOpen className="h-12 w-12 text-muted-foreground/30" />
+            <h3 className="text-sm font-medium text-foreground mt-4">No projects found</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              {isSearching
+                ? 'Try adjusting your search or filter'
+                : 'Create your first estimate to get started'}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3 text-xs"
+              onClick={() => setCurrentPage('new-estimate')}
+            >
+              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+              New Estimate
+            </Button>
+          </motion.div>
+        </SectionCard>
+      ) : (
+        <SectionCard title="Project History">
+          <div className="overflow-x-auto -mx-4 px-4">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Project ID</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Project Name</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Customer</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Machine Type</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Created</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Updated</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Complexity</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Status</TableHead>
+                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </SectionCard>
+              </TableHeader>
+              <TableBody>
+                {filteredProjects.map((p) => (
+                  <TableRow key={p.id} className="border-border hover:bg-muted/50 cursor-pointer">
+                    <TableCell className="text-xs font-mono text-muted-foreground py-2.5">{p.id}</TableCell>
+                    <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground py-2.5">{p.createdAt}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
+                    <TableCell className="py-2.5"><ComplexityBadge level={p.complexity} /></TableCell>
+                    <TableCell className="py-2.5"><StatusBadge status={p.status} /></TableCell>
+                    <TableCell className='py-2.5'>
+                      <div className='flex items-center gap-1'>
+                        <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-foreground' onClick={(e) => { e.stopPropagation(); handleDuplicate(p); }}>
+                          <Copy className='h-3.5 w-3.5' />
+                        </Button>
+                        {!p.id.startsWith('sample-') && (
+                          <Button variant='ghost' size='sm' className='h-7 w-7 p-0 text-muted-foreground hover:text-destructive' onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}>
+                            <Trash2 className='h-3.5 w-3.5' />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </SectionCard>
+      )}
     </div>
   );
 }

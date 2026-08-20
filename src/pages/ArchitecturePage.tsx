@@ -36,8 +36,8 @@ function ArchBlockItem({ item, index }: { item: ArchBlock; index: number }) {
           : item.isPrimary
           ? 'border-2 border-primary/40 bg-primary/5 font-semibold text-primary'
           : item.isSecondary
-          ? 'border border-primary/30 bg-white font-medium text-foreground ring-1 ring-primary/20'
-          : 'border border-border bg-white text-foreground'
+          ? 'border border-primary/30 bg-card font-medium text-foreground ring-1 ring-primary/20'
+          : 'border border-border bg-card text-foreground'
       }`}
     >
       {item.isController && (
@@ -144,7 +144,7 @@ export function ArchitecturePage() {
               className={`px-2 py-1 text-[11px] rounded ${
                 item === '→' ? 'text-muted-foreground' :
                 item === 'B&R Product' || item === 'Engineering Effort' ? 'bg-primary/10 text-primary font-semibold' :
-                'bg-white border border-border text-foreground'
+                'bg-card border border-border text-foreground'
               }`}
             >
               {item}

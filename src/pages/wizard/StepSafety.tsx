@@ -28,7 +28,7 @@ export function StepSafety() {
                   className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
                     s.enabled === val
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-white text-muted-foreground hover:border-primary/50'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/50'
                   }`}
                 >
                   {val ? 'Yes' : 'No'}
@@ -76,7 +76,7 @@ export function StepSafety() {
               <div className="flex flex-col items-center gap-0 py-3 px-4">
                 {['Safety Design', 'Configuration', 'Programming', 'Validation', 'Testing', 'Commissioning'].map((item, idx, arr) => (
                   <React.Fragment key={item}>
-                    <div className="rounded-md border border-border bg-white px-4 py-1.5 text-xs font-medium text-foreground">
+                    <div className="rounded-md border border-border bg-card px-4 py-1.5 text-xs font-medium text-foreground">
                       {item}
                     </div>
                     {idx < arr.length - 1 && <ArrowDown className="h-4 w-4 text-muted-foreground" />}

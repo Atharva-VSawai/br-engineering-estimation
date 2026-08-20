@@ -96,7 +96,7 @@ export function AppSidebar() {
         <div className="text-[10px] text-muted-foreground leading-tight">Frontend Prototype</div>
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground leading-tight">
           <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
-          v0.2
+          v0.3
         </div>
       </div>
     </aside>
