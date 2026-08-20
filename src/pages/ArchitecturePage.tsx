@@ -30,7 +30,7 @@ function ArchBlockItem({ item, index }: { item: ArchBlock; index: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      className={`rounded-md px-6 py-2 font-sans text-sm ${
+      className={`relative rounded-md px-6 py-2 pr-8 font-sans text-sm ${
         item.isController
           ? 'border-2 border-primary/40 bg-primary/10 font-semibold text-primary'
           : item.isPrimary
@@ -43,10 +43,13 @@ function ArchBlockItem({ item, index }: { item: ArchBlock; index: number }) {
       {item.isController && (
         <>
           <div className="relative z-10">Controller</div>
-          <div className="absolute inset-0 rounded-md bg-primary/5 animate-pulse" />
+          <div className="absolute inset-0 rounded-md bg-primary/5 dark:bg-primary/10 animate-pulse" />
         </>
       )}
       {!item.isController && item.label}
+      <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-bold text-muted-foreground">
+        {index + 1}
+      </span>
     </motion.div>
   );
 }
@@ -64,6 +67,7 @@ function ConnectingLine({ index }: { index: number }) {
 
 export function ArchitecturePage() {
   return (
+    <div className="bg-gradient-to-br from-background via-background to-muted/20">
     <div className="space-y-6">
       <div>
         <h1 className="text-lg font-bold text-foreground">Machine Architecture</h1>
@@ -129,7 +133,7 @@ export function ArchitecturePage() {
           { label: 'Industrial PC', desc: 'Automation PC for edge computing and IIoT', color: 'border-purple-200 dark:border-purple-700/40 bg-purple-50/50 dark:bg-purple-950/30' },
           { label: 'IIoT', desc: 'Cloud connectivity, data collection, analytics', color: 'border-teal-200 dark:border-teal-700/40 bg-teal-50/50 dark:bg-teal-950/30' },
         ].map((item) => (
-          <div key={item.label} className={`rounded-md border p-3 hover:bg-muted/50 hover:border-primary/20 transition-all duration-150 ${item.color}`}>
+          <div key={item.label} className={`rounded-md border p-3 hover:bg-muted/50 hover:border-primary/20 hover:shadow-sm transition-all duration-150 ${item.color}`}>
             <div className="text-xs font-semibold text-foreground">{item.label}</div>
             <div className="text-[11px] text-muted-foreground/80 mt-1">{item.desc}</div>
           </div>
@@ -152,6 +156,7 @@ export function ArchitecturePage() {
           ))}
         </div>
       </SectionCard>
+    </div>
     </div>
   );
 }

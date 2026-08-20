@@ -832,3 +832,204 @@ Unresolved Issues / Risks / Next Phase Recommendations:
 - **Priority 4**: Connect cost estimation to validated company formulas
 - **Risk**: HMI screen preview is static
 - **Risk**: Cost estimation formulas are simplified placeholders
+
+---
+Task ID: 10a
+Agent: Sub-Agent (general-purpose)
+Task: Styling polish round v0.5 — Product Explorer cards, Dashboard table, Architecture visual, Activities matrix
+
+Work Log:
+
+- **TASK 1 — Product Explorer Product Cards**:
+  - Replaced raw hex `border-t-[#...]` values in `CATEGORY_BORDER_COLORS` mapping with proper Tailwind utility classes (`border-t-blue-400`, `border-t-violet-400`, `border-t-orange-400`, `border-t-cyan-400`, `border-t-red-400`, `border-t-emerald-400`, `border-t-amber-400`, `border-t-gray-400`). Kept extra aliases (HMI, Safety Technology) for backward compatibility.
+  - Changed product description text from `text-xs text-muted-foreground` to `text-[13px] text-foreground` for improved readability.
+  - Cleaned up the 'Used' toggle button active state: removed explicit `border border-primary` when active, keeping only `bg-primary text-primary-foreground` for a true filled button look.
+
+- **TASK 2 — Dashboard Table Row Interactions**:
+  - Added `COMPLEXITY_LEFT_BORDER` mapping object: Low→`border-l-emerald-400`, Medium→`border-l-amber-400`, High→`border-l-orange-400`, Very High→`border-l-red-400`.
+  - Each project TableRow now has `transition-colors duration-150 hover:bg-primary/[0.03] border-l-2` with the complexity-mapped left border color.
+  - Replaced hardcoded 'X20, ACOPOStrak, ACOPOS' in B&R Configuration column with dynamic `{p.industry || p.machineType}` per project.
+  - Wrapped 'View All' button in a `<div className="group">` and changed `hover:underline` to `group-hover:underline` on the button text.
+
+- **TASK 3 — Architecture Page Visual Improvements**:
+  - Connected Components grid items: added `hover:shadow-sm` to existing hover/transition classes.
+  - Controller block glow: changed from `bg-primary/5` to `bg-primary/5 dark:bg-primary/10` for proper dark mode visibility.
+  - Wrapped entire page content in `<div className="bg-gradient-to-br from-background via-background to-muted/20">`.
+  - Added number/index indicator to each ArchBlockItem: absolute-positioned circle (`-top-1.5 -right-1.5`, `w-5 h-5 rounded-full bg-muted text-[9px] font-bold text-muted-foreground`) showing sequential number (1-10). Added `relative` and `pr-8` to block container for proper positioning.
+
+- **TASK 4 — Engineering Activities Matrix**:
+  - Added zebra striping: alternating rows get `bg-muted/20` (every odd index via `rowIdx % 2 === 1`).
+  - Header row background: added `bg-muted/30` to the header TableRow.
+  - Checkmark icons: changed from `text-emerald-700` to `text-emerald-500` for consistency with emerald-500 color spec.
+  - Added Total Hours footer row using `TableFooter` component: sums all `estimatedHours` with `ENGINEERING_ACTIVITIES.reduce()`, displayed in `font-bold text-primary`. Imported `TableFooter` from table UI component.
+
+Results:
+- 0 new files created
+- 4 existing files edited: `ProductExplorerPage.tsx`, `DashboardPage.tsx`, `ArchitecturePage.tsx`, `EngineeringActivitiesPage.tsx`
+- `bun run lint` passes with zero errors
+- All existing functionality preserved
+- Responsive design maintained (mobile-first grid, overflow-x-auto tables)
+
+Unresolved / Next Phase:
+- Future: Make dashboard B&R Configuration column show actual selected products from project config when available
+- Future: Architecture page could show dynamic blocks based on current project configuration
+- Future: Engineering Activities matrix could be filterable/sortable
+
+---
+Task ID: 10b
+Agent: Sub-Agent (general-purpose)
+Task: New features round v0.5 — Inline editing, Quick Stats row, Export Report buttons
+
+Work Log:
+
+- **TASK 1 — Inline Editing on Review Step (StepReview.tsx)**:
+  - Added `editingSection` state (`useState<string | null>`) to track which section is being edited.
+  - Refactored section `content` to `staticContent` + `editFields` (typed `EditFieldDef[]`).
+  - Each `EditFieldDef` has: key, label, type ('text' | 'number' | 'select' | 'boolean'), value, options (for select), onUpdate.
+  - When 'Edit' button clicked → sets `editingSection` to section title instead of jumping to step.
+  - When `editingSection` matches, renders inline edit fields with framer-motion AnimatePresence animation:
+    - Text fields → `Input` from shadcn (onBlur/Enter to save via store update function)
+    - Number fields → `Input type="number"` (onBlur to save)
+    - Select fields → `Select/SelectTrigger/SelectContent/SelectItem` from shadcn (onValueChange to save)
+    - Boolean fields → `Switch` from shadcn (onCheckedChange to save)
+  - Blue left border (`border-l-blue-400`) on section card when being edited.
+  - 'Done' button with CheckCircle icon (bg-primary, text-primary-foreground, text-xs) to exit edit mode.
+  - Regular 'Edit' button with Pencil icon when NOT editing.
+  - Mapped all 12 sections (except Additional Features which has no edit fields):
+    - Project: name, customer, machineType (select), industry (select), projectVariants (number)
+    - Controller: family (select), quantity (number), performance (select)
+    - I/O: DI, DO, AI, AO, Safety I/O (all number)
+    - Motion: totalAxes, linearAxes, rotaryAxes, servoDrives (number), homingRequired (boolean/switch)
+    - HMI: type (select), screens (number), screenComplexity (select)
+    - Vision: enabled (boolean/switch), cameras (number)
+    - Safety: enabled (boolean/switch), controller (select), safetyIOCount (number)
+    - Communication: MES, SCADA, Cloud/IIoT (all boolean/switch)
+    - Mechatronics: type (select), movers (number)
+    - Robotics: enabled (boolean/switch), robotType (select), quantity (number)
+    - IIoT: ipcRequired (boolean/switch), ipcModel (select)
+    - Complexity: hardware, motion, hmi, software, testing (all select)
+  - Imported all store update functions: updateProjectInfo, updateController, updateIO, updateMotion, updateHMI, updateVision, updateSafety, updateCommunication, updateMechatronics, updateRobotics, updateIIoT, updateComplexity.
+  - Imported option arrays from data: MACHINE_TYPES, INDUSTRIES, CONTROLLER_FAMILIES, HMI_TYPES, SAFETY_CONTROLLERS, ROBOT_TYPES, IPC_MODELS.
+  - Imported types: ScreenComplexity, ComplexityLevel.
+  - Imported UI components: Input, Switch, Select, SelectContent, SelectItem, SelectTrigger, SelectValue.
+
+- **TASK 2 — Dashboard Quick Stats Row (DashboardPage.tsx)**:
+  - Added `config` to the useAppStore destructure.
+  - Imported icons: Cable, Zap, Monitor, Shield, Clock.
+  - Added new SectionCard 'Quick Configuration Overview' below the StatCards grid.
+  - Contains 5 mini stat items in a flex-wrap row (gap-6, centered on mobile, left-aligned on sm+):
+    1. Total I/O Points (Cable icon) — sum of all 9 I/O fields
+    2. Motion Axes (Zap icon) — config.motion.totalAxes
+    3. HMI Screens (Monitor icon) — config.hmi.screens
+    4. Safety I/O (Shield icon) — config.safety.safetyIOCount
+    5. Est. Hours (Clock icon) — calculated: ioTotal * 0.5 + motionAxes * 6 + hmiScreens * 8 + 40
+  - Each stat: icon (h-4 w-4, text-muted-foreground) + label (text-[11px]) + value (text-sm font-bold), vertically stacked.
+  - Wrapped in framer-motion entrance animation.
+
+- **TASK 3 — Estimate Summary Export/Share Buttons (EstimateSummaryPage.tsx)**:
+  - Added FileText, Share2 icons to lucide-react imports.
+  - Added a new `motion.div` row below 'Save as New Project' button with two buttons:
+    1. 'Export as PDF' (variant='outline', size='sm', FileText icon):
+       - Generates plain-text report as Blob, downloads as .txt file.
+       - Report includes: project name, customer, machine type, industry, date, complexity assessment (overall + per-dimension), cost breakdown (5 engineering areas + total hours), timeline summary (4 phases + total weeks).
+       - Uses same calculation logic as existing cost/timeline sections.
+       - Filename: `{projectName}_report.txt`
+    2. 'Share Report' (variant='outline', size='sm', Share2 icon):
+       - Copies identical report text to clipboard via `navigator.clipboard.writeText`.
+       - Shows toast: 'Report copied to clipboard'.
+  - Wrapped in framer-motion entrance animation (delay: 0.1).
+
+Results:
+- 0 new files created
+- 3 existing files edited: `StepReview.tsx`, `DashboardPage.tsx`, `EstimateSummaryPage.tsx`
+- `bun run lint` passes with zero errors
+- All existing functionality preserved
+- Responsive design maintained (mobile-first grid, flex-wrap)
+
+Unresolved / Next Phase:
+- Future: Expand inline editing to Additional Features section (protocol toggles)
+- Future: Extract report generation logic into a shared utility to avoid duplication between Export and Share
+- Future: Generate actual PDF reports using a PDF library (e.g., jsPDF or server-side)
+
+---
+Task ID: 10a
+Agent: Styling Sub-agent
+Task: Styling polish round v0.5
+
+Work Log:
+- **ProductExplorerPage**: Updated CATEGORY_BORDER_COLORS to Tailwind utility classes (border-t-blue-400 etc.), product description changed to text-[13px] text-foreground for better readability, 'Used' toggle active state now uses bg-primary text-primary-foreground.
+- **DashboardPage**: Added COMPLEXITY_LEFT_BORDER mapping, each TableRow has border-l-2 with complexity color + hover:bg-primary/[0.03] + transition-colors duration-150. B&R Configuration column now shows p.industry || p.machineType dynamically. 'View All' link wrapped in group div with group-hover:underline.
+- **ArchitecturePage**: Connected Components grid items have hover:shadow-sm and hover:border-primary/20. Controller glow uses bg-primary/5 dark:bg-primary/10. Page wrapped in bg-gradient-to-br from-background via-background to-muted/20. Each architecture block has a numbered circle indicator (w-5 h-5 rounded-full bg-muted text-[9px]) in top-right corner.
+- **EngineeringActivitiesPage**: Zebra striping on table rows (alternating bg-muted/20). Header row bg-muted/30. Checkmark icons changed to text-emerald-500. New TableFooter row with summed Total Hours in font-bold text-primary.
+
+Stage Summary:
+- 4 files edited for visual polish
+- All existing functionality preserved
+- `bun run lint` passes with zero errors
+
+---
+Task ID: 10b
+Agent: Features Sub-agent
+Task: New features v0.5 — Inline Editing, Quick Stats, Export Report
+
+Work Log:
+- **Inline Editing on Review Step (StepReview.tsx)**: Added editingSection state. Clicking 'Edit' toggles inline editing instead of jumping to wizard step. 11 of 12 sections have editable fields (3-5 key fields each). Input for text/number, Select for enums, Switch for booleans. Blue left border (border-l-blue-400) on editing section. 'Done' button exits edit mode. All store update functions wired up. AnimatePresence for transition animation.
+- **Dashboard Quick Stats Row (DashboardPage.tsx)**: New SectionCard 'Quick Configuration Overview' below StatCards. 5 mini stats: Total I/O Points (Cable icon), Motion Axes (Zap), HMI Screens (Monitor), Safety I/O (Shield), Est. Hours (Clock, calculated on-the-fly). Responsive flex-wrap layout. framer-motion entrance animation.
+- **Export/Share Report (EstimateSummaryPage.tsx)**: Two buttons below 'Save as New Project': 'Export as PDF' downloads formatted .txt report via Blob, 'Share Report' copies report to clipboard with toast. Report includes project info, complexity assessment, cost breakdown, timeline summary.
+
+Stage Summary:
+- 3 files edited for new features
+- All existing functionality preserved
+- `bun run lint` passes with zero errors
+
+---
+Task ID: 10
+Agent: Main Orchestrator (Round 10)
+Task: QA, styling improvements, new features
+
+Work Log:
+- **QA Testing**: Full agent-browser tour — Dashboard (Quick Stats verified), Wizard (Load Sample, all steps), Review (inline editing verified — Edit→input/Done flow, border-l-blue), Estimate Summary (Export/Share buttons verified, 0 errors on download), dark mode, all sidebar pages. Zero runtime errors, zero console errors.
+- **No bugs found** — v0.4 was stable.
+- **Version Bump**: v0.4 → v0.5 across AppSidebar, Settings, AppLayout.
+
+Stage Summary:
+- Version bumped to v0.5 with 4 new styling improvements and 3 new features
+- 7 files edited across styling and features
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully
+- All pages verified via agent-browser QA
+
+---
+Project Status: Feature-rich working prototype (v0.5)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Browser QA: Verified across 6 rounds
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+- Total features: Dark/light mode, keyboard shortcuts (⌘K/⌘S/⌘D/⌘Shift+C/Alt+1-9/←→), toast notifications, JSON export, clipboard copy, page transitions, search/filter, visual I/O bars, complexity heatmap, axis overview grid, HMI screen mockup, activity timeline with colored borders, configuration completeness, complexity profile bars, review status indicators, sidebar tooltips, product explorer with category icons and border accents, animated architecture diagram with numbered blocks, project duplicate/delete, frosted glass header, B&R brand stripe, sticky footer, print styles, gradient background, card hover effects, form field transitions, animated counters, welcome banner, cost estimation engine, project timeline, header circular progress, step validation dots, save as new project, empty states, effort summary card, SVG complexity gauge, I/O summary bar chart, notification center with slide-out panel, project comparison page, real-time field validation indicators, inline editing on review step, quick configuration overview dashboard row, export/share report functionality, zebra-striped activity matrix, architecture numbered blocks, product card category border accents
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ QA testing — all pages including new features verified (0 errors)
+- ✅ Product Explorer — category border accents on all cards, improved description readability, active toggle styling
+- ✅ Dashboard — complexity left borders on table rows, hover effects, dynamic B&R config column, Quick Configuration Overview with 5 live stats
+- ✅ Architecture — numbered blocks, gradient background, improved controller glow, connected components hover effects
+- ✅ Engineering Activities — zebra striping, total hours footer, improved checkmark colors
+- ✅ Review Step — inline editing for 11 sections with AnimatePresence transitions
+- ✅ Estimate Summary — Export as PDF (.txt report download) and Share Report (clipboard copy)
+- ✅ Version bumped to v0.5
+- ✅ ESLint clean, dev server compiles successfully
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: None — all identified issues resolved
+- **Priority 2**: Inline editing could be expanded to all wizard fields (currently 3-5 key fields per section)
+- **Priority 2**: Export uses plain text — upgrade to proper PDF with a library (e.g. @react-pdf/renderer or jspdf)
+- **Priority 2**: Notification center uses static data — connect to real app events
+- **Priority 3**: Persist project data to database via Prisma
+- **Priority 3**: Add user authentication via NextAuth
+- **Priority 3**: Field validation indicators could expand to all 14 wizard steps
+- **Priority 4**: Responsive design improvements for mobile viewports
+- **Priority 4**: Comparison page could show radar chart overlay for complexity dimensions
+- **Priority 4**: HMI screen preview could reflect actual HMI configuration
+- **Risk**: Cost estimation formulas are simplified placeholders
+- **Risk**: Export report is plain text, not formatted PDF

@@ -10,6 +10,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -71,7 +72,7 @@ export function EngineeringActivitiesPage() {
         <div className="overflow-x-auto -mx-4 px-4">
           <Table>
             <TableHeader>
-              <TableRow className="border-border hover:bg-transparent">
+              <TableRow className="border-border hover:bg-transparent bg-muted/30">
                 <TableHead className="text-xs font-semibold text-muted-foreground h-9">Technology</TableHead>
                 <TableHead className="text-center text-xs font-semibold text-muted-foreground h-9">Config</TableHead>
                 <TableHead className="text-center text-xs font-semibold text-muted-foreground h-9">Program</TableHead>
@@ -83,13 +84,13 @@ export function EngineeringActivitiesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ENGINEERING_ACTIVITIES.map((row) => (
-                <TableRow key={row.technology} className="border-border hover:bg-muted/50">
+              {ENGINEERING_ACTIVITIES.map((row, rowIdx) => (
+                <TableRow key={row.technology} className={`border-border hover:bg-muted/50 ${rowIdx % 2 === 1 ? 'bg-muted/20' : ''}`}>
                   <TableCell className="text-xs font-medium text-foreground py-2.5">{row.technology}</TableCell>
                   {['configuration', 'programming', 'integration', 'testing', 'commissioning'].map((col) => (
                     <TableCell key={col} className="text-center py-2.5">
                       {row[col as keyof typeof row] ? (
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-700 text-xs">✓</span>
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-emerald-100 text-emerald-500 text-xs">✓</span>
                       ) : (
                         <span className="text-border text-xs">—</span>
                       )}
@@ -102,6 +103,14 @@ export function EngineeringActivitiesPage() {
                 </TableRow>
               ))}
             </TableBody>
+            <TableFooter>
+              <TableRow className="border-border hover:bg-transparent">
+                <TableCell className="text-xs font-bold text-primary py-2.5">Total Hours</TableCell>
+                <TableCell colSpan={5} />
+                <TableCell className="text-xs font-bold text-primary py-2.5">{ENGINEERING_ACTIVITIES.reduce((sum, a) => sum + a.estimatedHours, 0)}h</TableCell>
+                <TableCell />
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       </SectionCard>

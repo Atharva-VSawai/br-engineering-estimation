@@ -10,16 +10,16 @@ import { PRODUCT_CATEGORIES } from '@/data';
 import type { LucideIcon } from 'lucide-react';
 
 const CATEGORY_BORDER_COLORS: Record<string, string> = {
-  'Controllers': 'border-t-[#3b82f6]',
-  'I/O Modules': 'border-t-[#8b5cf6]',
-  'Motion Systems': 'border-t-[#f97316]',
-  'HMI': 'border-t-[#06b6d4]',
-  'HMI Panels': 'border-t-[#06b6d4]',
-  'Safety': 'border-t-[#ef4444]',
-  'Safety Technology': 'border-t-[#ef4444]',
-  'Industrial PCs': 'border-t-[#10b981]',
-  'Software': 'border-t-[#f59e0b]',
-  'Accessories': 'border-t-[#6b7280]',
+  'Controllers': 'border-t-blue-400',
+  'I/O Modules': 'border-t-violet-400',
+  'Motion Systems': 'border-t-orange-400',
+  'HMI': 'border-t-cyan-400',
+  'HMI Panels': 'border-t-cyan-400',
+  'Safety': 'border-t-red-400',
+  'Safety Technology': 'border-t-red-400',
+  'Industrial PCs': 'border-t-emerald-400',
+  'Software': 'border-t-amber-400',
+  'Accessories': 'border-t-gray-400',
 };
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -196,7 +196,7 @@ export function ProductExplorerPage() {
                     <div className="text-[11px] text-muted-foreground mt-0.5">{product.category}</div>
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <span className="text-[8px] bg-primary/10 text-primary rounded px-1 shrink-0">B&R</span>
-                      <span className="text-xs text-muted-foreground leading-relaxed">{product.description}</span>
+                      <span className="text-[13px] text-foreground leading-relaxed">{product.description}</span>
                     </div>
                     <div className="text-[11px] text-muted-foreground mt-1.5">
                       <span className="font-medium text-foreground">Engineering Role:</span> {product.engineeringRole}
@@ -206,7 +206,7 @@ export function ProductExplorerPage() {
                     onClick={() => handleToggle(product.name)}
                     className={`shrink-0 flex items-center justify-center rounded-md transition-colors ${
                       product.usedInProject
-                        ? 'h-7 px-2.5 border border-primary bg-primary text-primary-foreground text-[11px] font-medium gap-1'
+                        ? 'h-7 px-2.5 bg-primary text-primary-foreground text-[11px] font-medium gap-1'
                         : 'h-6 w-6 border border-border bg-card text-transparent hover:border-primary/50 hover:text-primary/50'
                     }`}
                     title={product.usedInProject ? 'Remove from project' : 'Add to project'}

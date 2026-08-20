@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock } from 'lucide-react';
 import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
@@ -34,6 +34,13 @@ const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
 
 const ALL_LEVELS: ComplexityLevel[] = ['Low', 'Medium', 'High', 'Very High'];
 
+const COMPLEXITY_LEFT_BORDER: Record<ComplexityLevel, string> = {
+  Low: 'border-l-emerald-400',
+  Medium: 'border-l-amber-400',
+  High: 'border-l-orange-400',
+  'Very High': 'border-l-red-400',
+};
+
 const ACTIVITY_DOT_COLORS: Record<string, string> = {
   edit: 'bg-blue-400',
   info: 'bg-amber-400',
@@ -59,7 +66,7 @@ const recentActivity = [
 ];
 
 export function DashboardPage() {
-  const { projects, setCurrentPage, loadSampleConfig } = useAppStore();
+  const { projects, config, setCurrentPage, loadSampleConfig } = useAppStore();
 
   const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
   const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
@@ -168,6 +175,41 @@ export function DashboardPage() {
           </div>
         </div>
 
+        {/* Quick Stats Row */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15, duration: 0.3 }}
+        >
+          <SectionCard title="Quick Configuration Overview">
+            <div className="flex flex-wrap gap-6 justify-center sm:justify-start">
+              {(() => {
+                const totalIO =
+                  config.io.digitalInputs + config.io.digitalOutputs +
+                  config.io.analogInputs + config.io.analogOutputs +
+                  config.io.safetyIO + config.io.encoderCounterModules +
+                  config.io.temperatureModules + config.io.communicationIO +
+                  config.io.specialModules;
+                const estHours = totalIO * 0.5 + config.motion.totalAxes * 6 + config.hmi.screens * 8 + 40;
+                const quickStats = [
+                  { icon: Cable, label: 'Total I/O Points', value: String(totalIO) },
+                  { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes) },
+                  { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens) },
+                  { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount) },
+                  { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1) },
+                ];
+                return quickStats.map((stat) => (
+                  <div key={stat.label} className="flex flex-col items-center gap-1">
+                    <stat.icon className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground">{stat.label}</span>
+                    <span className="text-sm font-bold text-foreground">{stat.value}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+          </SectionCard>
+        </motion.div>
+
         {/* Quick Actions & Complexity Distribution */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Quick Actions */}
@@ -251,13 +293,13 @@ export function DashboardPage() {
                 {projects.map((p) => (
                   <TableRow
                     key={p.id}
-                    className="border-border cursor-pointer hover:bg-muted/50"
+                    className={`border-border cursor-pointer transition-colors duration-150 hover:bg-primary/[0.03] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
                     onClick={() => setCurrentPage('projects')}
                   >
                     <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
                     <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground py-2.5">X20, ACOPOStrak, ACOPOS</TableCell>
+                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.industry || p.machineType}</TableCell>
                     <TableCell className="py-2.5">
                       <ComplexityBadge level={p.complexity} />
                     </TableCell>
@@ -290,10 +332,12 @@ export function DashboardPage() {
                 <span className="text-[11px] font-medium text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
               </motion.div>
             ))}
-            <button className="flex items-center gap-0.5 text-primary text-[11px] font-medium pt-2 hover:underline">
-              View All
-              <ChevronRight className="h-3 w-3" />
-            </button>
+            <div className="group pt-2">
+              <button className="flex items-center gap-0.5 text-primary text-[11px] font-medium group-hover:underline">
+                View All
+                <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
           </div>
         </SectionCard>
 
