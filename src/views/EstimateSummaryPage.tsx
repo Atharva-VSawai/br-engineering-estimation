@@ -10,7 +10,6 @@ import { StatusBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
 import { EFFORT_AREAS } from '@/data';
 import { toast } from 'sonner';
-import { exportPdf } from '@/lib/export-pdf';
 import { calculateEngineeringEffort } from '@/lib/effort-calculation';
 import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
 
@@ -202,10 +201,25 @@ export function EstimateSummaryPage() {
 
   const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
 
-  const handleExportPdf = useCallback(() => {
+  const handleExportPdf = useCallback(async () => {
     try {
       setExporting('pdf');
-      exportPdf(c);
+      const params = activeProjectId ? `?projectId=${encodeURIComponent(activeProjectId)}` : '';
+      const res = await fetch(`/api/export/pdf${params}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(c),
+      });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `br-estimate-${(c.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
       toast.success('PDF downloaded', { description: 'Report saved as PDF file.' });
     } catch (err) {
       console.error('PDF export error:', err);
@@ -213,7 +227,7 @@ export function EstimateSummaryPage() {
     } finally {
       setExporting(null);
     }
-  }, [c]);
+  }, [c, activeProjectId]);
 
   const handleExportExcel = useCallback(async () => {
     try {
@@ -242,11 +256,7 @@ export function EstimateSummaryPage() {
     }
   }, [c]);
 
-  useEffect(() => {
-    const handler = () => handleExportPdf();
-    window.addEventListener('br:export-pdf', handler);
-    return () => window.removeEventListener('br:export-pdf', handler);
-  }, [handleExportPdf]);
+
 
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>

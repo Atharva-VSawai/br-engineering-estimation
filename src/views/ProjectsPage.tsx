@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { PlusCircle, Search, Copy, Trash2, FolderOpen, GripVertical } from 'lucide-react';
+import { PlusCircle, Search, Copy, Trash2, FolderOpen, GripVertical, Eye, Pencil, FileText, Table2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { DndContext, closestCenter, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
@@ -73,7 +73,7 @@ const COMPLEXITY_BORDER: Record<ComplexityLevel, string> = {
 };
 
 export function ProjectsPage() {
-  const { projects, setCurrentPage, addProject, deleteProject, updateProject, updateConfig, reorderProjects } = useAppStore();
+  const { projects, setCurrentPage, addProject, deleteProject, updateProject, updateConfig, reorderProjects, openProject, setWizardStep } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
@@ -289,6 +289,18 @@ export function ProjectsPage() {
                           </TableCell>
                           <TableCell className="py-2.5">
                             <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="View Estimate Report" onClick={(e) => { e.stopPropagation(); openProject(p.id); setCurrentPage('estimate-summary'); }}>
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Edit Configuration" onClick={(e) => { e.stopPropagation(); openProject(p.id); setWizardStep(13); setCurrentPage('new-estimate'); }}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Export PDF" onClick={async (e) => { e.stopPropagation(); if (!p.config) { toast.error('No configuration'); return; } try { const r = await fetch(`/api/export/pdf?projectId=${encodeURIComponent(p.id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p.config) }); if (!r.ok) throw new Error(); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `br-estimate-${p.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); toast.success('PDF exported'); } catch { toast.error('PDF export failed'); } }}>
+                                <FileText className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" title="Export Excel" onClick={async (e) => { e.stopPropagation(); if (!p.config) { toast.error('No configuration'); return; } try { const r = await fetch('/api/export/excel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p.config) }); if (!r.ok) throw new Error(); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `br-estimate-${p.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); toast.success('Excel exported'); } catch { toast.error('Excel export failed'); } }}>
+                                <Table2 className="h-3.5 w-3.5" />
+                              </Button>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); handleDuplicate(p); }}>
                                 <Copy className="h-3.5 w-3.5" />
                               </Button>

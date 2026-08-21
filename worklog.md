@@ -2254,3 +2254,55 @@ Stage Summary:
 - Excel export button added with proper loading states
 - Excel data bug fixed: sheets now properly populated with all configuration and effort data
 - Both exports verified working end-to-end via agent-browser
+
+---
+Task ID: Server-Side PDF Export API Route
+Agent: Code Agent
+Task: Create server-side PDF export API route to replace broken client-side download
+
+Work Log:
+- Read existing client-side `src/lib/export-pdf.ts` to understand full 3-page PDF generation logic
+- Read existing `src/app/api/export/excel/route.ts` to follow the same API pattern
+- Created `src/app/api/export/pdf/route.ts` with identical PDF generation logic
+- Key difference from client-side: uses `doc.output('arraybuffer')` instead of `doc.output('blob')` + anchor click
+- Accepts POST with ProjectConfig body and optional `?projectId=` query param
+- Returns PDF as binary response with proper headers (Content-Type: application/pdf, Content-Disposition: attachment)
+- Fixed server-side compatibility issue: jsPDF Node.js build lacks `beginPath()`/`closePath()` methods (browser-only Canvas API wrappers); removed them since `doc.fill()` handles path closure implicitly
+- Verified route with curl: HTTP 200, valid %PDF-1.3 header, correct Content-Disposition filename, ~82-86KB for typical projects
+- Lint passes cleanly
+
+Stage Summary:
+- New API route at POST `/api/export/pdf?projectId=xxx` generates 3-page PDF server-side
+- Returns ArrayBuffer with proper PDF Content-Type and Content-Disposition headers
+- Client can now fetch this as a blob and trigger download (sandbox-compatible)
+- PDF content is identical to the client-side version (same charts, tables, layout)
+
+---
+Task ID: pdf-fix-and-project-actions
+Agent: Main Orchestrator
+Task: Fix PDF export (server-side API route), add action buttons to project rows
+
+Work Log:
+- Diagnosed PDF still not downloading: client-side jsPDF blocked in sandbox environment
+- Created server-side PDF API route at `src/app/api/export/pdf/route.ts` (same pattern as Excel route)
+  - Accepts POST with ProjectConfig body, optional `?projectId=` query param
+  - Uses jsPDF + autoTable server-side (Node.js compatible)
+  - Returns PDF as `application/pdf` binary response with Content-Disposition
+  - Removed Canvas 2D API calls (`beginPath`/`closePath`) that don't exist in Node.js
+  - Verified: 86KB valid PDF with `%PDF-1.3` header
+- Updated `EstimateSummaryPage.tsx` to use PDF API route instead of client-side jsPDF
+  - Removed `import { exportPdf }` and event listener
+  - Changed `handleExportPdf` to `async` fetch from `/api/export/pdf`
+- Updated `DashboardPage.tsx` project table:
+  - Added Actions column with 4 buttons per project: View Report (Eye), Edit Config (Pencil), Export PDF (FileText), Export Excel (Table2)
+  - Made table responsive with `hidden lg:table-cell` etc. on less-critical columns
+  - Removed row-level click handler (buttons handle navigation)
+- Updated `ProjectsPage.tsx` project table:
+  - Added same 4 action buttons to existing Actions column (alongside existing Copy/Delete)
+  - Uses `openProject(p.id)` to load config before navigation
+- All verified via agent-browser: buttons visible, PDF API returns 200, Excel API returns 200
+
+Stage Summary:
+- PDF export now works via server-side API route (86KB valid PDF)
+- Both Dashboard and Projects pages have View Report, Edit Config, Export PDF, Export Excel buttons per project
+- All exports verified end-to-end with 200 responses

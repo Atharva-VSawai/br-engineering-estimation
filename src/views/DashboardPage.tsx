@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson, Settings2, GripVertical } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson, Settings2, GripVertical, Eye, FileText, Table2, Loader2 } from 'lucide-react';
 import { DndContext, closestCenter, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -10,6 +10,7 @@ import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
+import { toast } from 'sonner';
 import type { ComplexityLevel } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -560,33 +561,70 @@ export function DashboardPage() {
                   <TableHead className="text-sm font-semibold text-muted-foreground h-9">Project</TableHead>
                   <TableHead className="text-sm font-semibold text-muted-foreground h-9">Customer</TableHead>
                   <TableHead className="text-sm font-semibold text-muted-foreground h-9">Machine Type</TableHead>
-                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">B&R Configuration</TableHead>
-                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Complexity</TableHead>
-                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Status</TableHead>
-                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Last Updated</TableHead>
+                  <TableHead className="text-sm font-semibold text-muted-foreground h-9 hidden lg:table-cell">B&R Configuration</TableHead>
+                  <TableHead className="text-sm font-semibold text-muted-foreground h-9 hidden sm:table-cell">Complexity</TableHead>
+                  <TableHead className="text-sm font-semibold text-muted-foreground h-9 hidden md:table-cell">Status</TableHead>
+                  <TableHead className="text-sm font-semibold text-muted-foreground h-9 hidden xl:table-cell">Last Updated</TableHead>
+                  <TableHead className="text-sm font-semibold text-muted-foreground h-9 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {projects.map((p) => (
                   <TableRow
                     key={p.id}
-                    className={`border-border cursor-pointer transition-colors duration-100 hover:bg-primary/[0.03] active:bg-primary/[0.06] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
-                    onClick={() => {
-                      openProject(p.id);
-                      setCurrentPage('estimate-summary');
-                    }}
+                    className={`border-border transition-colors duration-100 hover:bg-primary/[0.03] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
                   >
                     <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
                     <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.industry || p.machineType}</TableCell>
-                    <TableCell className="py-2.5">
+                    <TableCell className="text-sm text-muted-foreground py-2.5 hidden lg:table-cell">{p.industry || p.machineType}</TableCell>
+                    <TableCell className="py-2.5 hidden sm:table-cell">
                       <ComplexityBadge level={p.complexity} />
                     </TableCell>
-                    <TableCell className="py-2.5">
+                    <TableCell className="py-2.5 hidden md:table-cell">
                       <StatusBadge status={p.status} />
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground py-2.5 hidden xl:table-cell">{p.updatedAt}</TableCell>
+                    <TableCell className="py-2.5">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          title="View Estimate Report"
+                          onClick={(e) => { e.stopPropagation(); openProject(p.id); setCurrentPage('estimate-summary'); }}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          title="Edit Configuration"
+                          onClick={(e) => { e.stopPropagation(); openProject(p.id); setWizardStep(13); setCurrentPage('new-estimate'); }}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          title="Export PDF"
+                          onClick={async (e) => { e.stopPropagation(); if (!p.config) { toast.error('No configuration', { description: 'This project has no saved configuration.' }); return; } try { const r = await fetch(`/api/export/pdf?projectId=${encodeURIComponent(p.id)}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p.config) }); if (!r.ok) throw new Error(); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `br-estimate-${p.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); toast.success('PDF exported'); } catch { toast.error('PDF export failed'); } }}
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          title="Export Excel"
+                          onClick={async (e) => { e.stopPropagation(); if (!p.config) { toast.error('No configuration', { description: 'This project has no saved configuration.' }); return; } try { const r = await fetch('/api/export/excel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p.config) }); if (!r.ok) throw new Error(); const b = await r.blob(); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `br-estimate-${p.name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.xlsx`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u); toast.success('Excel exported'); } catch { toast.error('Excel export failed'); } }}
+                        >
+                          <Table2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
