@@ -242,6 +242,58 @@ export const WIZARD_STEPS = [
   'Review',
 ] as const;
 
+// ===== Default Protocols =====
+export const DEFAULT_PROTOCOLS: CommunicationProtocol[] = COMMUNICATION_PROTOCOLS.map((name) => ({
+  name,
+  enabled: false,
+  devices: 0,
+}));
+
+// ===== Default Additional Features =====
+export const DEFAULT_ADDITIONAL_FEATURES: AdditionalFeature[] = ADDITIONAL_FEATURE_OPTIONS.map((name) => ({
+  name,
+  enabled: false,
+  complexity: 'Basic' as const,
+}));
+
+// ===== Helper: create a project config =====
+function makeConfig(overrides: Partial<ProjectConfig> = {}): ProjectConfig {
+  const base: ProjectConfig = {
+    project: { name: '', customer: '', machineType: '', industry: '', description: '', requirementClarity: 'Mostly Clear', customerInvolvement: 'Medium', projectVariants: 1, machineStations: 1, complexity: 'Medium' },
+    controller: { family: 'X20', quantity: 1, performance: 'Standard', communicationInterfaces: '', redundancyRequired: false, simulationRequired: false, diagnosticsRequired: false },
+    io: { digitalInputs: 0, digitalOutputs: 0, analogInputs: 0, analogOutputs: 0, safetyIO: 0, encoderCounterModules: 0, temperatureModules: 0, communicationIO: 0, specialModules: 0 },
+    motion: { totalAxes: 0, linearAxes: 0, rotaryAxes: 0, servoDrives: 0, servoMotors: 0, homingRequired: false, positioning: false, velocityControl: false, torqueControl: false, synchronization: false, masterSlave: false, electronicGearing: false, electronicCamming: false, coordinatedMotion: false, interpolation: false, complexMotionProfiles: false, axisDiagnostics: false },
+    hmi: { type: 'Automation Panel', screens: 0, screenComplexity: 'Moderate', alarmManagement: false, recipeManagement: false, trendVisualization: false, userManagement: false, machineDiagnostics: false, manualMode: false, automaticMode: false, maintenanceScreens: false, parameterManagement: false },
+    vision: { enabled: false, cameras: 0, lightingSystems: 0, inspection: false, measurement: false, detection: false, identification: false, ocr: false, barcodeQR: false, patternMatching: false, positionDetection: false, qualityControl: false, triggering: '', plcIntegration: false, motionVisionSync: false },
+    safety: { enabled: false, controller: 'X20 Safety', safetyIOCount: 0, emergencyStops: 0, safetyDoors: 0, lightCurtains: 0, safeMotion: false, safetyFunctions: false, validationRequired: false, testingRequired: false, documentationRequired: false },
+    communication: { protocols: DEFAULT_PROTOCOLS.map((p) => ({ ...p })), plcToPlc: false, mesIntegration: false, scadaIntegration: false, cloudIIoTIntegration: false },
+    mechatronics: { type: 'None', movers: 0, processingStations: 0, moverRouting: false, independentMoverControl: false, synchronization: false, transportSequences: false, productHandling: false, visionIntegration: false, hmiIntegration: false, safetyIntegration: false, diagnostics: false },
+    robotics: { enabled: false, robotType: 'Delta', quantity: 0, motionIntegration: false, visionIntegration: false, pickAndPlace: false, trajectoryProgramming: false, synchronization: false, simulation: false, safety: false, robotDiagnostics: false },
+    iiot: { ipcRequired: false, ipcModel: 'Automation PC 3100', iiotRequired: false, iiotConnector: false, iiotServices: false, iiotEdgeDevice: false, cloudConnectivity: false, machineDataCollection: false, remoteMaintenance: false, opcUa: false, dataLogging: false, analyticsIntegration: false },
+    additionalFeatures: DEFAULT_ADDITIONAL_FEATURES.map((f) => ({ ...f })),
+    complexity: { hardware: 'Medium', motion: 'Medium', hmi: 'Medium', vision: 'Medium', safety: 'Medium', communication: 'Medium', software: 'Medium', integration: 'Medium', requirement: 'Medium', testing: 'Medium', requirementClarity: 'Mostly Clear', customerChangeFrequency: 'Medium', productVariants: 1, machineStations: 1, reuseLevel: 'Medium' },
+  };
+  // Deep merge overrides
+  const merge = (target: any, source: any) => {
+    for (const key of Object.keys(source)) {
+      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+        target[key] = merge(target[key] || {}, source[key]);
+      } else {
+        target[key] = source[key];
+      }
+    }
+    return target;
+  };
+  return merge(JSON.parse(JSON.stringify(base)), overrides);
+}
+
+function enableProtocols(enabled: [string, number][]): CommunicationProtocol[] {
+  return DEFAULT_PROTOCOLS.map((p) => {
+    const found = enabled.find(([name]) => name === p.name);
+    return found ? { name: p.name, enabled: true, devices: found[1] } : { ...p };
+  });
+}
+
 // ===== Sample Projects =====
 export const SAMPLE_PROJECTS: Project[] = [
   {
@@ -259,6 +311,20 @@ export const SAMPLE_PROJECTS: Project[] = [
     complexity: 'High',
     createdAt: '2025-12-15',
     updatedAt: '2026-01-10',
+    config: makeConfig({
+      project: { name: 'Packaging Line A', customer: 'Customer A', machineType: 'Packaging', industry: 'Consumer Goods', description: 'High-speed packaging line with vision inspection and ACOPOStrak transport', requirementClarity: 'Mostly Clear', customerInvolvement: 'Medium', projectVariants: 3, machineStations: 4, complexity: 'High' },
+      controller: { family: 'X20', quantity: 2, performance: 'High Performance', communicationInterfaces: 'POWERLINK, OPC UA', simulationRequired: true, diagnosticsRequired: true },
+      io: { digitalInputs: 96, digitalOutputs: 64, analogInputs: 12, analogOutputs: 6, safetyIO: 16, encoderCounterModules: 4, temperatureModules: 2, communicationIO: 4, specialModules: 2 },
+      motion: { totalAxes: 12, linearAxes: 8, rotaryAxes: 4, servoDrives: 12, servoMotors: 12, homingRequired: true, positioning: true, velocityControl: true, synchronization: true, masterSlave: true, electronicGearing: true, coordinatedMotion: true, complexMotionProfiles: true, axisDiagnostics: true },
+      hmi: { type: 'Automation Panel', screens: 12, screenComplexity: 'Moderate', alarmManagement: true, recipeManagement: true, trendVisualization: true, userManagement: true, machineDiagnostics: true, manualMode: true, automaticMode: true, maintenanceScreens: true, parameterManagement: true },
+      vision: { enabled: true, cameras: 3, lightingSystems: 3, inspection: true, detection: true, identification: true, barcodeQR: true, patternMatching: true, positionDetection: true, qualityControl: true, triggering: 'External Trigger', plcIntegration: true, motionVisionSync: true },
+      safety: { enabled: true, controller: 'X20 Safety', safetyIOCount: 16, emergencyStops: 8, safetyDoors: 6, lightCurtains: 4, safeMotion: true, safetyFunctions: true, validationRequired: true, testingRequired: true, documentationRequired: true },
+      communication: { protocols: enableProtocols([['POWERLINK', 12], ['OPC UA', 3]]), plcToPlc: false, mesIntegration: true, scadaIntegration: false, cloudIIoTIntegration: true },
+      mechatronics: { type: 'ACOPOStrak', movers: 12, processingStations: 4, moverRouting: true, independentMoverControl: true, synchronization: true, transportSequences: true, productHandling: true, visionIntegration: true, hmiIntegration: true, safetyIntegration: true, diagnostics: true },
+      robotics: { enabled: false, robotType: 'Delta', quantity: 0 },
+      iiot: { ipcRequired: true, ipcModel: 'Automation PC 3100', iiotRequired: true, iiotConnector: true, iiotServices: true, cloudConnectivity: true, machineDataCollection: true, remoteMaintenance: true, opcUa: true, dataLogging: true, analyticsIntegration: true },
+      complexity: { hardware: 'High', motion: 'High', hmi: 'Medium', vision: 'High', safety: 'High', communication: 'Medium', software: 'High', integration: 'High', requirement: 'Medium', testing: 'High', requirementClarity: 'Mostly Clear', customerChangeFrequency: 'Medium', productVariants: 3, machineStations: 4, reuseLevel: 'Medium' },
+    }),
   },
   {
     id: 'BR-2026-002',
@@ -275,6 +341,20 @@ export const SAMPLE_PROJECTS: Project[] = [
     complexity: 'Very High',
     createdAt: '2025-11-20',
     updatedAt: '2026-01-08',
+    config: makeConfig({
+      project: { name: 'Automated Assembly Cell', customer: 'Customer B', machineType: 'Assembly', industry: 'Automotive', description: 'Multi-robot assembly cell with SCARA and 6-axis robots', requirementClarity: 'Clear', customerInvolvement: 'High', projectVariants: 2, machineStations: 6, complexity: 'Very High' },
+      controller: { family: 'X20', quantity: 1, performance: 'High Performance', communicationInterfaces: 'POWERLINK, Ethernet, OPC UA', simulationRequired: true, diagnosticsRequired: true },
+      io: { digitalInputs: 128, digitalOutputs: 96, analogInputs: 16, analogOutputs: 8, safetyIO: 24, encoderCounterModules: 6, temperatureModules: 2, communicationIO: 4, specialModules: 4 },
+      motion: { totalAxes: 14, linearAxes: 6, rotaryAxes: 8, servoDrives: 14, servoMotors: 14, homingRequired: true, positioning: true, velocityControl: true, torqueControl: true, synchronization: true, masterSlave: true, electronicGearing: true, electronicCamming: true, coordinatedMotion: true, interpolation: true, complexMotionProfiles: true, axisDiagnostics: true },
+      hmi: { type: 'Panel PC', screens: 20, screenComplexity: 'Complex', alarmManagement: true, recipeManagement: true, trendVisualization: true, userManagement: true, machineDiagnostics: true, manualMode: true, automaticMode: true, maintenanceScreens: true, parameterManagement: true },
+      vision: { enabled: true, cameras: 4, lightingSystems: 4, inspection: true, measurement: true, detection: true, identification: true, ocr: true, barcodeQR: true, patternMatching: true, positionDetection: true, qualityControl: true, triggering: 'External Trigger', plcIntegration: true, motionVisionSync: true },
+      safety: { enabled: true, controller: 'X20 Safety', safetyIOCount: 24, emergencyStops: 10, safetyDoors: 8, lightCurtains: 6, safeMotion: true, safetyFunctions: true, validationRequired: true, testingRequired: true, documentationRequired: true },
+      communication: { protocols: enableProtocols([['POWERLINK', 16], ['OPC UA', 4], ['Ethernet', 2]]), plcToPlc: true, mesIntegration: true, scadaIntegration: true, cloudIIoTIntegration: true },
+      mechatronics: { type: 'None', movers: 0, processingStations: 0 },
+      robotics: { enabled: true, robotType: '6-Axis', quantity: 3, motionIntegration: true, visionIntegration: true, pickAndPlace: true, trajectoryProgramming: true, synchronization: true, simulation: true, safety: true, robotDiagnostics: true },
+      iiot: { ipcRequired: true, ipcModel: 'Automation PC 3100', iiotRequired: true, iiotConnector: true, iiotServices: true, cloudConnectivity: true, machineDataCollection: true, remoteMaintenance: true, opcUa: true, dataLogging: true, analyticsIntegration: true },
+      complexity: { hardware: 'Very High', motion: 'Very High', hmi: 'High', vision: 'High', safety: 'Very High', communication: 'High', software: 'Very High', integration: 'Very High', requirement: 'High', testing: 'Very High', requirementClarity: 'Clear', customerChangeFrequency: 'High', productVariants: 2, machineStations: 6, reuseLevel: 'Low' },
+    }),
   },
   {
     id: 'BR-2026-003',
@@ -291,6 +371,17 @@ export const SAMPLE_PROJECTS: Project[] = [
     complexity: 'Medium',
     createdAt: '2025-09-10',
     updatedAt: '2025-12-20',
+    config: makeConfig({
+      project: { name: 'Bottle Inspection Machine', customer: 'Customer C', machineType: 'Inspection', industry: 'Pharmaceutical', description: 'Automated bottle inspection with multiple camera systems', requirementClarity: 'Clear', customerInvolvement: 'Medium', projectVariants: 1, machineStations: 3, complexity: 'Medium' },
+      controller: { family: 'X20', quantity: 1, performance: 'Standard', communicationInterfaces: 'POWERLINK, Ethernet' },
+      io: { digitalInputs: 32, digitalOutputs: 24, analogInputs: 4, analogOutputs: 2, safetyIO: 8, encoderCounterModules: 2, temperatureModules: 0, communicationIO: 2, specialModules: 1 },
+      motion: { totalAxes: 4, linearAxes: 2, rotaryAxes: 2, servoDrives: 4, servoMotors: 4, homingRequired: true, positioning: true, velocityControl: true },
+      hmi: { type: 'Automation Panel', screens: 6, screenComplexity: 'Moderate', alarmManagement: true, recipeManagement: false, trendVisualization: true, userManagement: false, machineDiagnostics: true, manualMode: true, automaticMode: true, maintenanceScreens: false, parameterManagement: true },
+      vision: { enabled: true, cameras: 6, lightingSystems: 6, inspection: true, measurement: true, detection: true, identification: true, ocr: true, barcodeQR: true, patternMatching: true, qualityControl: true, triggering: 'External Trigger', plcIntegration: true },
+      safety: { enabled: true, controller: 'X20 Safety', safetyIOCount: 8, emergencyStops: 4, safetyDoors: 2, lightCurtains: 2, safetyFunctions: true, validationRequired: true, testingRequired: true, documentationRequired: true },
+      communication: { protocols: enableProtocols([['POWERLINK', 6], ['Ethernet', 2]]) },
+      complexity: { hardware: 'Medium', motion: 'Medium', hmi: 'Medium', vision: 'High', safety: 'Medium', communication: 'Low', software: 'Medium', integration: 'Medium', requirement: 'Low', testing: 'Medium', requirementClarity: 'Clear', customerChangeFrequency: 'Low', productVariants: 1, machineStations: 3, reuseLevel: 'High' },
+    }),
   },
   {
     id: 'BR-2026-004',
@@ -307,6 +398,17 @@ export const SAMPLE_PROJECTS: Project[] = [
     complexity: 'High',
     createdAt: '2025-08-01',
     updatedAt: '2025-11-15',
+    config: makeConfig({
+      project: { name: 'Servo Press Machine', customer: 'Customer D', machineType: 'General Automation', industry: 'Automotive', description: 'Precision servo press with complex motion profiles and force control', requirementClarity: 'Mostly Clear', customerInvolvement: 'Low', projectVariants: 2, machineStations: 2, complexity: 'High' },
+      controller: { family: 'X20', quantity: 1, performance: 'High Performance', communicationInterfaces: 'POWERLINK', diagnosticsRequired: true },
+      io: { digitalInputs: 48, digitalOutputs: 32, analogInputs: 8, analogOutputs: 4, safetyIO: 12, encoderCounterModules: 4, temperatureModules: 0, communicationIO: 2, specialModules: 2 },
+      motion: { totalAxes: 6, linearAxes: 4, rotaryAxes: 2, servoDrives: 6, servoMotors: 6, homingRequired: true, positioning: true, velocityControl: true, torqueControl: true, electronicCamming: true, coordinatedMotion: true, complexMotionProfiles: true, axisDiagnostics: true },
+      hmi: { type: 'Automation Panel', screens: 8, screenComplexity: 'Moderate', alarmManagement: true, recipeManagement: true, trendVisualization: true, machineDiagnostics: true, manualMode: true, automaticMode: true, parameterManagement: true },
+      vision: { enabled: false },
+      safety: { enabled: true, controller: 'X20 Safety', safetyIOCount: 12, emergencyStops: 4, safetyDoors: 2, lightCurtains: 4, safeMotion: true, safetyFunctions: true, validationRequired: true, testingRequired: true, documentationRequired: true },
+      communication: { protocols: enableProtocols([['POWERLINK', 8]]) },
+      complexity: { hardware: 'High', motion: 'Very High', hmi: 'Medium', vision: 'Low', safety: 'High', communication: 'Low', software: 'High', integration: 'Medium', requirement: 'Medium', testing: 'High', requirementClarity: 'Mostly Clear', customerChangeFrequency: 'Low', productVariants: 2, machineStations: 2, reuseLevel: 'Medium' },
+    }),
   },
   {
     id: 'BR-2026-005',
@@ -323,22 +425,21 @@ export const SAMPLE_PROJECTS: Project[] = [
     complexity: 'Very High',
     createdAt: '2026-01-05',
     updatedAt: '2026-01-12',
+    config: makeConfig({
+      project: { name: 'ACOPOStrak Transport System', customer: 'Customer E', machineType: 'Material Handling', industry: 'Food & Beverage', description: 'Flexible transport system with 12 movers and vision-guided routing', requirementClarity: 'Partially Clear', customerInvolvement: 'Medium', projectVariants: 4, machineStations: 8, complexity: 'Very High' },
+      controller: { family: 'X20', quantity: 2, performance: 'High Performance', communicationInterfaces: 'POWERLINK, Ethernet, OPC UA', simulationRequired: true, diagnosticsRequired: true },
+      io: { digitalInputs: 80, digitalOutputs: 56, analogInputs: 8, analogOutputs: 4, safetyIO: 20, encoderCounterModules: 4, temperatureModules: 2, communicationIO: 6, specialModules: 4 },
+      motion: { totalAxes: 16, linearAxes: 10, rotaryAxes: 6, servoDrives: 16, servoMotors: 16, homingRequired: true, positioning: true, velocityControl: true, synchronization: true, masterSlave: true, electronicGearing: true, coordinatedMotion: true, complexMotionProfiles: true, axisDiagnostics: true },
+      hmi: { type: 'Panel PC', screens: 18, screenComplexity: 'Complex', alarmManagement: true, recipeManagement: true, trendVisualization: true, userManagement: true, machineDiagnostics: true, manualMode: true, automaticMode: true, maintenanceScreens: true, parameterManagement: true },
+      vision: { enabled: true, cameras: 4, lightingSystems: 4, inspection: true, detection: true, identification: true, barcodeQR: true, patternMatching: true, positionDetection: true, qualityControl: true, triggering: 'External Trigger', plcIntegration: true, motionVisionSync: true },
+      safety: { enabled: true, controller: 'X20 Safety', safetyIOCount: 20, emergencyStops: 8, safetyDoors: 8, lightCurtains: 6, safeMotion: true, safetyFunctions: true, validationRequired: true, testingRequired: true, documentationRequired: true },
+      communication: { protocols: enableProtocols([['POWERLINK', 18], ['OPC UA', 4], ['Ethernet', 2]]), plcToPlc: true, mesIntegration: true, cloudIIoTIntegration: true },
+      mechatronics: { type: 'ACOPOStrak', movers: 12, processingStations: 8, moverRouting: true, independentMoverControl: true, synchronization: true, transportSequences: true, productHandling: true, visionIntegration: true, hmiIntegration: true, safetyIntegration: true, diagnostics: true },
+      iiot: { ipcRequired: true, ipcModel: 'Automation PC 3100', iiotRequired: true, iiotConnector: true, iiotServices: true, cloudConnectivity: true, machineDataCollection: true, remoteMaintenance: true, opcUa: true, dataLogging: true, analyticsIntegration: true },
+      complexity: { hardware: 'Very High', motion: 'Very High', hmi: 'High', vision: 'High', safety: 'Very High', communication: 'High', software: 'Very High', integration: 'Very High', requirement: 'High', testing: 'Very High', requirementClarity: 'Partially Clear', customerChangeFrequency: 'High', productVariants: 4, machineStations: 8, reuseLevel: 'Low' },
+    }),
   },
 ];
-
-// ===== Default Protocols =====
-export const DEFAULT_PROTOCOLS: CommunicationProtocol[] = COMMUNICATION_PROTOCOLS.map((name) => ({
-  name,
-  enabled: false,
-  devices: 0,
-}));
-
-// ===== Default Additional Features =====
-export const DEFAULT_ADDITIONAL_FEATURES: AdditionalFeature[] = ADDITIONAL_FEATURE_OPTIONS.map((name) => ({
-  name,
-  enabled: false,
-  complexity: 'Basic' as const,
-}));
 
 // ===== Sample Project Configuration =====
 export const SAMPLE_CONFIG: ProjectConfig = {

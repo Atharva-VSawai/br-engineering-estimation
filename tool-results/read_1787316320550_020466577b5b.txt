@@ -1,0 +1,491 @@
+     1→'use client';
+     2→
+     3→import React, { useMemo, useState } from 'react';
+     4→import { Pencil, CheckCircle, FileText } from 'lucide-react';
+     5→import { motion, AnimatePresence } from 'framer-motion';
+     6→import { Button } from '@/components/ui/button';
+     7→import { Input } from '@/components/ui/input';
+     8→import { Switch } from '@/components/ui/switch';
+     9→import {
+    10→  Select,
+    11→  SelectContent,
+    12→  SelectItem,
+    13→  SelectTrigger,
+    14→  SelectValue,
+    15→} from '@/components/ui/select';
+    16→import { SectionCard } from '@/components/br/SectionCard';
+    17→import { useAppStore } from '@/store';
+    18→import { toast } from 'sonner';
+    19→import { MACHINE_TYPES, INDUSTRIES, CONTROLLER_FAMILIES, HMI_TYPES, SAFETY_CONTROLLERS, ROBOT_TYPES, IPC_MODELS } from '@/data';
+    20→import type { ScreenComplexity, ComplexityLevel } from '@/types';
+    21→
+    22→interface SectionReviewItem {
+    23→  title: string;
+    24→  step: number;
+    25→  configured: boolean;
+    26→  staticContent: React.ReactNode;
+    27→  editFields?: EditFieldDef[];
+    28→}
+    29→
+    30→interface EditFieldDef {
+    31→  key: string;
+    32→  label: string;
+    33→  type: 'text' | 'number' | 'select' | 'boolean';
+    34→  value: string | number | boolean;
+    35→  options?: readonly string[];
+    36→  onUpdate: (val: string | number | boolean) => void;
+    37→}
+    38→
+    39→const PERFORMANCE_OPTIONS = ['Basic', 'Standard', 'High Performance'] as const;
+    40→const SCREEN_COMPLEXITY_OPTIONS: ScreenComplexity[] = ['Basic', 'Moderate', 'Complex'];
+    41→const COMPLEXITY_LEVEL_OPTIONS: ComplexityLevel[] = ['Low', 'Medium', 'High', 'Very High'];
+    42→const MECHATRONICS_TYPE_OPTIONS = ['None', 'ACOPOStrak', 'ACOPOS 6D', 'SuperTrak'] as const;
+    43→
+    44→export function StepReview() {
+    45→  const {
+    46→    config, setWizardStep,
+    47→    updateProjectInfo, updateController, updateIO, updateMotion,
+    48→    updateHMI, updateVision, updateSafety, updateCommunication,
+    49→    updateMechatronics, updateRobotics, updateIIoT, updateComplexity,
+    50→  } = useAppStore();
+    51→  const c = config;
+    52→
+    53→  const [editingSection, setEditingSection] = useState<string | null>(null);
+    54→
+    55→  const goToStep = (step: number) => setWizardStep(step);
+    56→
+    57→  const yesNo = (v: boolean) => v ? 'Yes' : 'No';
+    58→  const listEnabled = (arr: { name: string; enabled: boolean }[]) => arr.filter((x) => x.enabled).map((x) => x.name);
+    59→
+    60→  const sections: SectionReviewItem[] = useMemo(() => {
+    61→    const ioTotal =
+    62→      c.io.digitalInputs + c.io.digitalOutputs +
+    63→      c.io.analogInputs + c.io.analogOutputs +
+    64→      c.io.safetyIO + c.io.encoderCounterModules +
+    65→      c.io.temperatureModules + c.io.communicationIO +
+    66→      c.io.specialModules;
+    67→
+    68→    return [
+    69→      {
+    70→        title: 'Project',
+    71→        step: 0,
+    72→        configured: !!c.project.name && c.project.name.trim() !== '',
+    73→        staticContent: (
+    74→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+    75→            <div><span className="text-muted-foreground">Name:</span> <span className="font-medium text-foreground ml-1">{c.project.name || '—'}</span></div>
+    76→            <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium text-foreground ml-1">{c.project.customer || '—'}</span></div>
+    77→            <div><span className="text-muted-foreground">Machine Type:</span> <span className="font-medium text-foreground ml-1">{c.project.machineType || '—'}</span></div>
+    78→            <div><span className="text-muted-foreground">Industry:</span> <span className="font-medium text-foreground ml-1">{c.project.industry || '—'}</span></div>
+    79→            <div><span className="text-muted-foreground">Variants:</span> <span className="font-medium text-foreground ml-1">{c.project.projectVariants}</span></div>
+    80→            <div><span className="text-muted-foreground">Stations:</span> <span className="font-medium text-foreground ml-1">{c.project.machineStations}</span></div>
+    81→          </div>
+    82→        ),
+    83→        editFields: [
+    84→          { key: 'name', label: 'Name', type: 'text', value: c.project.name || '', onUpdate: (v) => updateProjectInfo({ name: String(v) }) },
+    85→          { key: 'customer', label: 'Customer', type: 'text', value: c.project.customer || '', onUpdate: (v) => updateProjectInfo({ customer: String(v) }) },
+    86→          { key: 'machineType', label: 'Machine Type', type: 'select', value: c.project.machineType || '', options: MACHINE_TYPES, onUpdate: (v) => updateProjectInfo({ machineType: String(v) }) },
+    87→          { key: 'industry', label: 'Industry', type: 'select', value: c.project.industry || '', options: INDUSTRIES, onUpdate: (v) => updateProjectInfo({ industry: String(v) }) },
+    88→          { key: 'projectVariants', label: 'Variants', type: 'number', value: c.project.projectVariants, onUpdate: (v) => updateProjectInfo({ projectVariants: Number(v) }) },
+    89→        ],
+    90→      },
+    91→      {
+    92→        title: 'Controller',
+    93→        step: 1,
+    94→        configured: !!c.controller.family && c.controller.family.trim() !== '',
+    95→        staticContent: (
+    96→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+    97→            <div><span className="text-muted-foreground">Family:</span> <span className="font-medium text-foreground ml-1">{c.controller.family}</span></div>
+    98→            <div><span className="text-muted-foreground">Quantity:</span> <span className="font-medium text-foreground ml-1">{c.controller.quantity}</span></div>
+    99→            <div><span className="text-muted-foreground">Performance:</span> <span className="font-medium text-foreground ml-1">{c.controller.performance}</span></div>
+   100→            <div><span className="text-muted-foreground">Redundancy:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.controller.redundancyRequired)}</span></div>
+   101→            <div><span className="text-muted-foreground">Simulation:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.controller.simulationRequired)}</span></div>
+   102→          </div>
+   103→        ),
+   104→        editFields: [
+   105→          { key: 'family', label: 'Family', type: 'select', value: c.controller.family, options: CONTROLLER_FAMILIES, onUpdate: (v) => updateController({ family: String(v) }) },
+   106→          { key: 'quantity', label: 'Quantity', type: 'number', value: c.controller.quantity, onUpdate: (v) => updateController({ quantity: Number(v) }) },
+   107→          { key: 'performance', label: 'Performance', type: 'select', value: c.controller.performance, options: PERFORMANCE_OPTIONS, onUpdate: (v) => updateController({ performance: String(v) }) },
+   108→        ],
+   109→      },
+   110→      {
+   111→        title: 'I/O',
+   112→        step: 2,
+   113→        configured: ioTotal > 0,
+   114→        staticContent: (
+   115→          <div className="grid grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-1 text-sm">
+   116→            <div><span className="text-muted-foreground">DI:</span> <span className="font-medium text-foreground ml-1">{c.io.digitalInputs}</span></div>
+   117→            <div><span className="text-muted-foreground">DO:</span> <span className="font-medium text-foreground ml-1">{c.io.digitalOutputs}</span></div>
+   118→            <div><span className="text-muted-foreground">AI:</span> <span className="font-medium text-foreground ml-1">{c.io.analogInputs}</span></div>
+   119→            <div><span className="text-muted-foreground">AO:</span> <span className="font-medium text-foreground ml-1">{c.io.analogOutputs}</span></div>
+   120→            <div><span className="text-muted-foreground">Safety:</span> <span className="font-medium text-foreground ml-1">{c.io.safetyIO}</span></div>
+   121→            <div><span className="text-muted-foreground">Enc/Counter:</span> <span className="font-medium text-foreground ml-1">{c.io.encoderCounterModules}</span></div>
+   122→            <div><span className="text-muted-foreground">Temp:</span> <span className="font-medium text-foreground ml-1">{c.io.temperatureModules}</span></div>
+   123→            <div><span className="text-muted-foreground">Comm:</span> <span className="font-medium text-foreground ml-1">{c.io.communicationIO}</span></div>
+   124→            <div><span className="text-muted-foreground">Special:</span> <span className="font-medium text-foreground ml-1">{c.io.specialModules}</span></div>
+   125→          </div>
+   126→        ),
+   127→        editFields: [
+   128→          { key: 'digitalInputs', label: 'DI', type: 'number', value: c.io.digitalInputs, onUpdate: (v) => updateIO({ digitalInputs: Number(v) }) },
+   129→          { key: 'digitalOutputs', label: 'DO', type: 'number', value: c.io.digitalOutputs, onUpdate: (v) => updateIO({ digitalOutputs: Number(v) }) },
+   130→          { key: 'analogInputs', label: 'AI', type: 'number', value: c.io.analogInputs, onUpdate: (v) => updateIO({ analogInputs: Number(v) }) },
+   131→          { key: 'analogOutputs', label: 'AO', type: 'number', value: c.io.analogOutputs, onUpdate: (v) => updateIO({ analogOutputs: Number(v) }) },
+   132→          { key: 'safetyIO', label: 'Safety I/O', type: 'number', value: c.io.safetyIO, onUpdate: (v) => updateIO({ safetyIO: Number(v) }) },
+   133→        ],
+   134→      },
+   135→      {
+   136→        title: 'Motion',
+   137→        step: 3,
+   138→        configured: c.motion.totalAxes > 0,
+   139→        staticContent: (
+   140→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   141→            <div><span className="text-muted-foreground">Total Axes:</span> <span className="font-medium text-foreground ml-1">{c.motion.totalAxes}</span></div>
+   142→            <div><span className="text-muted-foreground">Linear:</span> <span className="font-medium text-foreground ml-1">{c.motion.linearAxes}</span></div>
+   143→            <div><span className="text-muted-foreground">Rotary:</span> <span className="font-medium text-foreground ml-1">{c.motion.rotaryAxes}</span></div>
+   144→            <div><span className="text-muted-foreground">Drives:</span> <span className="font-medium text-foreground ml-1">{c.motion.servoDrives}</span></div>
+   145→            <div><span className="text-muted-foreground">Motors:</span> <span className="font-medium text-foreground ml-1">{c.motion.servoMotors}</span></div>
+   146→            <div><span className="text-muted-foreground">Sync:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.motion.synchronization)}</span></div>
+   147→            <div><span className="text-muted-foreground">E-Gearing:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.motion.electronicGearing)}</span></div>
+   148→            <div><span className="text-muted-foreground">E-Camming:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.motion.electronicCamming)}</span></div>
+   149→          </div>
+   150→        ),
+   151→        editFields: [
+   152→          { key: 'totalAxes', label: 'Total Axes', type: 'number', value: c.motion.totalAxes, onUpdate: (v) => updateMotion({ totalAxes: Number(v) }) },
+   153→          { key: 'linearAxes', label: 'Linear Axes', type: 'number', value: c.motion.linearAxes, onUpdate: (v) => updateMotion({ linearAxes: Number(v) }) },
+   154→          { key: 'rotaryAxes', label: 'Rotary Axes', type: 'number', value: c.motion.rotaryAxes, onUpdate: (v) => updateMotion({ rotaryAxes: Number(v) }) },
+   155→          { key: 'servoDrives', label: 'Servo Drives', type: 'number', value: c.motion.servoDrives, onUpdate: (v) => updateMotion({ servoDrives: Number(v) }) },
+   156→          { key: 'homingRequired', label: 'Homing Required', type: 'boolean', value: c.motion.homingRequired, onUpdate: (v) => updateMotion({ homingRequired: Boolean(v) }) },
+   157→        ],
+   158→      },
+   159→      {
+   160→        title: 'HMI',
+   161→        step: 4,
+   162→        configured: c.hmi.screens > 0,
+   163→        staticContent: (
+   164→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   165→            <div><span className="text-muted-foreground">Type:</span> <span className="font-medium text-foreground ml-1">{c.hmi.type}</span></div>
+   166→            <div><span className="text-muted-foreground">Screens:</span> <span className="font-medium text-foreground ml-1">{c.hmi.screens}</span></div>
+   167→            <div><span className="text-muted-foreground">Complexity:</span> <span className="font-medium text-foreground ml-1">{c.hmi.screenComplexity}</span></div>
+   168→            <div><span className="text-muted-foreground">Alarms:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.hmi.alarmManagement)}</span></div>
+   169→            <div><span className="text-muted-foreground">Recipes:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.hmi.recipeManagement)}</span></div>
+   170→          </div>
+   171→        ),
+   172→        editFields: [
+   173→          { key: 'type', label: 'Type', type: 'select', value: c.hmi.type, options: HMI_TYPES, onUpdate: (v) => updateHMI({ type: String(v) }) },
+   174→          { key: 'screens', label: 'Screens', type: 'number', value: c.hmi.screens, onUpdate: (v) => updateHMI({ screens: Number(v) }) },
+   175→          { key: 'screenComplexity', label: 'Complexity', type: 'select', value: c.hmi.screenComplexity, options: SCREEN_COMPLEXITY_OPTIONS, onUpdate: (v) => updateHMI({ screenComplexity: String(v) as ScreenComplexity }) },
+   176→        ],
+   177→      },
+   178→      {
+   179→        title: 'Vision',
+   180→        step: 5,
+   181→        configured: c.vision.enabled,
+   182→        staticContent: (
+   183→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   184→            <div><span className="text-muted-foreground">Enabled:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.vision.enabled)}</span></div>
+   185→            <div><span className="text-muted-foreground">Cameras:</span> <span className="font-medium text-foreground ml-1">{c.vision.cameras}</span></div>
+   186→            <div><span className="text-muted-foreground">Triggering:</span> <span className="font-medium text-foreground ml-1">{c.vision.triggering || '—'}</span></div>
+   187→            <div><span className="text-muted-foreground">Inspection:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.vision.inspection)}</span></div>
+   188→            <div><span className="text-muted-foreground">Barcode/QR:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.vision.barcodeQR)}</span></div>
+   189→          </div>
+   190→        ),
+   191→        editFields: [
+   192→          { key: 'enabled', label: 'Enabled', type: 'boolean', value: c.vision.enabled, onUpdate: (v) => updateVision({ enabled: Boolean(v) }) },
+   193→          { key: 'cameras', label: 'Cameras', type: 'number', value: c.vision.cameras, onUpdate: (v) => updateVision({ cameras: Number(v) }) },
+   194→        ],
+   195→      },
+   196→      {
+   197→        title: 'Safety',
+   198→        step: 6,
+   199→        configured: c.safety.enabled,
+   200→        staticContent: (
+   201→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   202→            <div><span className="text-muted-foreground">Enabled:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.safety.enabled)}</span></div>
+   203→            <div><span className="text-muted-foreground">Controller:</span> <span className="font-medium text-foreground ml-1">{c.safety.controller}</span></div>
+   204→            <div><span className="text-muted-foreground">Safety I/O:</span> <span className="font-medium text-foreground ml-1">{c.safety.safetyIOCount}</span></div>
+   205→            <div><span className="text-muted-foreground">E-Stops:</span> <span className="font-medium text-foreground ml-1">{c.safety.emergencyStops}</span></div>
+   206→            <div><span className="text-muted-foreground">Doors:</span> <span className="font-medium text-foreground ml-1">{c.safety.safetyDoors}</span></div>
+   207→          </div>
+   208→        ),
+   209→        editFields: [
+   210→          { key: 'enabled', label: 'Enabled', type: 'boolean', value: c.safety.enabled, onUpdate: (v) => updateSafety({ enabled: Boolean(v) }) },
+   211→          { key: 'controller', label: 'Controller', type: 'select', value: c.safety.controller, options: SAFETY_CONTROLLERS, onUpdate: (v) => updateSafety({ controller: String(v) }) },
+   212→          { key: 'safetyIOCount', label: 'Safety I/O Count', type: 'number', value: c.safety.safetyIOCount, onUpdate: (v) => updateSafety({ safetyIOCount: Number(v) }) },
+   213→        ],
+   214→      },
+   215→      {
+   216→        title: 'Communication',
+   217→        step: 7,
+   218→        configured: c.communication.protocols.some((p) => p.enabled),
+   219→        staticContent: (
+   220→          <div className="text-sm">
+   221→            <span className="text-muted-foreground">Protocols: </span>
+   222→            <span className="font-medium text-foreground">{listEnabled(c.communication.protocols).join(', ') || 'None'}</span>
+   223→            <span className="text-muted-foreground ml-3">MES: </span>
+   224→            <span className="font-medium text-foreground">{yesNo(c.communication.mesIntegration)}</span>
+   225→            <span className="text-muted-foreground ml-3">SCADA: </span>
+   226→            <span className="font-medium text-foreground">{yesNo(c.communication.scadaIntegration)}</span>
+   227→            <span className="text-muted-foreground ml-3">Cloud/IIoT: </span>
+   228→            <span className="font-medium text-foreground">{yesNo(c.communication.cloudIIoTIntegration)}</span>
+   229→          </div>
+   230→        ),
+   231→        editFields: [
+   232→          { key: 'mesIntegration', label: 'MES Integration', type: 'boolean', value: c.communication.mesIntegration, onUpdate: (v) => updateCommunication({ mesIntegration: Boolean(v) }) },
+   233→          { key: 'scadaIntegration', label: 'SCADA Integration', type: 'boolean', value: c.communication.scadaIntegration, onUpdate: (v) => updateCommunication({ scadaIntegration: Boolean(v) }) },
+   234→          { key: 'cloudIIoTIntegration', label: 'Cloud/IIoT', type: 'boolean', value: c.communication.cloudIIoTIntegration, onUpdate: (v) => updateCommunication({ cloudIIoTIntegration: Boolean(v) }) },
+   235→        ],
+   236→      },
+   237→      {
+   238→        title: 'Mechatronics',
+   239→        step: 8,
+   240→        configured: c.mechatronics.type !== 'None',
+   241→        staticContent: (
+   242→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   243→            <div><span className="text-muted-foreground">Type:</span> <span className="font-medium text-foreground ml-1">{c.mechatronics.type}</span></div>
+   244→            {c.mechatronics.type !== 'None' && (
+   245→              <>
+   246→                <div><span className="text-muted-foreground">Movers:</span> <span className="font-medium text-foreground ml-1">{c.mechatronics.movers}</span></div>
+   247→                <div><span className="text-muted-foreground">Stations:</span> <span className="font-medium text-foreground ml-1">{c.mechatronics.processingStations}</span></div>
+   248→              </>
+   249→            )}
+   250→          </div>
+   251→        ),
+   252→        editFields: [
+   253→          { key: 'type', label: 'Type', type: 'select', value: c.mechatronics.type, options: MECHATRONICS_TYPE_OPTIONS, onUpdate: (v) => updateMechatronics({ type: String(v) as 'None' | 'ACOPOStrak' | 'ACOPOS 6D' | 'SuperTrak' }) },
+   254→          { key: 'movers', label: 'Movers', type: 'number', value: c.mechatronics.movers, onUpdate: (v) => updateMechatronics({ movers: Number(v) }) },
+   255→        ],
+   256→      },
+   257→      {
+   258→        title: 'Robotics',
+   259→        step: 9,
+   260→        configured: c.robotics.enabled,
+   261→        staticContent: (
+   262→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   263→            <div><span className="text-muted-foreground">Enabled:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.robotics.enabled)}</span></div>
+   264→            {c.robotics.enabled && (
+   265→              <>
+   266→                <div><span className="text-muted-foreground">Type:</span> <span className="font-medium text-foreground ml-1">{c.robotics.robotType}</span></div>
+   267→                <div><span className="text-muted-foreground">Quantity:</span> <span className="font-medium text-foreground ml-1">{c.robotics.quantity}</span></div>
+   268→              </>
+   269→            )}
+   270→          </div>
+   271→        ),
+   272→        editFields: [
+   273→          { key: 'enabled', label: 'Enabled', type: 'boolean', value: c.robotics.enabled, onUpdate: (v) => updateRobotics({ enabled: Boolean(v) }) },
+   274→          { key: 'robotType', label: 'Robot Type', type: 'select', value: c.robotics.robotType, options: ROBOT_TYPES, onUpdate: (v) => updateRobotics({ robotType: String(v) }) },
+   275→          { key: 'quantity', label: 'Quantity', type: 'number', value: c.robotics.quantity, onUpdate: (v) => updateRobotics({ quantity: Number(v) }) },
+   276→        ],
+   277→      },
+   278→      {
+   279→        title: 'Industrial PC / IIoT',
+   280→        step: 10,
+   281→        configured: c.iiot.ipcRequired || c.iiot.iiotRequired,
+   282→        staticContent: (
+   283→          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
+   284→            <div><span className="text-muted-foreground">IPC:</span> <span className="font-medium text-foreground ml-1">{c.iiot.ipcRequired ? c.iiot.ipcModel : 'Not required'}</span></div>
+   285→            <div><span className="text-muted-foreground">IIoT:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.iiot.iiotRequired)}</span></div>
+   286→            <div><span className="text-muted-foreground">Cloud:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.iiot.cloudConnectivity)}</span></div>
+   287→          </div>
+   288→        ),
+   289→        editFields: [
+   290→          { key: 'ipcRequired', label: 'IPC Required', type: 'boolean', value: c.iiot.ipcRequired, onUpdate: (v) => updateIIoT({ ipcRequired: Boolean(v) }) },
+   291→          { key: 'ipcModel', label: 'IPC Model', type: 'select', value: c.iiot.ipcModel, options: IPC_MODELS, onUpdate: (v) => updateIIoT({ ipcModel: String(v) }) },
+   292→        ],
+   293→      },
+   294→      {
+   295→        title: 'Additional Features',
+   296→        step: 11,
+   297→        configured: c.additionalFeatures.some((f) => f.enabled),
+   298→        staticContent: (
+   299→          <div className="text-sm">
+   300→            <span className="text-muted-foreground">Enabled: </span>
+   301→            <span className="font-medium text-foreground">{listEnabled(c.additionalFeatures).join(', ') || 'None'}</span>
+   302→          </div>
+   303→        ),
+   304→      },
+   305→      {
+   306→        title: 'Complexity',
+   307→        step: 12,
+   308→        configured: true,
+   309→        staticContent: (
+   310→          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-1 text-sm">
+   311→            {(['hardware', 'motion', 'hmi', 'vision', 'safety', 'communication', 'software', 'integration', 'requirement', 'testing'] as const).map((key) => (
+   312→              <div key={key} className="flex justify-between">
+   313→                <span className="text-muted-foreground capitalize">{key}:</span>
+   314→                <span className="font-medium text-foreground ml-1">{c.complexity[key]}</span>
+   315→              </div>
+   316→            ))}
+   317→          </div>
+   318→        ),
+   319→        editFields: [
+   320→          { key: 'hardware', label: 'Hardware', type: 'select', value: c.complexity.hardware, options: COMPLEXITY_LEVEL_OPTIONS, onUpdate: (v) => updateComplexity({ hardware: String(v) as ComplexityLevel }) },
+   321→          { key: 'motion', label: 'Motion', type: 'select', value: c.complexity.motion, options: COMPLEXITY_LEVEL_OPTIONS, onUpdate: (v) => updateComplexity({ motion: String(v) as ComplexityLevel }) },
+   322→          { key: 'hmi', label: 'HMI', type: 'select', value: c.complexity.hmi, options: COMPLEXITY_LEVEL_OPTIONS, onUpdate: (v) => updateComplexity({ hmi: String(v) as ComplexityLevel }) },
+   323→          { key: 'software', label: 'Software', type: 'select', value: c.complexity.software, options: COMPLEXITY_LEVEL_OPTIONS, onUpdate: (v) => updateComplexity({ software: String(v) as ComplexityLevel }) },
+   324→          { key: 'testing', label: 'Testing', type: 'select', value: c.complexity.testing, options: COMPLEXITY_LEVEL_OPTIONS, onUpdate: (v) => updateComplexity({ testing: String(v) as ComplexityLevel }) },
+   325→        ],
+   326→      },
+   327→    ];
+   328→  }, [c, updateProjectInfo, updateController, updateIO, updateMotion, updateHMI, updateVision, updateSafety, updateCommunication, updateMechatronics, updateRobotics, updateIIoT, updateComplexity]);
+   329→
+   330→  const configuredCount = sections.filter((s) => s.configured).length;
+   331→  const totalCount = sections.length;
+   332→  const progressPct = (configuredCount / totalCount) * 100;
+   333→
+   334→  const handleExportReview = () => {
+   335→    const c = config;
+   336→    const ioTotal = c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs + c.io.safetyIO;
+   337→    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Review - ${c.project.name || 'Project'}</title><style>body{font-family:system-ui,sans-serif;max-width:800px;margin:40px auto;padding:0 20px;color:#1a1a1a}h1{color:oklch(0.55 0.2 35);border-bottom:2px solid oklch(0.55 0.2 35);padding-bottom:8px}h2{margin-top:24px;color:#333}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{padding:6px 10px;border:1px solid #ddd;text-align:left;font-size:14px}th{background:#f5f5f5;font-weight:600}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600}</style></head><body><h1>Configuration Review</h1><p>${c.project.name || 'Untitled'} — ${c.project.customer || 'N/A'}</p><h2>Project</h2><table><tr><th>Machine Type</th><td>${c.project.machineType}</td></tr><tr><th>Industry</th><td>${c.project.industry || 'N/A'}</td></tr><tr><th>Clarity</th><td>${c.project.requirementClarity}</td></tr></table><h2>Technical Summary</h2><table><tr><th>Controller</th><td>${c.controller.family} × ${c.controller.quantity}</td></tr><tr><th>Total I/O</th><td>${ioTotal}</td></tr><tr><th>Motion Axes</th><td>${c.motion.totalAxes}</td></tr><tr><th>HMI Screens</th><td>${c.hmi.screens}</td></tr><tr><th>Vision</th><td>${c.vision.enabled ? c.vision.cameras + ' cameras' : 'Not configured'}</td></tr><tr><th>Safety</th><td>${c.safety.enabled ? c.safety.controller + ' (' + c.safety.safetyIOCount + ' I/O)' : 'Not configured'}</td></tr></table><h2>Complexity</h2><table>${Object.entries(c.complexity).map(([k, v]) => `<tr><th>${k.charAt(0).toUpperCase() + k.slice(1)}</th><td><span class="badge" style="background:${v === 'Low' ? '#d1fae5' : v === 'Medium' ? '#fef3c7' : v === 'High' ? '#ffedd5' : '#fee2e2'};color:${v === 'Low' ? '#065f46' : v === 'Medium' ? '#92400e' : v === 'High' ? '#9a3412' : '#991b1b'}">${v}</span></td></tr>`).join('')}</table><p style="margin-top:24px;color:#888;font-size:12px">Generated by B&R Engineering Estimation Tool v0.9</p></body></html>`;
+   338→    const blob = new Blob([html], { type: 'text/html' });
+   339→    const url = URL.createObjectURL(blob);
+   340→    window.open(url, '_blank');
+   341→    toast('Review exported', { description: 'Opened in new tab' });
+   342→  };
+   343→
+   344→  return (
+   345→    <div className="space-y-4">
+   346→      <div className="flex items-center justify-between mb-4">
+   347→        <div>
+   348→          <h2 className="text-sm font-bold text-foreground">Configuration Review</h2>
+   349→          <p className="text-sm text-muted-foreground">Review and edit all configured parameters before generating the estimate.</p>
+   350→        </div>
+   351→        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleExportReview}>
+   352→          <FileText className="h-3.5 w-3.5" />
+   353→          Export Review
+   354→        </Button>
+   355→      </div>
+   356→      <SectionCard title="Engineering Configuration Review" description="Review all configured parameters before generating the estimate summary.">
+   357→        {/* Summary Bar */}
+   358→        <div className="mb-4">
+   359→          <div className="flex items-center justify-between mb-2">
+   360→            <span className="text-sm font-medium text-foreground">
+   361→              {configuredCount} of {totalCount} sections configured
+   362→            </span>
+   363→            <span className="text-sm text-muted-foreground">
+   364→              {Math.round(progressPct)}%
+   365→            </span>
+   366→          </div>
+   367→          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+   368→            <div
+   369→              className="h-1.5 bg-primary rounded-full transition-all duration-500"
+   370→              style={{ width: `${progressPct}%` }}
+   371→            />
+   372→          </div>
+   373→        </div>
+   374→
+   375→        <div className="space-y-1">
+   376→          {sections.map(({ title, step, staticContent, configured, editFields }) => {
+   377→            const isEditing = editingSection === title;
+   378→            return (
+   379→              <div
+   380→                key={title}
+   381→                className={`flex items-start justify-between rounded-md border bg-card p-3 border-l-2 transition-colors duration-200 ${
+   382→                  isEditing
+   383→                    ? 'border-l-blue-400 border-blue-200/50'
+   384→                    : configured ? 'border-l-emerald-300' : 'border-l-gray-200'
+   385→                }`}
+   386→              >
+   387→                <div className="min-w-0 flex-1 flex items-start gap-2.5">
+   388→                  <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${configured ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+   389→                  <div className="min-w-0 flex-1">
+   390→                    <div className="text-sm font-semibold text-foreground mb-1.5">{title}</div>
+   391→                    <AnimatePresence mode="wait">
+   392→                      {isEditing && editFields ? (
+   393→                        <motion.div
+   394→                          key="edit"
+   395→                          initial={{ opacity: 0, y: -4 }}
+   396→                          animate={{ opacity: 1, y: 0 }}
+   397→                          exit={{ opacity: 0, y: 4 }}
+   398→                          transition={{ duration: 0.2 }}
+   399→                          className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2"
+   400→                        >
+   401→                          {editFields.map((field) => (
+   402→                            <div key={field.key} className="flex flex-col gap-1">
+   403→                              <span className="text-sm text-muted-foreground">{field.label}</span>
+   404→                              {field.type === 'text' && (
+   405→                                <Input
+   406→                                  className="h-8 text-sm"
+   407→                                  defaultValue={String(field.value)}
+   408→                                  onBlur={(e) => field.onUpdate(e.target.value)}
+   409→                                  onKeyDown={(e) => { if (e.key === 'Enter') field.onUpdate((e.target as HTMLInputElement).value); }}
+   410→                                />
+   411→                              )}
+   412→                              {field.type === 'number' && (
+   413→                                <Input
+   414→                                  type="number"
+   415→                                  className="h-8 text-sm w-24"
+   416→                                  defaultValue={Number(field.value)}
+   417→                                  onBlur={(e) => field.onUpdate(Number(e.target.value) || 0)}
+   418→                                />
+   419→                              )}
+   420→                              {field.type === 'select' && field.options && (
+   421→                                <Select
+   422→                                  value={String(field.value)}
+   423→                                  onValueChange={field.onUpdate}
+   424→                                >
+   425→                                  <SelectTrigger size="sm" className="h-8 text-sm w-full">
+   426→                                    <SelectValue />
+   427→                                  </SelectTrigger>
+   428→                                  <SelectContent>
+   429→                                    {field.options.map((opt) => (
+   430→                                      <SelectItem key={opt} value={opt} className="text-sm">
+   431→                                        {opt}
+   432→                                      </SelectItem>
+   433→                                    ))}
+   434→                                  </SelectContent>
+   435→                                </Select>
+   436→                              )}
+   437→                              {field.type === 'boolean' && (
+   438→                                <Switch
+   439→                                  checked={Boolean(field.value)}
+   440→                                  onCheckedChange={field.onUpdate}
+   441→                                />
+   442→                              )}
+   443→                            </div>
+   444→                          ))}
+   445→                        </motion.div>
+   446→                      ) : (
+   447→                        <motion.div
+   448→                          key="static"
+   449→                          initial={{ opacity: 0 }}
+   450→                          animate={{ opacity: 1 }}
+   451→                          exit={{ opacity: 0 }}
+   452→                          transition={{ duration: 0.15 }}
+   453→                        >
+   454→                          {staticContent}
+   455→                        </motion.div>
+   456→                      )}
+   457→                    </AnimatePresence>
+   458→                  </div>
+   459→                </div>
+   460→                {editFields && (
+   461→                  isEditing ? (
+   462→                    <Button
+   463→                      variant="default"
+   464→                      size="sm"
+   465→                      className="shrink-0 ml-2 h-7 gap-1 text-sm bg-primary text-primary-foreground"
+   466→                      onClick={() => setEditingSection(null)}
+   467→                    >
+   468→                      <CheckCircle className="h-3 w-3" />
+   469→                      Done
+   470→                    </Button>
+   471→                  ) : (
+   472→                    <Button
+   473→                      variant="ghost"
+   474→                      size="sm"
+   475→                      className="shrink-0 ml-2 h-7 gap-1 text-sm text-muted-foreground hover:text-primary"
+   476→                      onClick={() => setEditingSection(title)}
+   477→                    >
+   478→                      <Pencil className="h-3 w-3" />
+   479→                      Edit
+   480→                    </Button>
+   481→                  )
+   482→                )}
+   483→              </div>
+   484→            );
+   485→          })}
+   486→        </div>
+   487→      </SectionCard>
+   488→    </div>
+   489→  );
+   490→}
+   491→

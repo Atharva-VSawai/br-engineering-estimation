@@ -35,7 +35,7 @@ const PAGE_NAMES: Record<AppPage, string> = {
 const PROJECT_CONTEXT_PAGES: AppPage[] = ['new-estimate', 'estimate-summary', 'product-explorer', 'technical-params', 'engineering-activities', 'complexity', 'compare'];
 
 export function AppHeader() {
-  const { config, currentPage, wizardStep, activeProjectId, projects, setCurrentPage, notifications, addNotification, markAllNotificationsRead } = useAppStore();
+  const { config, currentPage, wizardStep, activeProjectId, projects, setCurrentPage, notifications, addNotification, markAllNotificationsRead, updateProject, createNewProject } = useAppStore();
   const { theme, setTheme } = useTheme();
   const [ncOpen, setNcOpen] = React.useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -114,8 +114,35 @@ export function AppHeader() {
   };
 
   const handleSave = () => {
-    addNotification({ message: 'Configuration saved', detail: `Project: ${config.project.name || 'Untitled'}`, icon: 'Check', color: 'text-emerald-500' });
-    toast('Configuration saved', { description: 'All changes saved locally.' });
+    if (activeProjectId) {
+      // Persist the current working config into the active project
+      const clonedConfig = JSON.parse(JSON.stringify(config)) as typeof config;
+      updateProject(activeProjectId, {
+        config: clonedConfig,
+        name: config.project.name || activeProject?.name,
+        customer: config.project.customer || activeProject?.customer,
+        machineType: config.project.machineType || activeProject?.machineType,
+        industry: config.project.industry || activeProject?.industry,
+        complexity: config.project.complexity || activeProject?.complexity,
+      });
+      addNotification({ message: 'Project saved', detail: `${config.project.name || activeProject?.name || 'Untitled'} configuration saved`, icon: 'Check', color: 'text-emerald-500' });
+      toast('Project saved', { description: `${config.project.name || activeProject?.name || 'Untitled'} \u2014 all changes persisted.` });
+    } else if (config.project.name?.trim()) {
+      // No active project but config has a name — create a new project and save
+      const id = createNewProject(config.project.name);
+      const clonedConfig = JSON.parse(JSON.stringify(config)) as typeof config;
+      updateProject(id, {
+        config: clonedConfig,
+        name: config.project.name,
+        customer: config.project.customer,
+        machineType: config.project.machineType,
+        industry: config.project.industry,
+      });
+      addNotification({ message: 'Project created & saved', detail: config.project.name, icon: 'Check', color: 'text-emerald-500' });
+      toast('Project created & saved', { description: `${config.project.name} \u2014 saved as new project.` });
+    } else {
+      toast.error('Nothing to save', { description: 'Enter a project name first.' });
+    }
   };
 
   useEffect(() => {

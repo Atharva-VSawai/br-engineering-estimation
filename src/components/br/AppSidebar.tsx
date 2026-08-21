@@ -123,10 +123,10 @@ export function AppSidebar() {
 
       {/* Footer */}
       <div className="border-t border-border/60 px-4 py-3 bg-gradient-to-t from-sidebar/80 to-transparent">
-        <div className="text-xs text-muted-foreground/60 leading-tight">Frontend Prototype</div>
+        <div className="text-xs text-muted-foreground/60 leading-tight">Engineering Tool</div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 leading-tight">
           <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block animate-pulse" />
-          <span className="bg-gradient-to-r from-primary/15 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v0.9</span>
+          <span className="bg-gradient-to-r from-primary/15 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v1.0</span>
         </div>
       </div>
     </aside>

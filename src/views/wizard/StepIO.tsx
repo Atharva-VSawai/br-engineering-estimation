@@ -6,19 +6,7 @@ import { ParamRow, NumberField } from '@/components/br/ParamRow';
 import { useAppStore } from '@/store';
 import { Info } from 'lucide-react';
 
-const IO_BAR_COLORS = [
-  'bg-blue-gray-400/70',  // Digital Inputs - blue-gray
-  'bg-slate-400/70',       // Digital Outputs - slate
-  'bg-teal-400/70',       // Analog Inputs - teal
-  'bg-cyan-400/70',       // Analog Outputs - cyan
-  'bg-red-400/30',        // Safety I/O - red
-  'bg-purple-400/70',     // Encoder/Counter - purple
-  'bg-amber-400/70',      // Temperature - amber
-  'bg-indigo-400/70',     // Communication - indigo
-  'bg-rose-400/70',       // Special - rose
-] as const;
-
-// Tailwind doesn't have blue-gray, so we use inline styles for that one
+// Tailwind bar styles for I/O breakdown chart
 const IO_BAR_STYLES = [
   'bg-[#8b9cb5]',   // Digital Inputs - blue-gray (muted)
   'bg-slate-400',   // Digital Outputs - slate

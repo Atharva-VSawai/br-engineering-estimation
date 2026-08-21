@@ -160,7 +160,7 @@ export function StepMotion() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {Array.from({ length: totalAxes }).map((_, i) => {
               const axisType = getAxisType(i);
-              const barWidth = 60 + (i * 7 % 40);
+              const barWidth = 70 + ((i + 1) * 13 % 30);
               return (
                 <motion.div
                   key={i}
@@ -205,7 +205,16 @@ export function StepMotion() {
       <SectionCard title="Motion Engineering Activities">
         <div className="flex flex-wrap gap-2">
           {engActivities.map((activity) => {
-            const isActive = activity === 'Axis Configuration' || activity === 'Motion Programming' || activity === 'Testing';
+            const isActive = totalAxes > 0 && (
+              activity === 'Axis Configuration' ||
+              (activity === 'Drive Configuration' && m.servoDrives > 0) ||
+              (activity === 'Motor Configuration' && m.servoMotors > 0) ||
+              (activity === 'Motion Programming' && m.positioning) ||
+              (activity === 'Homing' && m.homingRequired) ||
+              (activity === 'Synchronization' && (m.synchronization || m.masterSlave)) ||
+              activity === 'Testing' ||
+              activity === 'Commissioning'
+            );
             return (
               <span
                 key={activity}

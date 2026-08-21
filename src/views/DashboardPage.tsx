@@ -68,14 +68,6 @@ const ACTIVITY_BORDER_COLORS: Record<string, string> = {
   export: 'border-l-purple-400',
 };
 
-const recentActivity = [
-  { time: '2 hours ago', action: 'Configuration updated', detail: 'Motion axes changed from 6 to 8', type: 'edit' },
-  { time: '5 hours ago', action: 'Sample data loaded', detail: 'Automated Packaging Machine configuration', type: 'info' },
-  { time: '1 day ago', action: 'New estimate created', detail: 'ACOPOStrak Transport System', type: 'create' },
-  { time: '2 days ago', action: 'Estimate completed', detail: 'Bottle Inspection Machine \u2013 Medium complexity', type: 'complete' },
-  { time: '3 days ago', action: 'Project exported', detail: 'Servo Press Machine configuration as JSON', type: 'export' },
-];
-
 function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; children: React.ReactNode; onDragStart: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
@@ -105,7 +97,14 @@ function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; ch
 }
 
 export function DashboardPage() {
-  const { projects, config, activeProjectId, setCurrentPage, loadSampleConfig, loadSampleProjects, resetConfig, openProject, updateConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+  const { projects, config, activeProjectId, setCurrentPage, setWizardStep, loadSampleConfig, loadSampleProjects, resetConfig, openProject, updateConfig, updateProject, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+
+  const recentActivity = projects.slice(0, 5).map((p) => ({
+    time: p.updatedAt,
+    action: p.status === 'Completed' ? 'Estimate completed' : p.status === 'In Review' ? 'Estimate in review' : 'Estimate in progress',
+    detail: `${p.name} \u2013 ${p.complexity} complexity${p.machineType ? ` \u00b7 ${p.machineType}` : ''}`,
+    type: (p.status === 'Completed' ? 'complete' : 'edit') as 'complete' | 'edit' | 'info' | 'create' | 'export',
+  }));
 
   // Load sample projects on mount if none exist
   useEffect(() => {

@@ -235,7 +235,7 @@ export function SettingsPage() {
                 B&R Engineering Estimation Tool
               </h2>
               <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-sm text-muted-foreground">
-                v0.9 — Frontend Prototype
+                v1.0 — Engineering Effort Estimation
               </span>
             </div>
             <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">

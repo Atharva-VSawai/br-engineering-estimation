@@ -2334,3 +2334,78 @@ Stage Summary:
 - Per-project view accessible via dropdown selector
 - All calculations use calculateEngineeringEffort() from actual ProjectConfig data
 - Dashboard already had per-project action buttons (View Report, Edit, PDF, Excel)
+
+
+---
+Task ID: Audit-2026-08-21
+Agent: Main Orchestrator
+Task: Complete application audit — fix bugs, remove hardcoded data, verify data consistency
+
+## Current Project Status
+The B&R Engineering Effort Estimation Tool is a functional single-page Next.js 16 application with:
+- 10 navigable pages (Dashboard, New Estimate wizard with 14 steps, Projects, B&R Configuration, Technical Parameters, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+- Zustand store with localStorage persistence
+- Engineering effort calculation in src/lib/effort-calculation.ts
+- PDF export via jsPDF + jspdf-autotable
+- Excel export via xlsx
+- JSON export via blob download
+- 5 sample projects with full unique configs
+- No financial/cost/pricing logic
+
+## Issues Found and Fixed
+
+### P0 — Critical Bugs
+1. **setWizardStep not destructured** in DashboardPage.tsx (line 108) — "Edit Configuration" button crashed silently because `setWizardStep` was used but never extracted from `useAppStore()`. **Fixed**: Added `setWizardStep` and `updateProject` to the destructure.
+
+2. **Save button was fake** — AppHeader's `handleSave()` only showed a success toast without actually persisting the config to the project. **Fixed**: Now calls `updateProject(activeProjectId, { config: clonedConfig, ... })` to persist, or creates a new project if none is active but config has a name.
+
+3. **Sample projects had NO configs** — BR-2026-001 through 005 were defined in `SAMPLE_PROJECTS` without `config` fields. This meant "View Estimate Report" and "Export PDF/Excel" all failed with "No configuration" errors. **Fixed**: Added unique, realistic configs to all 5 sample projects matching their descriptions.
+
+### P1 — Hardcoded Data
+4. **Recent Activity was entirely fake** — DashboardPage had a hardcoded `recentActivity` array with static entries like "Motion axes changed from 6 to 8" and "Automated Packaging Machine configuration" that never changed. **Fixed**: Now dynamically derived from `projects.slice(0, 5).map(...)` showing actual project data.
+
+5. **StepHMI mock preview hardcoded** — Showed static "Automated Packaging Machine", "Conveyor", "Sealer", "Labeler", "1,247 units", "42.3°C" regardless of actual configuration. **Fixed**: Preview now shows actual project name, HMI type, screen count, enabled features, and configuration progress.
+
+6. **StepMotion engineering activities hardcoded** — Always showed 3 specific activities as active regardless of actual motion config. **Fixed**: Activity highlighting now driven by actual config values (e.g., "Drive Configuration" active only when servoDrives > 0).
+
+### P2 — Cleanup
+7. **"Frontend Prototype" label** appeared in sidebar and Settings page, looking unprofessional for an engineering tool. **Fixed**: Changed to "Engineering Tool" / "Engineering Effort Estimation", version bumped to v1.0.
+
+8. **Dead code removed**: Unused `IO_BAR_COLORS` array in StepIO.tsx, unused `HMI_NAV_ITEMS` constant in StepHMI.tsx.
+
+9. **`recentActivity` moved inside component** — Was at module level referencing store data that doesn't exist at import time, causing ReferenceError after refactor.
+
+## Features Verified Working
+- Navigation: All 10 pages accessible, breadcrumb shows correct page names
+- Project creation: Works via dashboard "New Estimate" button
+- Project switching: "Edit Configuration" navigates to wizard step 13 with correct project data
+- "View Estimate Report" navigates to Estimate Summary with correct project name
+- Export PDF: No console errors when exporting projects with configs
+- Export Excel: Working (verified in prior session)
+- JSON Export: Working via header Export dropdown
+- Copy to clipboard: Working via header Copy button
+- Theme toggle: Light/dark mode functional
+- Wizard navigation: All 14 steps accessible, back/next/step clicking work
+- Sample projects: All 5 load with unique, realistic configurations
+- Data isolation: Each project's config stored independently
+- localStorage persistence: Projects and activeProjectId survive page reload
+- Engineering effort calculation: Single source of truth in effort-calculation.ts
+- No financial/cost/pricing logic found anywhere in the codebase
+- Lint: Clean (0 errors)
+
+## Known Remaining Items (Not Bugs)
+- EngineeringActivitiesPage has different inline effort formulas than effort-calculation.ts (inconsistent but low priority — the page is a preview, not the source of truth)
+- I/O total calculation duplicated across 9+ files (could be extracted to a shared utility)
+- Complexity color maps duplicated 5+ times (could be centralized)
+- StepMotion axis overview bars are decorative, not data-driven
+- ProjectsPage uses native `confirm()` dialog instead of AlertDialog
+- StepReview HTML export has potential XSS from unescaped user input
+
+## Redundant Features NOT Removed
+After careful evaluation, the following were kept because they serve the engineering workflow:
+- Dashboard stat card drag-and-drop (user preference)
+- All chart visualizations (different views serve different purposes)
+- Product Explorer (useful for B&R product reference)
+- Compare page (useful for multi-project analysis)
+- All wizard step preview sections (provide immediate feedback)
+

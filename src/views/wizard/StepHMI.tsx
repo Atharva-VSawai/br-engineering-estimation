@@ -6,8 +6,6 @@ import { ParamRow, SelectField, NumberField, CheckboxField } from '@/components/
 import { useAppStore } from '@/store';
 import { HMI_TYPES } from '@/data';
 
-const HMI_NAV_ITEMS = ['Overview', 'Production', 'Parameters', 'Alarms', 'Diagnostics', 'Maintenance'];
-
 export function StepHMI() {
   const { config, updateHMI } = useAppStore();
   const h = config.hmi;
@@ -66,71 +64,49 @@ export function StepHMI() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Screen Preview" description="Mock preview of HMI screen layout">
+      <SectionCard title="Screen Preview" description="Configuration-based HMI screen layout preview">
         <div className="rounded-lg border-2 border-gray-300 bg-gray-50 overflow-hidden aspect-[16/10]">
           {/* Top bar */}
           <div className="h-8 bg-primary/90 flex items-center px-3">
-            <span className="text-white text-sm font-bold">Automated Packaging Machine</span>
+            <span className="text-white text-sm font-bold truncate">{config.project.name || 'Untitled Project'}</span>
             <div className="ml-auto flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="text-white text-sm">Running</span>
+              <span className="text-white text-sm">{h.screens > 0 ? 'Configured' : 'No Screens'}</span>
             </div>
           </div>
           {/* Body */}
           <div className="flex" style={{ height: 'calc(100% - 2rem)' }}>
-            {/* Left sidebar */}
+            {/* Left sidebar - show actual navigation items based on active features */}
             <div className="w-32 bg-card border-r border-gray-200 p-1.5 shrink-0">
-              {HMI_NAV_ITEMS.map((item, idx) => (
-                <div
-                  key={item}
-                  className={`h-5 rounded text-sm flex items-center px-1.5 mb-0.5 ${
-                    idx === 0
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-gray-400'
-                  }`}
-                >
-                  {item}
+              <div className={`h-5 rounded text-sm flex items-center px-1.5 mb-0.5 bg-primary/10 text-primary`}>Overview</div>
+              {activeFeatures.length > 0 ? activeFeatures.map((f) => (
+                <div key={f.key} className="h-5 rounded text-sm flex items-center px-1.5 mb-0.5 text-gray-400">
+                  {f.label}
                 </div>
-              ))}
+              )) : (
+                <div className="text-xs text-gray-400 px-1.5 mt-1">No features enabled</div>
+              )}
             </div>
-            {/* Main content */}
+            {/* Main content - data-driven widgets */}
             <div className="flex-1 p-3">
               <div className="grid grid-cols-2 gap-2 h-full">
-                {/* Machine Status widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Machine Status</div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-sm text-foreground">Conveyor</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-sm text-foreground">Sealer</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-sm text-foreground">Labeler</span>
-                    </div>
-                  </div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">HMI Type</div>
+                  <div className="text-sm font-bold text-foreground">{h.type}</div>
                 </div>
-                {/* Production Count widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Production Count</div>
-                  <div className="text-lg font-bold text-foreground leading-none mt-2">1,247</div>
-                  <div className="text-sm text-gray-400 mt-0.5">units</div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Screens</div>
+                  <div className="text-lg font-bold text-foreground leading-none mt-2">{h.screens}</div>
+                  <div className="text-sm text-gray-400 mt-0.5">{hmiComplexity} complexity</div>
                 </div>
-                {/* Alarm Status widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Alarm Status</div>
-                  <div className="text-sm text-green-600 font-medium mt-1.5">No Active Alarms</div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Features</div>
+                  <div className="text-sm text-green-600 font-medium mt-1.5">{activeFeatures.length} enabled</div>
                 </div>
-                {/* Temperature widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Temperature</div>
-                  <div className="text-sm font-bold text-foreground mt-1.5">42.3°C</div>
-                  <div className="mt-1.5 h-1 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-amber-400" style={{ width: '56%' }} />
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Config Level</div>
+                  <div className="mt-1.5 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (activeFeatures.length / hmiFeatures.length) * 100)}%` }} />
                   </div>
                 </div>
               </div>
@@ -157,11 +133,11 @@ export function StepHMI() {
           <SectionCard title="HMI Engineering Preview">
             <div className="space-y-2">
               {engPreview.map((item) => {
-                const active = item === 'UI Development' || item === 'PLC Tag Integration' || item === 'Testing';
+                const isActive = activeFeatures.some(f => f.label.includes(item.split(' ')[0]));
                 return (
                   <div key={item} className="flex items-center gap-2 text-sm">
-                    <div className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-primary' : 'bg-border'}`} />
-                    <span className={active ? 'text-foreground font-medium' : 'text-muted-foreground'}>{item}</span>
+                    <div className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-primary' : 'bg-border'}`} />
+                    <span className={isActive ? 'text-foreground font-medium' : 'text-muted-foreground'}>{item}</span>
                   </div>
                 );
               })}
