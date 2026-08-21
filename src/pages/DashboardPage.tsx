@@ -13,6 +13,13 @@ import { useAppStore } from '@/store';
 import type { ComplexityLevel } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -97,8 +104,32 @@ function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; ch
 }
 
 export function DashboardPage() {
-  const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+  const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
 
+  // Project selector state
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
+
+  // Derived: currently selected project object
+  const selectedProject = useMemo(
+    () => (selectedProjectId === 'all' ? null : projects.find((p) => p.id === selectedProjectId) ?? null),
+    [selectedProjectId, projects]
+  );
+
+  // When a project is selected, deep-clone its config into the store
+  const handleProjectSelect = (value: string) => {
+    setSelectedProjectId(value);
+    if (value === 'all') {
+      // Restore default config for aggregate view
+      resetConfig();
+      return;
+    }
+    const project = projects.find((p) => p.id === value);
+    if (project?.config) {
+      // Deep-clone to avoid reference issues with the stored project
+      const clonedConfig = JSON.parse(JSON.stringify(project.config));
+      updateConfig(clonedConfig);
+    }
+  };
 
   // Stat card drag-and-drop order
   const [statOrder, setStatOrder] = useState<number[]>(() => {
@@ -176,28 +207,88 @@ export function DashboardPage() {
         transition={{ duration: 0.3 }}
       >
         {/* Welcome Banner */}
-        <div className="relative overflow-hidden border border-border bg-gradient-to-r from-muted/80 via-muted/40 to-muted/20 p-5"
-        >
-          <Settings2 className="h-24 w-24 text-muted-foreground/[0.06] absolute right-6 top-1/2 -translate-y-1/2" />
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <div className="relative overflow-hidden border border-border/80 rounded-xl bg-gradient-to-r from-primary/[0.07] via-primary/[0.03] to-transparent p-6">
+          {/* Subtle dot pattern decoration */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, oklch(0.55 0.2 35) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          {/* Decorative gradient blob */}
+          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-primary/10 to-transparent blur-2xl" />
+          <div className="absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-gradient-to-tl from-primary/5 to-transparent blur-xl" />
+          <Settings2 className="h-28 w-28 text-primary/[0.05] absolute right-8 top-1/2 -translate-y-1/2" />
+          <div className="relative flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-sm ring-1 ring-primary/10">
                 <Cpu className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-foreground">B&R Engineering Estimation</h2>
+                <h2 className="text-lg font-bold text-foreground tracking-tight">B&amp;R Engineering Estimation</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">Configure your automation project and generate effort estimates</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-background/80 border border-border px-2.5 py-1 text-sm font-medium text-muted-foreground">5 Projects</span>
-              <span className="rounded-full bg-background/80 border border-border px-2.5 py-1 text-sm font-medium text-muted-foreground">3 Config Domains</span>
-              <span className="rounded-full bg-background/80 border border-border px-2.5 py-1 text-sm font-medium text-muted-foreground">14 Wizard Steps</span>
+              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">5 Projects</span>
+              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">3 Config Domains</span>
+              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">14 Wizard Steps</span>
             </div>
           </div>
         </div>
         {/* Bottom gradient shadow below welcome banner */}
         <div className="h-3 -mt-1.5 bg-gradient-to-b from-muted/30 to-transparent rounded-b-lg pointer-events-none" />
+
+        {/* Project Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05, duration: 0.25 }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <FolderKanban className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-semibold text-foreground">Project Scope</span>
+            </div>
+            <Select value={selectedProjectId} onValueChange={handleProjectSelect}>
+              <SelectTrigger className="w-full sm:w-[320px] h-9 font-medium border-border/80">
+                <SelectValue placeholder="Select a project…" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <span className="flex items-center gap-2">
+                    <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+                    All Projects (Aggregate View)
+                  </span>
+                </SelectItem>
+                {projects.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    <span className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-sm shrink-0 ${COMPLEXITY_COLORS[p.complexity]}`} />
+                      <span className="truncate">{p.name}</span>
+                      <span className="text-muted-foreground ml-auto text-xs shrink-0">{p.customer}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedProject && (
+              <div className="flex items-center gap-3 text-sm animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Customer:</span>
+                  <span className="font-medium text-foreground">{selectedProject.customer}</span>
+                </div>
+                <span className="h-4 w-px bg-border" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Machine:</span>
+                  <span className="font-medium text-foreground">{selectedProject.machineType}</span>
+                </div>
+                <span className="h-4 w-px bg-border" />
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">Status:</span>
+                  <StatusBadge status={selectedProject.status} />
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
 
         {/* Header */}
         <div>
@@ -278,7 +369,7 @@ export function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15, duration: 0.3 }}
         >
-          <SectionCard title="Quick Configuration Overview">
+          <SectionCard title={selectedProject ? `Configuration: ${selectedProject.name}` : 'Quick Configuration Overview'} description={selectedProject ? `${selectedProject.customer} · ${selectedProject.machineType}` : 'Current working configuration snapshot'}>
             <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
               {(() => {
                 const totalIO =

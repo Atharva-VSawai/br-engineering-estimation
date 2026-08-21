@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAppStore } from '@/store';
 import { toast } from 'sonner';
+import { exportPdf } from '@/lib/export-pdf';
 import type { AppPage } from '@/types';
 import { NotificationCenter, useNotificationCenter } from '@/components/br/NotificationCenter';
 
@@ -38,10 +39,9 @@ export function AppHeader() {
   const projectName = config.project.name || 'Packaging Machine \u2013 Project 2026';
 
   const handlePdfExport = () => {
-    setCurrentPage('estimate-summary');
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('br:export-pdf'));
-    }, 500);
+    exportPdf(config);
+    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'PDF exported', detail: 'Report downloaded', icon: FileText, color: 'text-red-500' } }));
+    toast('PDF exported', { description: 'Report downloaded.' });
   };
 
   const handleExcelExport = async () => {

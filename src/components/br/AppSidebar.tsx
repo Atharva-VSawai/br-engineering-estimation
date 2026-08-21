@@ -41,13 +41,16 @@ export function AppSidebar() {
   const configName = config.project.name || '';
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-sidebar shadow-[inset_-1px_0_0_0_oklch(0.0_0_0/0.05)]">
+    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 shadow-[inset_-1px_0_0_0_oklch(0.0_0_0/0.05)]">
       {/* B&R brand accent stripe */}
       <div className="h-[3px] bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
 
       {/* Logo area */}
-      <div className="flex h-14 items-center gap-2.5 border-b border-border px-4">
-        <div className="h-3 w-3 shrink-0 rotate-45 rounded-[2px] bg-primary/20 border border-primary/40" />
+      <div className="flex h-14 items-center gap-2.5 border-b border-border/80 px-4 bg-gradient-to-r from-primary/[0.03] to-transparent">
+        <div className="relative h-4 w-4 shrink-0 flex items-center justify-center">
+          <div className="absolute inset-0 rotate-45 rounded-[2px] bg-gradient-to-br from-primary/40 to-primary/15 border border-primary/30" />
+          <div className="absolute inset-[3px] rotate-45 rounded-[1px] bg-primary/80" />
+        </div>
         <div className="flex flex-col">
           <span className="text-base font-bold tracking-tight text-sidebar-foreground leading-tight">
             B&R Engineering
@@ -67,21 +70,18 @@ export function AppSidebar() {
               const isActive = currentPage === page;
               return (
                 <li key={page} className="relative">
-                  {isActive && (
-                    <span className="absolute left-0 top-0 h-full w-[2px] rounded-r bg-primary" />
-                  )}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => setCurrentPage(page)}
-                        className={`relative flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
+                        className={`relative flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
                           ${isActive
-                            ? 'bg-gradient-to-r from-primary/8 to-transparent text-sidebar-accent-foreground shadow-[0_0_12px_oklch(0.55_0.2_35/0.15)] after:content-[\'\'] after:absolute after:bottom-0 after:left-2 after:right-2 after:h-[3px] after:rounded-full after:bg-primary'
-                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                            ? 'bg-gradient-to-r from-primary/10 to-primary/[0.03] text-sidebar-accent-foreground shadow-[inset_3px_0_0_0_oklch(0.55_0.2_35/0.8),0_0_16px_oklch(0.55_0.2_35/0.08)]'
+                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground hover:translate-x-0.5'
                           }`}
                         aria-current={isActive ? 'page' : undefined}
                       >
-                        <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-primary drop-shadow-[0_0_4px_oklch(0.55_0.2_35/0.3)]' : ''}`} />
+                        <Icon className={`h-4 w-4 shrink-0 transition-colors duration-200 ${isActive ? 'text-primary drop-shadow-[0_0_6px_oklch(0.55_0.2_35/0.4)]' : 'group-hover:text-muted-foreground'}`} />
                         {label}
                         {page === 'new-estimate' && currentPage === 'new-estimate' && (
                           <span className="ml-auto rounded-full bg-primary text-primary-foreground text-[11px] font-bold px-1.5 py-0.5 leading-none">
@@ -122,11 +122,11 @@ export function AppSidebar() {
       )}
 
       {/* Footer */}
-      <div className="border-t border-border px-4 py-3">
+      <div className="border-t border-border/60 px-4 py-3 bg-gradient-to-t from-sidebar/80 to-transparent">
         <div className="text-xs text-muted-foreground/60 leading-tight">Frontend Prototype</div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 leading-tight">
-          <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
-          <span className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v0.9</span>
+          <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block animate-pulse" />
+          <span className="bg-gradient-to-r from-primary/15 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v0.9</span>
         </div>
       </div>
     </aside>

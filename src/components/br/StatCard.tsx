@@ -70,18 +70,18 @@ export function StatCard({ label, value, sublabel, icon, accentColor, sparkline 
   }, [sparkline]);
 
   return (
-    <Card className="relative border-border bg-card group transition-all duration-200 hover:shadow-md hover:border-primary/20 hover:-translate-y-0.5 overflow-hidden">
+    <Card className="relative border-border bg-card group transition-all duration-300 ease-out hover:shadow-lg hover:shadow-primary/[0.06] hover:border-primary/25 hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
       {/* Accent border */}
       {accentColor && (
         <div className={`absolute top-0 left-4 right-4 h-0.5 rounded-full ${accentColor}`} />
       )}
       {/* Hover gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      <CardContent className="p-4 relative">
+      <CardContent className="p-5 relative">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-muted-foreground truncate">{label}</p>
-            <p className="mt-1 text-4xl font-bold text-foreground leading-tight tabular-nums group-hover:text-primary/80 transition-colors duration-200">{renderedValue}</p>
+            <p className="mt-1.5 text-[2.25rem] font-extrabold text-foreground leading-none tabular-nums tracking-tight group-hover:text-primary/80 transition-colors duration-300">{renderedValue}</p>
             {sublabel && (
               <p className="mt-0.5 text-sm text-muted-foreground truncate">{sublabel}</p>
             )}
@@ -100,7 +100,7 @@ export function StatCard({ label, value, sublabel, icon, accentColor, sparkline 
             )}
           </div>
           {icon && (
-            <div className="ml-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-200">
+            <div className="ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary group-hover:scale-110 group-hover:from-primary/25 group-hover:to-primary/10 transition-all duration-300 shadow-sm">
               {icon}
             </div>
           )}

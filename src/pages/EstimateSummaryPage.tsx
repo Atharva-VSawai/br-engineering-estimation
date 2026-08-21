@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { AlertTriangle, ArrowRight, Check, Minus, Save, FileText, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
 import { EFFORT_AREAS } from '@/data';
 import { toast } from 'sonner';
+import { exportPdf } from '@/lib/export-pdf';
 import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
 
 const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
@@ -181,14 +182,14 @@ export function EstimateSummaryPage() {
   const configuredCount = completeness.filter((s) => s.configured).length;
 
   // Listen for br:export-pdf event (triggered from header export dropdown)
-  const pdfButtonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const handleExportPdf = () => {
-      pdfButtonRef.current?.click();
+      exportPdf(c);
+      toast('PDF downloaded', { description: 'Report saved as PDF file.' });
     };
     window.addEventListener('br:export-pdf', handleExportPdf);
     return () => window.removeEventListener('br:export-pdf', handleExportPdf);
-  }, []);
+  }, [c]);
 
   return (
     <motion.div
@@ -244,284 +245,18 @@ export function EstimateSummaryPage() {
         transition={{ delay: 0.1, duration: 0.3 }}
       >
         <Button
-          ref={pdfButtonRef}
           variant="outline"
           size="sm"
           className="gap-1.5 text-sm"
           onClick={() => {
-            const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
-            const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
-            const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
-            const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
-            const integrationHours = (hwHours + swHours + motionHours + safetyHours) * 0.3;
-            const totalHours = hwHours + swHours + motionHours + safetyHours + integrationHours;
-
-            const hwDesignWeeks = 2;
-            const swDevWeeks = Math.max(2, Math.ceil(c.hmi.screens / 3));
-            const integrationWeeks = Math.max(2, Math.ceil(totalHours / 40));
-            const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
-            const commissionWeeks = complexityMap[overallComplexity] || 2;
-            const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
-
-            const complexityDims = [
-              { label: 'Hardware', value: c.complexity.hardware },
-              { label: 'Motion', value: c.complexity.motion },
-              { label: 'HMI', value: c.complexity.hmi },
-              { label: 'Vision', value: c.complexity.vision },
-              { label: 'Safety', value: c.complexity.safety },
-              { label: 'Communication', value: c.complexity.communication },
-              { label: 'Software', value: c.complexity.software },
-              { label: 'Integration', value: c.complexity.integration },
-              { label: 'Requirement', value: c.complexity.requirement },
-              { label: 'Testing', value: c.complexity.testing },
-            ];
-
-            const effortRows = [
-              { area: 'Hardware Engineering', hours: hwHours },
-              { area: 'Software Development', hours: swHours },
-              { area: 'Motion Configuration', hours: motionHours },
-              { area: 'Safety Engineering', hours: safetyHours },
-              { area: 'Integration & Testing', hours: integrationHours },
-            ];
-
-            const timelinePhases = [
-              { phase: 'Hardware Design', weeks: hwDesignWeeks },
-              { phase: 'Software Development', weeks: swDevWeeks },
-              { phase: 'Integration & Testing', weeks: integrationWeeks },
-              { phase: 'Commissioning', weeks: commissionWeeks },
-            ];
-
-            // --- Build SVG charts ---
-            const complexityValueMap: Record<string, number> = { Low: 0.25, Medium: 0.5, High: 0.75, 'Very High': 1 };
-
-            // 1) Radar Chart (400x400)
-            const radarCx = 200; const radarCy = 200; const radarMaxR = 160;
-            const radarRings = [0.25, 0.5, 0.75, 1];
-            let radarRingsSvg = '';
-            for (const ring of radarRings) {
-              const rr = ring * radarMaxR;
-              let pts = '';
-              for (let i = 0; i < 10; i++) {
-                const angle = i * (2 * Math.PI / 10) - Math.PI / 2;
-                const px = radarCx + rr * Math.cos(angle);
-                const py = radarCy + rr * Math.sin(angle);
-                pts += `${px.toFixed(1)},${py.toFixed(1)} `;
-              }
-              radarRingsSvg += `<polygon points="${pts.trim()}" fill="none" stroke="#e5e5e5" stroke-width="0.8"/>\n`;
-            }
-            let radarAxesSvg = '';
-            for (let i = 0; i < 10; i++) {
-              const angle = i * (2 * Math.PI / 10) - Math.PI / 2;
-              const px = radarCx + radarMaxR * Math.cos(angle);
-              const py = radarCy + radarMaxR * Math.sin(angle);
-              radarAxesSvg += `<line x1="${radarCx}" y1="${radarCy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="#e5e5e5" stroke-width="0.8"/>\n`;
-            }
-            let radarDataPts = '';
-            let radarLabelsSvg = '';
-            for (let i = 0; i < complexityDims.length; i++) {
-              const d = complexityDims[i];
-              const val = complexityValueMap[d.value] || 0.25;
-              const r = val * radarMaxR;
-              const angle = i * (2 * Math.PI / 10) - Math.PI / 2;
-              const px = radarCx + r * Math.cos(angle);
-              const py = radarCy + r * Math.sin(angle);
-              radarDataPts += `${px.toFixed(1)},${py.toFixed(1)} `;
-              const lx = radarCx + (radarMaxR + 22) * Math.cos(angle);
-              const ly = radarCy + (radarMaxR + 22) * Math.sin(angle);
-              const anchor = Math.abs(Math.cos(angle)) < 0.1 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
-              const dy = Math.sin(angle) > 0.3 ? 4 : Math.sin(angle) < -0.3 ? -3 : 1;
-              radarLabelsSvg += `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="${anchor}" font-size="10" fill="#555" dominant-baseline="middle" dy="${dy}">${d.label}</text>\n`;
-            }
-            const radarSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">\n${radarRingsSvg}${radarAxesSvg}<polygon points="${radarDataPts.trim()}" fill="oklch(0.55 0.2 35 / 0.2)" stroke="oklch(0.55 0.2 35)" stroke-width="2"/>\n${radarLabelsSvg}</svg>`;
-
-            // 2) Effort Breakdown Bar Chart (500x200)
-            const effortColors = ['#3b82f6', '#8b5cf6', '#f97316', '#ef4444', '#10b981'];
-            const effortMax = Math.max(...effortRows.map((r) => r.hours), 1);
-            let effortBarsSvg = '';
-            effortRows.forEach((r, i) => {
-              const y = 12 + i * 32;
-              const barW = Math.max((r.hours / effortMax) * 300, 4);
-              effortBarsSvg += `<text x="148" y="${y + 13}" text-anchor="end" font-size="11" fill="#333">${r.area}</text>\n`;
-              effortBarsSvg += `<rect x="155" y="${y}" width="${barW.toFixed(1)}" height="18" rx="3" fill="${effortColors[i]}"/>\n`;
-              effortBarsSvg += `<text x="${160 + barW + 6}" y="${y + 13}" font-size="11" font-weight="600" fill="#333">${r.hours.toFixed(1)}h</text>\n`;
-            });
-            const totalY = 12 + effortRows.length * 32;
-            const totalBarW = Math.max((totalHours / effortMax) * 300, 4);
-            effortBarsSvg += `<line x1="155" y1="${totalY - 4}" x2="490" y2="${totalY - 4}" stroke="#ddd" stroke-width="0.8"/>\n`;
-            effortBarsSvg += `<text x="148" y="${totalY + 13}" text-anchor="end" font-size="11" font-weight="700" fill="#C75B12">TOTAL</text>\n`;
-            effortBarsSvg += `<rect x="155" y="${totalY}" width="${totalBarW.toFixed(1)}" height="18" rx="3" fill="#C75B12"/>\n`;
-            effortBarsSvg += `<text x="${160 + totalBarW + 6}" y="${totalY + 13}" font-size="11" font-weight="700" fill="#C75B12">${totalHours.toFixed(1)}h</text>\n`;
-            const effortSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="200" viewBox="0 0 500 200">\n${effortBarsSvg}</svg>`;
-
-            // 3) Timeline Gantt Chart (500x120)
-            const ganttColors = ['#3b82f6', '#f59e0b', '#f97316', '#10b981'];
-            let ganttBarsSvg = '';
-            timelinePhases.forEach((p, i) => {
-              const y = 8 + i * 28;
-              const barW = Math.max((p.weeks / totalWeeks) * 300, 8);
-              ganttBarsSvg += `<text x="130" y="${y + 14}" text-anchor="end" font-size="10" fill="#333">${p.phase}</text>\n`;
-              ganttBarsSvg += `<circle cx="135" cy="${y + 10}" r="3" fill="${ganttColors[i]}"/>\n`;
-              ganttBarsSvg += `<rect x="140" y="${y}" width="${barW.toFixed(1)}" height="18" rx="3" fill="${ganttColors[i]}" opacity="0.85"/>\n`;
-              ganttBarsSvg += `<text x="${145 + barW + 6}" y="${y + 13}" font-size="10" fill="#555">${p.weeks} week${p.weeks !== 1 ? 's' : ''}</text>\n`;
-            });
-            const ganttSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="120" viewBox="0 0 500 120">\n${ganttBarsSvg}</svg>`;
-
-            // 4) Complexity Profile Bar Chart (500x280)
-            const complexityBarColors: Record<string, string> = { Low: '#10b981', Medium: '#f59e0b', High: '#f97316', 'Very High': '#ef4444' };
-            let complexityBarsSvg = '';
-            complexityDims.forEach((d, i) => {
-              const y = 4 + i * 26;
-              const val = complexityValueMap[d.value] || 0.25;
-              const barW = Math.max(val * 300, 4);
-              const color = complexityBarColors[d.value] || '#999';
-              complexityBarsSvg += `<text x="108" y="${y + 14}" text-anchor="end" font-size="10" fill="#333">${d.label}</text>\n`;
-              complexityBarsSvg += `<rect x="115" y="${y}" width="${barW.toFixed(1)}" height="18" rx="3" fill="${color}" opacity="0.85"/>\n`;
-              complexityBarsSvg += `<text x="${120 + barW + 6}" y="${y + 14}" font-size="10" font-weight="600" fill="#333">${d.value}</text>\n`;
-            });
-            const complexitySvg = `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="280" viewBox="0 0 500 280">\n${complexityBarsSvg}</svg>`;
-
-            // 5) Risk assessment helpers
-            const clarity = c.project.requirementClarity || 'Mostly Clear';
-            const involvement = c.project.customerInvolvement || 'Medium';
-            const clarityColorMap: Record<string, string> = { Clear: '#10b981', 'Mostly Clear': '#f59e0b', 'Partially Clear': '#f97316', Unclear: '#ef4444' };
-            const involvementColorMap: Record<string, string> = { Low: '#ef4444', Medium: '#f59e0b', High: '#10b981' };
-            const scopeColor = highCount >= 5 ? '#ef4444' : highCount >= 3 ? '#f97316' : highCount >= 1 ? '#f59e0b' : '#10b981';
-
-            // 6) Completeness checks
-            const completenessChecks = checkCompleteness(c);
-
-            // 7) Engineering areas table data
-            const engAreaRows = EFFORT_AREAS.map((area) => ({
-              name: area.name,
-              complexity: areaComplexities[area.name] || 'Medium',
-              driver: area.driver,
-            }));
-
-            // 8) Overall complexity badge color
-            const badgeBgMap: Record<ComplexityLevel, string> = { Low: '#ecfdf5', Medium: '#fffbeb', High: '#fff7ed', 'Very High': '#fef2f2' };
-            const badgeColorMap: Record<ComplexityLevel, string> = { Low: '#059669', Medium: '#d97706', High: '#ea580c', 'Very High': '#dc2626' };
-
-            const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>B&R Engineering Estimation Report</title>
-<style>
-@page { margin: 15mm; size: A4; }
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a1a; background: #fff; padding: 24px; font-size: 12px; line-height: 1.6; }
-.header { border-bottom: 3px solid #C75B12; padding-bottom: 16px; margin-bottom: 24px; }
-.header h1 { font-size: 22px; font-weight: 700; color: #C75B12; margin-bottom: 4px; }
-.header .meta { font-size: 12px; color: #666; margin-top: 4px; }
-.header .meta strong { color: #333; }
-.section { margin-bottom: 24px; page-break-inside: avoid; }
-.section h2 { font-size: 13px; font-weight: 700; color: #C75B12; border-bottom: 1px solid #e5e5e5; padding-bottom: 6px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-th { text-align: left; font-weight: 600; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 10px; color: #444; }
-td { border: 1px solid #ddd; padding: 7px 10px; }
-tr:last-child td { font-weight: 600; background: #fafafa; }
-.complexity-badge { display: inline-block; padding: 2px 10px; border-radius: 4px; font-weight: 600; font-size: 11px; }
-.chart-container { display: flex; justify-content: center; margin: 16px 0; }
-.risk-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-.risk-card { border: 1px solid #ddd; border-radius: 6px; padding: 12px; }
-.risk-card .label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
-.risk-card .value { font-size: 14px; font-weight: 600; color: #1a1a1a; }
-.risk-card .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-.footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e5e5e5; font-size: 10px; color: #999; }
-@media print { body { padding: 0; } }
-.print-hint { background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 10px 14px; margin-bottom: 20px; font-size: 12px; color: #6d4c00; }
-.print-hint strong { color: #e65100; }
-.completeness-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
-.completeness-item { display: flex; align-items: center; gap: 6px; font-size: 11px; padding: 4px 0; }
-.completeness-icon { width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; border-radius: 50%; }
-.check-yes { background: #ecfdf5; color: #059669; }
-.check-no { background: #f3f4f6; color: #9ca3af; }
-</style>
-</head>
-<body>
-  <div class="print-hint">
-    <strong>Tip:</strong> Use <strong>Ctrl+P</strong> (or Cmd+P on Mac) to save this report as a PDF.
-  </div>
-  <div class="header">
-    <h1>${c.project.name || 'Untitled Project'}</h1>
-    <div class="meta">
-      <strong>Customer:</strong> ${c.project.customer || 'N/A'} &nbsp;&middot;&nbsp; <strong>Machine Type:</strong> ${c.project.machineType || 'N/A'} &nbsp;&middot;&nbsp; <strong>Industry:</strong> ${c.project.industry || 'N/A'}<br>
-      <strong>Date:</strong> ${new Date().toLocaleDateString('de-AT', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;&middot;&nbsp; Overall Complexity: <span class="complexity-badge" style="background:${badgeBgMap[overallComplexity]};color:${badgeColorMap[overallComplexity]}">${overallComplexity}</span>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>Complexity Radar</h2>
-    <div class="chart-container">${radarSvg}</div>
-    <p style="text-align:center;font-size:11px;color:#888;margin-top:4px;">${highCount} of 10 dimensions rated High or Very High</p>
-  </div>
-
-  <div class="section">
-    <h2>Effort Breakdown</h2>
-    <div class="chart-container">${effortSvg}</div>
-  </div>
-
-  <div class="section">
-    <h2>Project Timeline</h2>
-    <div class="chart-container">${ganttSvg}</div>
-  </div>
-
-  <div class="section">
-    <h2>Complexity Profile</h2>
-    <div class="chart-container">${complexitySvg}</div>
-  </div>
-
-  <div class="section">
-    <h2>Risk Assessment</h2>
-    <div class="risk-grid">
-      <div class="risk-card">
-        <div class="label">Requirement Clarity</div>
-        <div class="value"><span class="dot" style="background:${clarityColorMap[clarity] || '#999'}"></span>${clarity}</div>
-      </div>
-      <div class="risk-card">
-        <div class="label">Customer Involvement</div>
-        <div class="value"><span class="dot" style="background:${involvementColorMap[involvement] || '#999'}"></span>${involvement}</div>
-      </div>
-      <div class="risk-card">
-        <div class="label">Scope Complexity</div>
-        <div class="value"><span class="dot" style="background:${scopeColor}"></span>${highCount} / 10 dimensions</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>Engineering Areas</h2>
-    <table>
-      <thead><tr><th>Area</th><th>Complexity</th><th>Potential Effort Driver</th></tr></thead>
-      <tbody>
-        ${engAreaRows.map((r) => `<tr><td>${r.name}</td><td>${r.complexity}</td><td>${r.driver}</td></tr>`).join('\n')}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="section">
-    <h2>Configuration Completeness</h2>
-    <div class="completeness-grid">
-      ${completenessChecks.map((s) => `<div class="completeness-item"><span class="completeness-icon ${s.configured ? 'check-yes' : 'check-no'}">${s.configured ? '\u2713' : '\u2717'}</span><span style="color:${s.configured ? '#1a1a1a' : '#999'}">${s.label}</span></div>`).join('\n')}
-    </div>
-    <p style="margin-top:8px;font-size:11px;color:#888;">${configuredCount} of ${completenessChecks.length} sections configured</p>
-  </div>
-
-  <div class="footer">
-    Generated by B&R Engineering Estimation Tool &mdash; ${new Date().toLocaleDateString('de-AT')}
-  </div>
-</body>
-</html>`;
-
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            toast('Report opened in new tab \u2014 use Ctrl+P to save as PDF');
+            exportPdf(c);
+            toast('PDF downloaded', { description: 'Report saved as PDF file.' });
           }}
         >
           <FileText className="h-3.5 w-3.5" />
           Export as PDF
         </Button>
+
         <Button
           variant="outline"
           size="sm"

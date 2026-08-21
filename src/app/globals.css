@@ -131,26 +131,43 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - WebKit */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: oklch(0.82 0.005 250);
-  border-radius: 3px;
+  border-radius: 4px;
+  border: 1.5px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.7 0.005 250);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 .dark ::-webkit-scrollbar-thumb {
   background: oklch(0.35 0.01 250);
+  background-clip: padding-box;
 }
 .dark ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.45 0.01 250);
+  background-clip: padding-box;
+}
+
+/* Custom scrollbar - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.82 0.005 250) transparent;
+}
+.dark * {
+  scrollbar-color: oklch(0.35 0.01 250) transparent;
 }
 
 /* Focus visible ring for better accessibility */
@@ -162,10 +179,10 @@
 
 /* Subtle gradient background for the main app */
 .app-bg-gradient {
-  background: linear-gradient(135deg, oklch(0.975 0.002 250) 0%, oklch(0.975 0.004 260) 50%, oklch(0.975 0.002 250) 100%);
+  background: linear-gradient(160deg, oklch(0.978 0.002 260) 0%, oklch(0.975 0.004 250) 35%, oklch(0.972 0.003 35/0.02) 100%);
 }
 .dark .app-bg-gradient {
-  background: linear-gradient(135deg, oklch(0.14 0.01 250) 0%, oklch(0.15 0.01 260) 50%, oklch(0.14 0.01 250) 100%);
+  background: linear-gradient(160deg, oklch(0.145 0.005 260) 0%, oklch(0.14 0.01 250) 35%, oklch(0.13 0.01 35/0.03) 100%);
 }
 
 /* Selection color */
@@ -195,10 +212,10 @@
   /* Subtle inner shadow on cards for depth */
   [data-slot="card"] {
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
-    transition: box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   [data-slot="card"]:hover {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
   }
 }
 
