@@ -180,6 +180,7 @@ function drawHorizontalBarChart(
   const barStartX = x + labelWidth + 4;
   const barMaxWidth = width - labelWidth - 30;
   const maxVal = Math.max(...items.map((it) => it.max), 1);
+  const labelRightEdge = barStartX - 2; // Right-align labels just before the bar
 
   let curY = y;
 
@@ -187,7 +188,7 @@ function drawHorizontalBarChart(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(50, 50, 50);
-    doc.text(item.label, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+    doc.text(item.label, labelRightEdge, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
 
     const barW = Math.max((item.value / maxVal) * barMaxWidth, 2);
     doc.setFillColor(...item.color);
@@ -212,7 +213,7 @@ function drawHorizontalBarChart(
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(...BR_ORANGE);
-    doc.text(showTotal.label, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+    doc.text(showTotal.label, labelRightEdge, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
 
     const barW = Math.max((showTotal.value / maxVal) * barMaxWidth, 2);
     doc.setFillColor(...showTotal.color);
@@ -236,9 +237,10 @@ function drawComplexityProfile(
   gap: number,
   config: ProjectConfig,
 ): number {
-  const labelWidth = 30;
+  const labelWidth = 38;
   const barStartX = x + labelWidth + 4;
   const barMaxWidth = width - labelWidth - 25;
+  const labelRightEdge = barStartX - 2; // Right-align labels just before the bar
 
   let curY = y;
 
@@ -250,7 +252,7 @@ function drawComplexityProfile(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(50, 50, 50);
-    doc.text(dim.label, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+    doc.text(dim.label, labelRightEdge, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
 
     const barW = Math.max(val * barMaxWidth, 2);
     doc.setFillColor(color[0], color[1], color[2]);
@@ -281,9 +283,10 @@ function drawTimelineChart(
   phases: { phase: string; weeks: number }[],
   totalWeeks: number,
 ): number {
-  const labelWidth = 45;
+  const labelWidth = 55;
   const barStartX = x + labelWidth + 4;
   const barMaxWidth = width - labelWidth - 28;
+  const labelRightEdge = barStartX - 2; // Right-align labels just before the bar
   const colors: [number, number, number][] = [
     [59, 130, 246],
     [245, 158, 11],
@@ -300,7 +303,7 @@ function drawTimelineChart(
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(50, 50, 50);
-    doc.text(p.phase, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+    doc.text(p.phase, labelRightEdge, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
 
     doc.setFillColor(...color);
     doc.circle(barStartX - 2, curY + barHeight / 2, 1.5, 'F');

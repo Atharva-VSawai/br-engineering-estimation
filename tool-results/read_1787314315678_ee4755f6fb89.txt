@@ -1,0 +1,702 @@
+     1→import { NextRequest, NextResponse } from 'next/server';
+     2→import jsPDF from 'jspdf';
+     3→import autoTable from 'jspdf-autotable';
+     4→import type { ProjectConfig, ComplexityLevel } from '@/types';
+     5→import { calculateEngineeringEffort } from '@/lib/effort-calculation';
+     6→import { EFFORT_AREAS } from '@/data';
+     7→
+     8→// B&R orange: #C75B12 => RGB(199, 91, 18)
+     9→const BR_ORANGE = [199, 91, 18] as const;
+    10→
+    11→// Complexity value mapping
+    12→const COMPLEXITY_VALUE: Record<ComplexityLevel, number> = {
+    13→  Low: 0.25,
+    14→  Medium: 0.5,
+    15→  High: 0.75,
+    16→  'Very High': 1.0,
+    17→};
+    18→
+    19→// Complexity bar colors (RGB)
+    20→const COMPLEXITY_BAR_COLOR: Record<ComplexityLevel, [number, number, number]> = {
+    21→  Low: [16, 185, 129],
+    22→  Medium: [245, 158, 11],
+    23→  High: [249, 115, 22],
+    24→  'Very High': [239, 68, 68],
+    25→};
+    26→
+    27→// Donut chart palette
+    28→const DONUT_COLORS: [number, number, number][] = [
+    29→  [59, 130, 246],   // blue
+    30→  [139, 92, 246],   // purple
+    31→  [249, 115, 22],   // orange
+    32→  [6, 182, 212],    // cyan
+    33→  [239, 68, 68],    // red
+    34→  [16, 185, 129],   // emerald
+    35→  [245, 158, 11],   // amber
+    36→  [99, 102, 241],   // indigo
+    37→];
+    38→
+    39→const DIMENSIONS: { key: keyof ProjectConfig['complexity']; label: string }[] = [
+    40→  { key: 'hardware', label: 'Hardware' },
+    41→  { key: 'motion', label: 'Motion' },
+    42→  { key: 'hmi', label: 'HMI' },
+    43→  { key: 'vision', label: 'Vision' },
+    44→  { key: 'safety', label: 'Safety' },
+    45→  { key: 'communication', label: 'Communication' },
+    46→  { key: 'software', label: 'Software' },
+    47→  { key: 'integration', label: 'Integration' },
+    48→  { key: 'requirement', label: 'Requirement' },
+    49→  { key: 'testing', label: 'Testing' },
+    50→];
+    51→
+    52→// ── Helpers ──────────────────────────────────────────────────────────────────
+    53→
+    54→function checkCompleteness(config: ProjectConfig): { label: string; configured: boolean }[] {
+    55→  const c = config;
+    56→  const ioTotal = c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs + c.io.safetyIO + c.io.encoderCounterModules + c.io.temperatureModules + c.io.communicationIO + c.io.specialModules;
+    57→  const motionFeatures = [c.motion.homingRequired, c.motion.positioning, c.motion.velocityControl, c.motion.torqueControl, c.motion.synchronization, c.motion.masterSlave, c.motion.electronicGearing, c.motion.electronicCamming, c.motion.coordinatedMotion, c.motion.interpolation, c.motion.complexMotionProfiles, c.motion.axisDiagnostics].filter(Boolean).length;
+    58→  const hmiFeatures = [c.hmi.alarmManagement, c.hmi.recipeManagement, c.hmi.trendVisualization, c.hmi.userManagement, c.hmi.machineDiagnostics, c.hmi.manualMode, c.hmi.automaticMode, c.hmi.maintenanceScreens, c.hmi.parameterManagement].filter(Boolean).length;
+    59→  const commActive = c.communication.protocols.some((p) => p.enabled);
+    60→  const commIntegrations = [c.communication.plcToPlc, c.communication.mesIntegration, c.communication.scadaIntegration, c.communication.cloudIIoTIntegration].filter(Boolean).length;
+    61→  const iiotFeatures = [c.iiot.ipcRequired, c.iiot.iiotRequired, c.iiot.iiotConnector, c.iiot.iiotServices, c.iiot.iiotEdgeDevice, c.iiot.cloudConnectivity, c.iiot.machineDataCollection, c.iiot.remoteMaintenance, c.iiot.opcUa, c.iiot.dataLogging, c.iiot.analyticsIntegration].filter(Boolean).length;
+    62→  return [
+    63→    { label: 'Project', configured: !!(c.project.name && c.project.name.trim()) },
+    64→    { label: 'Controller', configured: c.controller.quantity > 1 || c.controller.performance !== 'Standard' || !!c.controller.communicationInterfaces },
+    65→    { label: 'I/O', configured: ioTotal > 0 },
+    66→    { label: 'Motion', configured: c.motion.totalAxes > 0 || motionFeatures > 0 },
+    67→    { label: 'HMI', configured: c.hmi.screens > 0 || hmiFeatures > 0 },
+    68→    { label: 'Vision', configured: c.vision.enabled },
+    69→    { label: 'Safety', configured: c.safety.enabled },
+    70→    { label: 'Communication', configured: commActive || commIntegrations > 0 },
+    71→    { label: 'Mechatronics', configured: c.mechatronics.type !== 'None' && c.mechatronics.type !== '' },
+    72→    { label: 'Robotics', configured: c.robotics.enabled },
+    73→    { label: 'IIoT', configured: iiotFeatures > 0 },
+    74→  ];
+    75→}
+    76→
+    77→// ── Section title helper ────────────────────────────────────────────────────
+    78→
+    79→function drawSectionTitle(doc: jsPDF, y: number, title: string): number {
+    80→  doc.setFont('helvetica', 'bold');
+    81→  doc.setFontSize(11);
+    82→  doc.setTextColor(...BR_ORANGE);
+    83→  doc.text(title.toUpperCase(), 15, y);
+    84→  doc.setDrawColor(...BR_ORANGE);
+    85→  doc.setLineWidth(0.5);
+    86→  doc.line(15, y + 1.5, 195, y + 1.5);
+    87→  doc.setDrawColor(0, 0, 0);
+    88→  return y + 7;
+    89→}
+    90→
+    91→// ── Donut Chart ───────────────────────────────────────────────────────────────
+    92→
+    93→function drawDonutChart(
+    94→  doc: jsPDF,
+    95→  cx: number,
+    96→  cy: number,
+    97→  outerR: number,
+    98→  innerR: number,
+    99→  data: { label: string; value: number }[],
+   100→  totalHours: number,
+   101→): void {
+   102→  let startAngle = -Math.PI / 2;
+   103→
+   104→  for (let i = 0; i < data.length; i++) {
+   105→    const item = data[i];
+   106→    if (item.value <= 0) continue;
+   107→    const sliceAngle = (item.value / totalHours) * 2 * Math.PI;
+   108→    const endAngle = startAngle + sliceAngle;
+   109→    const color = DONUT_COLORS[i % DONUT_COLORS.length];
+   110→
+   111→    doc.setFillColor(color[0], color[1], color[2]);
+   112→    doc.setGState(new (doc as any).GState({ opacity: 0.9 }));
+   113→
+   114→    // Draw filled arc segments using small triangles for approximation
+   115→    const steps = Math.max(Math.ceil(sliceAngle / 0.05), 8);
+   116→    // Outer arc
+   117→    for (let s = 0; s <= steps; s++) {
+   118→      const angle = startAngle + (sliceAngle * s) / steps;
+   119→      const px = cx + outerR * Math.cos(angle);
+   120→      const py = cy + outerR * Math.sin(angle);
+   121→      if (s === 0) doc.moveTo(px, py);
+   122→      else doc.lineTo(px, py);
+   123→    }
+   124→    // Inner arc (reverse)
+   125→    for (let s = steps; s >= 0; s--) {
+   126→      const angle = startAngle + (sliceAngle * s) / steps;
+   127→      const px = cx + innerR * Math.cos(angle);
+   128→      const py = cy + innerR * Math.sin(angle);
+   129→      doc.lineTo(px, py);
+   130→    }
+   131→    doc.fill();
+   132→
+   133→    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+   134→
+   135→    startAngle = endAngle;
+   136→  }
+   137→
+   138→  // Center text
+   139→  doc.setFont('helvetica', 'bold');
+   140→  doc.setFontSize(16);
+   141→  doc.setTextColor(50, 50, 50);
+   142→  doc.text(`${Math.round(totalHours)}h`, cx, cy + 1, { align: 'center', baseline: 'middle' });
+   143→  doc.setFont('helvetica', 'normal');
+   144→  doc.setFontSize(7);
+   145→  doc.setTextColor(120, 120, 120);
+   146→  doc.text('Total Effort', cx, cy + 7, { align: 'center', baseline: 'middle' });
+   147→
+   148→  // Legend (to the right of the donut)
+   149→  const legendX = cx + outerR + 10;
+   150→  let legendY = cy - (data.length * 5) / 2;
+   151→
+   152→  for (let i = 0; i < data.length; i++) {
+   153→    if (data[i].value <= 0) continue;
+   154→    const color = DONUT_COLORS[i % DONUT_COLORS.length];
+   155→    doc.setFillColor(color[0], color[1], color[2]);
+   156→    doc.roundedRect(legendX, legendY - 1.5, 3, 3, 0.5, 0.5, 'F');
+   157→
+   158→    doc.setFont('helvetica', 'normal');
+   159→    doc.setFontSize(6.5);
+   160→    doc.setTextColor(60, 60, 60);
+   161→    const pct = totalHours > 0 ? Math.round((data[i].value / totalHours) * 100) : 0;
+   162→    doc.text(`${data[i].label} (${pct}%)`, legendX + 5, legendY, { align: 'left', baseline: 'middle' });
+   163→    legendY += 5;
+   164→  }
+   165→}
+   166→
+   167→// ── Horizontal Bar Chart ─────────────────────────────────────────────────────
+   168→
+   169→function drawHorizontalBarChart(
+   170→  doc: jsPDF,
+   171→  x: number,
+   172→  y: number,
+   173→  width: number,
+   174→  barHeight: number,
+   175→  gap: number,
+   176→  items: { label: string; value: number; max: number; color: [number, number, number]; valueLabel?: string }[],
+   177→  showTotal?: { label: string; value: number; color: [number, number, number] },
+   178→): number {
+   179→  const labelWidth = 42;
+   180→  const barStartX = x + labelWidth + 4;
+   181→  const barMaxWidth = width - labelWidth - 30;
+   182→  const maxVal = Math.max(...items.map((it) => it.max), 1);
+   183→
+   184→  let curY = y;
+   185→
+   186→  for (const item of items) {
+   187→    doc.setFont('helvetica', 'normal');
+   188→    doc.setFontSize(7);
+   189→    doc.setTextColor(50, 50, 50);
+   190→    doc.text(item.label, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+   191→
+   192→    const barW = Math.max((item.value / maxVal) * barMaxWidth, 2);
+   193→    doc.setFillColor(...item.color);
+   194→    doc.roundedRect(barStartX, curY, barW, barHeight, 1.5, 1.5, 'F');
+   195→
+   196→    doc.setFont('helvetica', 'bold');
+   197→    doc.setFontSize(7);
+   198→    doc.setTextColor(50, 50, 50);
+   199→    const vLabel = item.valueLabel ?? `${item.value.toFixed(1)}h`;
+   200→    doc.text(vLabel, barStartX + barW + 3, curY + barHeight / 2 + 1, { align: 'left', baseline: 'middle' });
+   201→
+   202→    curY += barHeight + gap;
+   203→  }
+   204→
+   205→  if (showTotal) {
+   206→    curY -= gap / 2;
+   207→    doc.setDrawColor(220, 220, 220);
+   208→    doc.setLineWidth(0.3);
+   209→    doc.line(barStartX, curY, barStartX + barMaxWidth, curY);
+   210→    curY += gap / 2;
+   211→
+   212→    doc.setFont('helvetica', 'bold');
+   213→    doc.setFontSize(7);
+   214→    doc.setTextColor(...BR_ORANGE);
+   215→    doc.text(showTotal.label, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+   216→
+   217→    const barW = Math.max((showTotal.value / maxVal) * barMaxWidth, 2);
+   218→    doc.setFillColor(...showTotal.color);
+   219→    doc.roundedRect(barStartX, curY, barW, barHeight, 1.5, 1.5, 'F');
+   220→
+   221→    doc.text(`${showTotal.value.toFixed(1)}h`, barStartX + barW + 3, curY + barHeight / 2 + 1, { align: 'left', baseline: 'middle' });
+   222→    curY += barHeight + gap;
+   223→  }
+   224→
+   225→  return curY;
+   226→}
+   227→
+   228→// ── Complexity Bar Chart ─────────────────────────────────────────────────────
+   229→
+   230→function drawComplexityProfile(
+   231→  doc: jsPDF,
+   232→  x: number,
+   233→  y: number,
+   234→  width: number,
+   235→  barHeight: number,
+   236→  gap: number,
+   237→  config: ProjectConfig,
+   238→): number {
+   239→  const labelWidth = 30;
+   240→  const barStartX = x + labelWidth + 4;
+   241→  const barMaxWidth = width - labelWidth - 25;
+   242→
+   243→  let curY = y;
+   244→
+   245→  for (const dim of DIMENSIONS) {
+   246→    const level = config.complexity[dim.key];
+   247→    const val = COMPLEXITY_VALUE[level] || 0.25;
+   248→    const color = COMPLEXITY_BAR_COLOR[level] || [150, 150, 150];
+   249→
+   250→    doc.setFont('helvetica', 'normal');
+   251→    doc.setFontSize(7);
+   252→    doc.setTextColor(50, 50, 50);
+   253→    doc.text(dim.label, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+   254→
+   255→    const barW = Math.max(val * barMaxWidth, 2);
+   256→    doc.setFillColor(color[0], color[1], color[2]);
+   257→    doc.setGState(new (doc as any).GState({ opacity: 0.85 }));
+   258→    doc.roundedRect(barStartX, curY, barW, barHeight, 1.5, 1.5, 'F');
+   259→    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+   260→
+   261→    doc.setFont('helvetica', 'bold');
+   262→    doc.setFontSize(7);
+   263→    doc.setTextColor(50, 50, 50);
+   264→    doc.text(level, barStartX + barW + 3, curY + barHeight / 2 + 1, { align: 'left', baseline: 'middle' });
+   265→
+   266→    curY += barHeight + gap;
+   267→  }
+   268→
+   269→  return curY;
+   270→}
+   271→
+   272→// ── Timeline / Gantt Chart ────────────────────────────────────────────────────
+   273→
+   274→function drawTimelineChart(
+   275→  doc: jsPDF,
+   276→  x: number,
+   277→  y: number,
+   278→  width: number,
+   279→  barHeight: number,
+   280→  gap: number,
+   281→  phases: { phase: string; weeks: number }[],
+   282→  totalWeeks: number,
+   283→): number {
+   284→  const labelWidth = 45;
+   285→  const barStartX = x + labelWidth + 4;
+   286→  const barMaxWidth = width - labelWidth - 28;
+   287→  const colors: [number, number, number][] = [
+   288→    [59, 130, 246],
+   289→    [245, 158, 11],
+   290→    [249, 115, 22],
+   291→    [16, 185, 129],
+   292→  ];
+   293→
+   294→  let curY = y;
+   295→
+   296→  for (let i = 0; i < phases.length; i++) {
+   297→    const p = phases[i];
+   298→    const color = colors[i % colors.length];
+   299→
+   300→    doc.setFont('helvetica', 'normal');
+   301→    doc.setFontSize(7);
+   302→    doc.setTextColor(50, 50, 50);
+   303→    doc.text(p.phase, x, curY + barHeight / 2 + 1, { align: 'right', baseline: 'middle' });
+   304→
+   305→    doc.setFillColor(...color);
+   306→    doc.circle(barStartX - 2, curY + barHeight / 2, 1.5, 'F');
+   307→
+   308→    const barW = Math.max((p.weeks / totalWeeks) * barMaxWidth, 6);
+   309→    doc.setFillColor(color[0], color[1], color[2]);
+   310→    doc.setGState(new (doc as any).GState({ opacity: 0.85 }));
+   311→    doc.roundedRect(barStartX, curY, barW, barHeight, 1.5, 1.5, 'F');
+   312→    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+   313→
+   314→    doc.setFont('helvetica', 'normal');
+   315→    doc.setFontSize(7);
+   316→    doc.setTextColor(100, 100, 100);
+   317→    const weekLabel = `${p.weeks} week${p.weeks !== 1 ? 's' : ''}`;
+   318→    doc.text(weekLabel, barStartX + barW + 3, curY + barHeight / 2 + 1, { align: 'left', baseline: 'middle' });
+   319→
+   320→    curY += barHeight + gap;
+   321→  }
+   322→
+   323→  return curY;
+   324→}
+   325→
+   326→// ── PDF Generation (identical to client-side, returns ArrayBuffer instead of downloading) ──
+   327→
+   328→function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): ArrayBuffer {
+   329→  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+   330→  const pageW = 210;
+   331→  const margin = 15;
+   332→  const contentW = pageW - margin * 2;
+   333→
+   334→  // Use shared calculation
+   335→  const result = calculateEngineeringEffort(config);
+   336→  const { effort, timeline, overallComplexity, highCount } = result;
+   337→  const completeness = checkCompleteness(config);
+   338→  const configuredCount = completeness.filter((s) => s.configured).length;
+   339→
+   340→  // Effort items for charts (8 categories, skip hmiHours which is 0)
+   341→  const effortData = [
+   342→    { label: 'Hardware', value: effort.hardwareHours },
+   343→    { label: 'PLC/Software', value: effort.plcSoftwareHours },
+   344→    { label: 'Motion', value: effort.motionHours },
+   345→    { label: 'Vision', value: effort.visionHours },
+   346→    { label: 'Safety', value: effort.safetyHours },
+   347→    { label: 'Comm/Integ.', value: effort.communicationIntegrationHours },
+   348→    { label: 'Testing', value: effort.testingHours },
+   349→    { label: 'Commissioning', value: effort.commissioningHours },
+   350→  ];
+   351→
+   352→  const timelinePhases = [
+   353→    { phase: 'Hardware Design & Ordering', weeks: timeline.hardwareDesignWeeks },
+   354→    { phase: 'Software Development', weeks: timeline.softwareDevelopmentWeeks },
+   355→    { phase: 'Integration & Testing', weeks: timeline.integrationTestingWeeks },
+   356→    { phase: 'Commissioning & Handover', weeks: timeline.commissioningWeeks },
+   357→  ];
+   358→
+   359→  // ══════════════════════════════════════════════════════════════════════════
+   360→  // PAGE 1: Report Header, Project Info, Effort Summary, Donut Chart
+   361→  // ══════════════════════════════════════════════════════════════════════════
+   362→
+   363→  let y = 12;
+   364→
+   365→  // Report title
+   366→  doc.setFont('helvetica', 'bold');
+   367→  doc.setFontSize(16);
+   368→  doc.setTextColor(...BR_ORANGE);
+   369→  doc.text('B&R Engineering Effort Estimation Report', margin, y);
+   370→  y += 10;
+   371→
+   372→  // Project Information
+   373→  y = drawSectionTitle(doc, y, 'Project Information');
+   374→
+   375→  const infoRows = [
+   376→    ['Project ID', projectId || 'N/A'],
+   377→    ['Project Name', config.project.name || 'Untitled'],
+   378→    ['Customer', config.project.customer || 'N/A'],
+   379→    ['Machine Type', config.project.machineType || 'N/A'],
+   380→    ['Industry', config.project.industry || 'N/A'],
+   381→    ['Date', new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })],
+   382→  ];
+   383→
+   384→  autoTable(doc, {
+   385→    startY: y,
+   386→    body: infoRows,
+   387→    theme: 'plain',
+   388→    styles: {
+   389→      fontSize: 8,
+   390→      cellPadding: 2.5,
+   391→      lineColor: [240, 240, 240],
+   392→      lineWidth: 0.3,
+   393→    },
+   394→    columnStyles: {
+   395→      0: { cellWidth: 35, fontStyle: 'bold', textColor: [100, 100, 100] },
+   396→      1: { cellWidth: 'auto' },
+   397→    },
+   398→    margin: { left: margin, right: margin },
+   399→  });
+   400→
+   401→  y = (doc as any).lastAutoTable?.finalY ?? 60;
+   402→  y += 8;
+   403→
+   404→  // Engineering Effort Summary (prominent)
+   405→  y = drawSectionTitle(doc, y, 'Engineering Effort Summary');
+   406→
+   407→  // Summary boxes
+   408→  const boxW = (contentW - 15) / 4;
+   409→  const boxH = 18;
+   410→  const summaryItems = [
+   411→    { label: 'Total Hours', value: `${Math.round(effort.totalHours)}h` },
+   412→    { label: 'Working Days', value: `${(Math.round(effort.totalDays * 10) / 10).toFixed(1)} days` },
+   413→    { label: 'Weeks', value: `${effort.totalWeeks} weeks` },
+   414→    { label: 'Months', value: `${(Math.round(effort.totalMonths * 10) / 10).toFixed(1)} months` },
+   415→  ];
+   416→
+   417→  for (let i = 0; i < summaryItems.length; i++) {
+   418→    const bx = margin + i * (boxW + 5);
+   419→    const item = summaryItems[i];
+   420→
+   421→    doc.setFillColor(248, 248, 248);
+   422→    doc.setDrawColor(230, 230, 230);
+   423→    doc.setLineWidth(0.3);
+   424→    doc.roundedRect(bx, y, boxW, boxH, 2, 2, 'FD');
+   425→
+   426→    doc.setFont('helvetica', 'normal');
+   427→    doc.setFontSize(6.5);
+   428→    doc.setTextColor(140, 140, 140);
+   429→    doc.text(item.label.toUpperCase(), bx + boxW / 2, y + 6, { align: 'center' });
+   430→
+   431→    doc.setFont('helvetica', 'bold');
+   432→    doc.setFontSize(12);
+   433→    doc.setTextColor(30, 30, 30);
+   434→    doc.text(item.value, bx + boxW / 2, y + 13, { align: 'center' });
+   435→  }
+   436→
+   437→  y += boxH + 10;
+   438→
+   439→  // Donut Chart
+   440→  y = drawSectionTitle(doc, y, 'Effort Distribution');
+   441→  const donutCx = margin + 45;
+   442→  const donutCy = y + 30;
+   443→  drawDonutChart(doc, donutCx, donutCy, 28, 14, effortData, effort.totalHours);
+   444→
+   445→  // ══════════════════════════════════════════════════════════════════════════
+   446→  // PAGE 2: Technical Configuration (brief), Complexity Assessment, Effort Bars
+   447→  // ══════════════════════════════════════════════════════════════════════════
+   448→  doc.addPage();
+   449→  y = 15;
+   450→
+   451→  // Key Technical Parameters (brief table)
+   452→  y = drawSectionTitle(doc, y, 'Key Technical Parameters');
+   453→
+   454→  const techRows = [
+   455→    ['Controller', `${config.controller.family} x${config.controller.quantity} (${config.controller.performance})`],
+   456→    ['I/O Points', `${config.io.digitalInputs + config.io.digitalOutputs + config.io.analogInputs + config.io.analogOutputs} (DI/DO/AI/AO)`],
+   457→    ['Motion Axes', `${config.motion.totalAxes} (L:${config.motion.linearAxes} R:${config.motion.rotaryAxes})`],
+   458→    ['HMI', `${config.hmi.type} - ${config.hmi.screens} screens`],
+   459→    ['Vision', config.vision.enabled ? `${config.vision.cameras} camera(s)` : 'Not enabled'],
+   460→    ['Safety', config.safety.enabled ? `${config.safety.controller} - ${config.safety.safetyIOCount} I/O` : 'Not enabled'],
+   461→    ['Protocols', `${config.communication.protocols.filter((p) => p.enabled).map((p) => p.name).join(', ') || 'None'}`],
+   462→    ['Mechatronics', config.mechatronics.type !== 'None' ? `${config.mechatronics.type} (${config.mechatronics.movers} movers)` : 'None'],
+   463→    ['Robotics', config.robotics.enabled ? `${config.robotics.robotType} x${config.robotics.quantity}` : 'Not enabled'],
+   464→    ['IIoT', config.iiot.ipcRequired ? config.iiot.ipcModel : 'Not configured'],
+   465→  ];
+   466→
+   467→  autoTable(doc, {
+   468→    startY: y,
+   469→    body: techRows,
+   470→    theme: 'plain',
+   471→    styles: {
+   472→      fontSize: 7.5,
+   473→      cellPadding: 2.5,
+   474→      lineColor: [240, 240, 240],
+   475→      lineWidth: 0.3,
+   476→    },
+   477→    columnStyles: {
+   478→      0: { cellWidth: 28, fontStyle: 'bold', textColor: [100, 100, 100] },
+   479→      1: { cellWidth: 'auto' },
+   480→    },
+   481→    margin: { left: margin, right: margin },
+   482→  });
+   483→
+   484→  y = (doc as any).lastAutoTable?.finalY ?? 60;
+   485→  y += 8;
+   486→
+   487→  // Complexity Assessment (bar chart)
+   488→  y = drawSectionTitle(doc, y, 'Complexity Assessment');
+   489→  y = drawComplexityProfile(doc, margin, y, contentW, 4.5, 2, config);
+   490→  y += 3;
+   491→  doc.setFont('helvetica', 'normal');
+   492→  doc.setFontSize(7.5);
+   493→  doc.setTextColor(100, 100, 100);
+   494→  doc.text(`Overall: ${overallComplexity}  |  ${highCount} of 10 dimensions rated High or Very High`, margin, y);
+   495→  y += 10;
+   496→
+   497→  // Engineering Effort Breakdown (horizontal bars)
+   498→  y = drawSectionTitle(doc, y, 'Engineering Effort Breakdown');
+   499→
+   500→  const effortBarItems = effortData.map((item, i) => ({
+   501→    label: item.label,
+   502→    value: item.value,
+   503→    max: effort.totalHours,
+   504→    color: DONUT_COLORS[i % DONUT_COLORS.length],
+   505→  }));
+   506→
+   507→  y = drawHorizontalBarChart(doc, margin, y, contentW, 5, 2, effortBarItems, {
+   508→    label: 'TOTAL',
+   509→    value: effort.totalHours,
+   510→    color: BR_ORANGE as unknown as [number, number, number],
+   511→  });
+   512→
+   513→  // ══════════════════════════════════════════════════════════════════════════
+   514→  // PAGE 3: Detailed Effort Table, Timeline, Completeness, Drivers
+   515→  // ══════════════════════════════════════════════════════════════════════════
+   516→  doc.addPage();
+   517→  y = 15;
+   518→
+   519→  // Effort Distribution Table (autotable)
+   520→  y = drawSectionTitle(doc, y, 'Detailed Engineering Effort');
+   521→
+   522→  const effortTableRows = effortData.map((item) => [
+   523→    item.label,
+   524→    `${item.value.toFixed(1)}h`,
+   525→    effort.totalHours > 0 ? `${Math.round((item.value / effort.totalHours) * 100)}%` : '0%',
+   526→  ]);
+   527→  effortTableRows.push([
+   528→    'TOTAL',
+   529→    `${effort.totalHours.toFixed(1)}h`,
+   530→    '100%',
+   531→  ]);
+   532→
+   533→  autoTable(doc, {
+   534→    startY: y,
+   535→    head: [['Engineering Area', 'Estimated Hours', 'Percentage']],
+   536→    body: effortTableRows,
+   537→    theme: 'grid',
+   538→    styles: {
+   539→      fontSize: 8,
+   540→      cellPadding: 3,
+   541→      lineColor: [220, 220, 220],
+   542→      lineWidth: 0.3,
+   543→    },
+   544→    headStyles: {
+   545→      fillColor: [248, 248, 248],
+   546→      textColor: [80, 80, 80],
+   547→      fontStyle: 'bold',
+   548→      halign: 'left',
+   549→    },
+   550→    columnStyles: {
+   551→      0: { cellWidth: 50, fontStyle: 'bold' },
+   552→      1: { cellWidth: 35, halign: 'right' },
+   553→      2: { cellWidth: 25, halign: 'right' },
+   554→    },
+   555→    margin: { left: margin, right: margin },
+   556→    // Style the last row (TOTAL) as bold
+   557→    didParseCell: (data) => {
+   558→      if (data.section === 'body' && data.row.index === effortData.length) {
+   559→        data.cell.styles.fontStyle = 'bold';
+   560→        data.cell.styles.fillColor = [253, 248, 243];
+   561→      }
+   562→    },
+   563→  });
+   564→
+   565→  y = (doc as any).lastAutoTable?.finalY ?? 60;
+   566→  y += 8;
+   567→
+   568→  // Timeline (Gantt-like bars)
+   569→  y = drawSectionTitle(doc, y, 'Project Timeline');
+   570→  y = drawTimelineChart(doc, margin, y, contentW, 6, 3, timelinePhases, timeline.totalWeeks);
+   571→  y += 3;
+   572→  doc.setFont('helvetica', 'bold');
+   573→  doc.setFontSize(8);
+   574→  doc.setTextColor(...BR_ORANGE);
+   575→  doc.text(`Estimated Total: ${timeline.totalWeeks} weeks`, margin, y);
+   576→  y += 10;
+   577→
+   578→  // Configuration Completeness
+   579→  y = drawSectionTitle(doc, y, 'Configuration Completeness');
+   580→
+   581→  const cols = 3;
+   582→  const colW = contentW / cols;
+   583→  for (let i = 0; i < completeness.length; i++) {
+   584→    const col = i % cols;
+   585→    const row = Math.floor(i / cols);
+   586→    const cx = margin + col * colW;
+   587→    const cy = y + row * 7;
+   588→
+   589→    const configured = completeness[i].configured;
+   590→    if (configured) {
+   591→      doc.setFillColor(236, 253, 245);
+   592→      doc.circle(cx + 3, cy + 2.5, 2.8, 'F');
+   593→      doc.setFont('helvetica', 'bold');
+   594→      doc.setFontSize(7);
+   595→      doc.setTextColor(5, 150, 105);
+   596→      doc.text('\u2713', cx + 3, cy + 3.2, { align: 'center', baseline: 'middle' });
+   597→    } else {
+   598→      doc.setFillColor(243, 244, 246);
+   599→      doc.circle(cx + 3, cy + 2.5, 2.8, 'F');
+   600→      doc.setFont('helvetica', 'bold');
+   601→      doc.setFontSize(7);
+   602→      doc.setTextColor(156, 163, 175);
+   603→      doc.text('\u2717', cx + 3, cy + 3.2, { align: 'center', baseline: 'middle' });
+   604→    }
+   605→
+   606→    doc.setFont('helvetica', 'normal');
+   607→    doc.setFontSize(7.5);
+   608→    doc.setTextColor(configured ? 30 : 156, configured ? 30 : 163, configured ? 30 : 175);
+   609→    doc.text(completeness[i].label, cx + 8, cy + 3.2, { align: 'left', baseline: 'middle' });
+   610→  }
+   611→
+   612→  const totalRows = Math.ceil(completeness.length / cols);
+   613→  y += totalRows * 7 + 4;
+   614→  doc.setFont('helvetica', 'normal');
+   615→  doc.setFontSize(7.5);
+   616→  doc.setTextColor(140, 140, 140);
+   617→  doc.text(`${configuredCount} of ${completeness.length} sections configured`, margin, y);
+   618→  y += 10;
+   619→
+   620→  // Effort Drivers
+   621→  y = drawSectionTitle(doc, y, 'Effort Drivers');
+   622→
+   623→  const driversTableBody = EFFORT_AREAS.map((area) => [
+   624→    area.name,
+   625→    area.driver,
+   626→  ]);
+   627→
+   628→  autoTable(doc, {
+   629→    startY: y,
+   630→    head: [['Area', 'Potential Effort Driver']],
+   631→    body: driversTableBody,
+   632→    theme: 'plain',
+   633→    styles: {
+   634→      fontSize: 7.5,
+   635→      cellPadding: 2.5,
+   636→      lineColor: [240, 240, 240],
+   637→      lineWidth: 0.3,
+   638→    },
+   639→    headStyles: {
+   640→      fillColor: [248, 248, 248],
+   641→      textColor: [80, 80, 80],
+   642→      fontStyle: 'bold',
+   643→      halign: 'left',
+   644→    },
+   645→    columnStyles: {
+   646→      0: { cellWidth: 30, fontStyle: 'bold' },
+   647→      1: { cellWidth: 'auto' },
+   648→    },
+   649→    margin: { left: margin, right: margin },
+   650→  });
+   651→
+   652→  // ── Footer on all pages ───────────────────────────────────────────────────
+   653→  const totalPages = doc.getNumberOfPages();
+   654→  for (let i = 1; i <= totalPages; i++) {
+   655→    doc.setPage(i);
+   656→    doc.setDrawColor(230, 230, 230);
+   657→    doc.setLineWidth(0.3);
+   658→    doc.line(margin, 285, pageW - margin, 285);
+   659→    doc.setFont('helvetica', 'normal');
+   660→    doc.setFontSize(7);
+   661→    doc.setTextColor(160, 160, 160);
+   662→    doc.text('Generated by B&R Engineering Estimation Tool', margin, 289);
+   663→    if (projectId) {
+   664→      doc.text(`Project: ${projectId}`, pageW / 2, 289, { align: 'center' });
+   665→    } else {
+   666→      doc.text(`Page ${i} of ${totalPages}`, pageW / 2, 289, { align: 'center' });
+   667→    }
+   668→    doc.text(`${new Date().toLocaleDateString('en-US')}`, pageW - margin, 289, { align: 'right' });
+   669→  }
+   670→
+   671→  // ── Return ArrayBuffer (server-side: no blob URL / anchor click) ──────────
+   672→  return doc.output('arraybuffer');
+   673→}
+   674→
+   675→// ===== POST Handler =====
+   676→
+   677→export async function POST(request: NextRequest) {
+   678→  try {
+   679→    const body: ProjectConfig = await request.json();
+   680→    const projectId = request.nextUrl.searchParams.get('projectId');
+   681→
+   682→    const buffer = generatePdfBuffer(body, projectId);
+   683→
+   684→    const fileName = `br-estimate-${(body.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+   685→
+   686→    return new NextResponse(buffer, {
+   687→      status: 200,
+   688→      headers: {
+   689→        'Content-Type': 'application/pdf',
+   690→        'Content-Disposition': `attachment; filename="${fileName}"`,
+   691→        'Content-Length': String(buffer.byteLength),
+   692→      },
+   693→    });
+   694→  } catch (error) {
+   695→    console.error('[PDF Export] Error generating PDF file:', error);
+   696→    return NextResponse.json(
+   697→      { error: 'Failed to generate PDF file' },
+   698→      { status: 500 },
+   699→    );
+   700→  }
+   701→}
+   702→

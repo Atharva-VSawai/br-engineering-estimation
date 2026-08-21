@@ -2306,3 +2306,31 @@ Stage Summary:
 - PDF export now works via server-side API route (86KB valid PDF)
 - Both Dashboard and Projects pages have View Report, Edit Config, Export PDF, Export Excel buttons per project
 - All exports verified end-to-end with 200 responses
+
+---
+Task ID: 6
+Agent: Main Orchestrator
+Task: Fix PDF alignment, redesign Estimate Summary with combined/project-wise views
+
+Work Log:
+- Analyzed uploaded PDF (4 pages) using VLM to identify alignment issues
+- Found labels clipped at left edge in 3 chart functions: drawHorizontalBarChart, drawComplexityProfile, drawTimelineChart
+- Root cause: Labels were right-aligned at x=margin (15mm) instead of at barStartX-2, causing text to extend off-page
+- Fixed all 3 chart functions in src/app/api/export/pdf/route.ts by introducing labelRightEdge variable
+- Increased complexity label width from 30→38, timeline label width from 45→55
+- Completely rewrote EstimateSummaryPage.tsx with:
+  - Project Scope selector: "All Projects (Combined)" vs individual project dropdown
+  - Combined view dynamically calculates effort for ALL projects with saved configs using calculateEngineeringEffort()
+  - Per-project breakdown table (visible when >1 project has configs) with hours, days, complexity, % contribution
+  - All data is dynamically calculated - zero static/hardcoded values
+  - View switching opens project in store and recalculates all metrics
+- Updated AppHeader.tsx to use API route for PDF export (removed client-side exportPdf import)
+- Fixed Excel export URL in AppHeader (removed incorrect ?XTransformPort=3000)
+- Verified: PDF API returns 200, no lint errors, page renders correctly with all sections
+
+Stage Summary:
+- PDF labels no longer clipped (Communication, Commissioning, timeline labels fully visible)
+- Estimate Summary now defaults to All Projects Combined view with dynamic calculations
+- Per-project view accessible via dropdown selector
+- All calculations use calculateEngineeringEffort() from actual ProjectConfig data
+- Dashboard already had per-project action buttons (View Report, Edit, PDF, Excel)

@@ -1,17 +1,33 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, Check, Minus, Clock, FileText, Share2, Wrench, Save, Pencil, Zap, Cpu, Bot, Eye, ShieldCheck, Radio, FlaskConical, Rocket, Settings2, Table2, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ArrowRight, Check, Minus, Clock, FileText, Share2, Wrench, Save, Pencil, Zap, Cpu, Eye, ShieldCheck, Radio, FlaskConical, Rocket, Table2, Loader2, BarChart3, FolderKanban } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/br/SectionCard';
-import { StatusBadge } from '@/components/br/ComplexityBadge';
+import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
 import { EFFORT_AREAS } from '@/data';
 import { toast } from 'sonner';
 import { calculateEngineeringEffort } from '@/lib/effort-calculation';
-import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
+import type { EffortResult, TimelineResult } from '@/lib/effort-calculation';
+import type { ComplexityLevel, ProjectConfig, Project as ProjectType } from '@/types';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
   Low: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
@@ -72,6 +88,17 @@ const EFFORT_BAR_COLORS: Record<string, string> = {
   Commissioning: 'bg-indigo-400',
 };
 
+const EFFORT_CHART_COLORS: Record<string, string> = {
+  Hardware: '#3b82f6',
+  'PLC/Software': '#8b5cf6',
+  Motion: '#f97316',
+  Vision: '#06b6d4',
+  Safety: '#ef4444',
+  'Comm/Integration': '#10b981',
+  Testing: '#f59e0b',
+  Commissioning: '#6366f1',
+};
+
 const EFFORT_ICONS: Record<string, React.ElementType> = {
   Hardware: Wrench,
   'PLC/Software': Pencil,
@@ -82,6 +109,17 @@ const EFFORT_ICONS: Record<string, React.ElementType> = {
   Testing: FlaskConical,
   Commissioning: Rocket,
 };
+
+const EFFORT_KEYS = [
+  { key: 'hardwareHours' as const, label: 'Hardware' },
+  { key: 'plcSoftwareHours' as const, label: 'PLC/Software' },
+  { key: 'motionHours' as const, label: 'Motion' },
+  { key: 'visionHours' as const, label: 'Vision' },
+  { key: 'safetyHours' as const, label: 'Safety' },
+  { key: 'communicationIntegrationHours' as const, label: 'Comm/Integration' },
+  { key: 'testingHours' as const, label: 'Testing' },
+  { key: 'commissioningHours' as const, label: 'Commissioning' },
+] as const;
 
 interface SectionCheck {
   label: string;
@@ -150,72 +188,143 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export function EstimateSummaryPage() {
-  const { config: c, activeProjectId, projects, setCurrentPage, setWizardStep, addProject } = useAppStore();
+  const { config: c, activeProjectId, projects, setCurrentPage, setWizardStep, addProject, openProject } = useAppStore();
   const currentProject = activeProjectId ? projects.find((p) => p.id === activeProjectId) : null;
 
-  const { effort, timeline, overallComplexity, highCount } = useMemo(
-    () => calculateEngineeringEffort(c),
-    [c],
-  );
+  // View mode: 'all' for combined all-projects, or a project ID for single project
+  const [viewMode, setViewMode] = useState<'all' | string>('all');
+
+  // Calculate results for ALL projects with configs
+  const projectResults = useMemo(() => {
+    return projects
+      .filter((p) => p.config)
+      .map((p) => {
+        const result = calculateEngineeringEffort(p.config!);
+        return { project: p, ...result };
+      });
+  }, [projects]);
+
+  // Combined (aggregated) effort from ALL projects - dynamically calculated
+  const combinedEffort = useMemo(() => {
+    if (projectResults.length === 0) {
+      // Fallback: use current working config
+      const result = calculateEngineeringEffort(c);
+      return result.effort;
+    }
+    const base: EffortResult = {
+      hardwareHours: 0, plcSoftwareHours: 0, motionHours: 0,
+      hmiHours: 0, visionHours: 0, safetyHours: 0,
+      communicationIntegrationHours: 0, testingHours: 0, commissioningHours: 0,
+      totalHours: 0, totalDays: 0, totalWeeks: 0, totalMonths: 0,
+    };
+    for (const pr of projectResults) {
+      base.hardwareHours += pr.effort.hardwareHours;
+      base.plcSoftwareHours += pr.effort.plcSoftwareHours;
+      base.motionHours += pr.effort.motionHours;
+      base.hmiHours += pr.effort.hmiHours;
+      base.visionHours += pr.effort.visionHours;
+      base.safetyHours += pr.effort.safetyHours;
+      base.communicationIntegrationHours += pr.effort.communicationIntegrationHours;
+      base.testingHours += pr.effort.testingHours;
+      base.commissioningHours += pr.effort.commissioningHours;
+    }
+    base.totalHours = base.hardwareHours + base.plcSoftwareHours + base.motionHours + base.hmiHours + base.visionHours + base.safetyHours + base.communicationIntegrationHours + base.testingHours + base.commissioningHours;
+    base.totalDays = base.totalHours / 8;
+    base.totalWeeks = Math.ceil(base.totalDays / 5);
+    base.totalMonths = Math.round((base.totalDays / 20) * 10) / 10;
+    return base;
+  }, [projectResults, c]);
+
+  // Combined timeline from ALL projects
+  const combinedTimeline = useMemo(() => {
+    if (projectResults.length === 0) {
+      const result = calculateEngineeringEffort(c);
+      return result.timeline;
+    }
+    const base: TimelineResult = { hardwareDesignWeeks: 0, softwareDevelopmentWeeks: 0, integrationTestingWeeks: 0, commissioningWeeks: 0, totalWeeks: 0 };
+    for (const pr of projectResults) {
+      base.hardwareDesignWeeks += pr.timeline.hardwareDesignWeeks;
+      base.softwareDevelopmentWeeks += pr.timeline.softwareDevelopmentWeeks;
+      base.integrationTestingWeeks += pr.timeline.integrationTestingWeeks;
+      base.commissioningWeeks += pr.timeline.commissioningWeeks;
+    }
+    base.totalWeeks = base.hardwareDesignWeeks + base.softwareDevelopmentWeeks + base.integrationTestingWeeks + base.commissioningWeeks;
+    return base;
+  }, [projectResults, c]);
+
+  // Determine which data to display based on viewMode
+  const displayConfig = useMemo((): ProjectConfig => {
+    if (viewMode === 'all') return c;
+    const p = projects.find((pr) => pr.id === viewMode);
+    if (p?.config) return p.config;
+    return c;
+  }, [viewMode, projects, c]);
+
+  const displayResult = useMemo(() => {
+    if (viewMode === 'all') {
+      // For combined view, we still need overallComplexity and highCount from displayConfig
+      return calculateEngineeringEffort(displayConfig);
+    }
+    return calculateEngineeringEffort(displayConfig);
+  }, [viewMode, displayConfig]);
+
+  // The actual effort data to render (combined or per-project)
+  const effort = viewMode === 'all' ? combinedEffort : displayResult.effort;
+  const timeline = viewMode === 'all' ? combinedTimeline : displayResult.timeline;
+  const overallComplexity = displayResult.overallComplexity;
+  const highCount = displayResult.highCount;
 
   const areaComplexities: Record<string, ComplexityLevel> = {
-    Motion: c.complexity.motion,
-    HMI: c.complexity.hmi,
-    'I/O': c.io.digitalInputs + c.io.digitalOutputs > 200 ? 'High' : 'Medium',
-    Vision: c.vision.enabled ? c.complexity.vision : 'Low',
-    Safety: c.safety.enabled ? c.complexity.safety : 'Low',
-    Communication: c.complexity.communication,
-    Software: c.complexity.software,
-    Integration: c.complexity.integration,
-    Testing: c.complexity.testing,
-    Commissioning: c.complexity.testing,
+    Motion: displayConfig.complexity.motion,
+    HMI: displayConfig.complexity.hmi,
+    'I/O': displayConfig.io.digitalInputs + displayConfig.io.digitalOutputs > 200 ? 'High' : 'Medium',
+    Vision: displayConfig.vision.enabled ? displayConfig.complexity.vision : 'Low',
+    Safety: displayConfig.safety.enabled ? displayConfig.complexity.safety : 'Low',
+    Communication: displayConfig.complexity.communication,
+    Software: displayConfig.complexity.software,
+    Integration: displayConfig.complexity.integration,
+    Testing: displayConfig.complexity.testing,
+    Commissioning: displayConfig.complexity.testing,
   };
 
-  const completeness = checkCompleteness(c);
+  const completeness = checkCompleteness(displayConfig);
   const configuredCount = completeness.filter((s) => s.configured).length;
-  const drivers = useMemo(() => getEffortDrivers(c), [c]);
+  const drivers = useMemo(() => getEffortDrivers(displayConfig), [displayConfig]);
 
   // Donut chart data
-  const effortChartData = [
-    { name: 'Hardware', value: effort.hardwareHours, color: '#3b82f6' },
-    { name: 'PLC/Software', value: effort.plcSoftwareHours, color: '#8b5cf6' },
-    { name: 'Motion', value: effort.motionHours, color: '#f97316' },
-    { name: 'Vision', value: effort.visionHours, color: '#06b6d4' },
-    { name: 'Safety', value: effort.safetyHours, color: '#ef4444' },
-    { name: 'Comm/Integration', value: effort.communicationIntegrationHours, color: '#10b981' },
-    { name: 'Testing', value: effort.testingHours, color: '#f59e0b' },
-    { name: 'Commissioning', value: effort.commissioningHours, color: '#6366f1' },
-  ];
+  const effortChartData = EFFORT_KEYS.map(({ key, label }) => ({
+    name: label,
+    value: effort[key],
+    color: EFFORT_CHART_COLORS[label],
+  }));
   const chartData = effortChartData.filter((d) => d.value > 0);
 
-  const effortRows = [
-    { name: 'Hardware', hours: effort.hardwareHours, color: EFFORT_BAR_COLORS['Hardware'], icon: EFFORT_ICONS['Hardware'] },
-    { name: 'PLC/Software', hours: effort.plcSoftwareHours, color: EFFORT_BAR_COLORS['PLC/Software'], icon: EFFORT_ICONS['PLC/Software'] },
-    { name: 'Motion', hours: effort.motionHours, color: EFFORT_BAR_COLORS['Motion'], icon: EFFORT_ICONS['Motion'] },
-    { name: 'Vision', hours: effort.visionHours, color: EFFORT_BAR_COLORS['Vision'], icon: EFFORT_ICONS['Vision'] },
-    { name: 'Safety', hours: effort.safetyHours, color: EFFORT_BAR_COLORS['Safety'], icon: EFFORT_ICONS['Safety'] },
-    { name: 'Comm/Integration', hours: effort.communicationIntegrationHours, color: EFFORT_BAR_COLORS['Comm/Integration'], icon: EFFORT_ICONS['Comm/Integration'] },
-    { name: 'Testing', hours: effort.testingHours, color: EFFORT_BAR_COLORS['Testing'], icon: EFFORT_ICONS['Testing'] },
-    { name: 'Commissioning', hours: effort.commissioningHours, color: EFFORT_BAR_COLORS['Commissioning'], icon: EFFORT_ICONS['Commissioning'] },
-  ];
+  const effortRows = EFFORT_KEYS.map(({ key, label }) => ({
+    name: label,
+    hours: effort[key],
+    color: EFFORT_BAR_COLORS[label],
+    icon: EFFORT_ICONS[label],
+  }));
 
   const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
 
   const handleExportPdf = useCallback(async () => {
     try {
       setExporting('pdf');
-      const params = activeProjectId ? `?projectId=${encodeURIComponent(activeProjectId)}` : '';
+      const exportConfig = viewMode === 'all' && projectResults.length > 0 ? displayConfig : displayConfig;
+      const params = (activeProjectId || viewMode !== 'all') ? `?projectId=${encodeURIComponent(viewMode === 'all' ? (activeProjectId || '') : viewMode)}` : '';
       const res = await fetch(`/api/export/pdf${params}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(c),
+        body: JSON.stringify(exportConfig),
       });
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `br-estimate-${(c.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+      const namePrefix = viewMode === 'all' ? 'all-projects' : (displayConfig.project.name || 'untitled');
+      a.download = `br-estimate-${namePrefix.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -227,7 +336,7 @@ export function EstimateSummaryPage() {
     } finally {
       setExporting(null);
     }
-  }, [c, activeProjectId]);
+  }, [displayConfig, viewMode, activeProjectId, projectResults.length]);
 
   const handleExportExcel = useCallback(async () => {
     try {
@@ -235,14 +344,15 @@ export function EstimateSummaryPage() {
       const res = await fetch('/api/export/excel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(c),
+        body: JSON.stringify(displayConfig),
       });
       if (!res.ok) throw new Error(`Server returned ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `br-estimate-${(c.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.xlsx`;
+      const namePrefix = viewMode === 'all' ? 'all-projects' : (displayConfig.project.name || 'untitled');
+      a.download = `br-estimate-${namePrefix.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -254,9 +364,20 @@ export function EstimateSummaryPage() {
     } finally {
       setExporting(null);
     }
-  }, [c]);
+  }, [displayConfig, viewMode]);
 
+  // When viewing a specific project, open it in the store
+  const handleProjectView = (projectId: string) => {
+    setViewMode(projectId);
+    const p = projects.find((pr) => pr.id === projectId);
+    if (p?.config) {
+      openProject(projectId);
+    }
+  };
 
+  const viewLabel = viewMode === 'all'
+    ? 'All Projects (Combined)'
+    : projects.find((p) => p.id === viewMode)?.name || 'Untitled';
 
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -266,26 +387,75 @@ export function EstimateSummaryPage() {
           <h1 className="text-lg font-bold text-foreground">Engineering Effort Summary</h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5 flex-wrap">
             {activeProjectId && <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{activeProjectId}</span>}
-            <span>{c.project.name || 'Untitled Project'}</span>
-            {c.project.customer && <span>&middot; {c.project.customer}</span>}
-            {currentProject && <StatusBadge status={currentProject.status} />}
+            <span>{viewLabel}</span>
+            {viewMode !== 'all' && currentProject && <StatusBadge status={currentProject.status} />}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" disabled={exporting === 'pdf'} onClick={handleExportPdf}>{exporting === 'pdf' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />} PDF</Button>
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" disabled={exporting === 'excel'} onClick={handleExportExcel}>{exporting === 'excel' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Table2 className="h-3.5 w-3.5" />} Excel</Button>
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => {
-            const report = [`B&R Engineering Effort Report`, `Project: ${activeProjectId || 'N/A'}`, `Name: ${c.project.name || 'N/A'}`, `Customer: ${c.project.customer || 'N/A'}`, `Machine Type: ${c.project.machineType || 'N/A'}`, ``, `TOTAL ENGINEERING EFFORT`, `  ${effort.totalHours.toFixed(1)} hours | ${effort.totalDays} days | ${timeline.totalWeeks} weeks | ${effort.totalMonths} months`, ``, `BREAKDOWN:`, `  Hardware: ${effort.hardwareHours.toFixed(1)}h`, `  PLC/Software: ${effort.plcSoftwareHours.toFixed(1)}h`, `  Motion: ${effort.motionHours.toFixed(1)}h`, `  Vision: ${effort.visionHours.toFixed(1)}h`, `  Safety: ${effort.safetyHours.toFixed(1)}h`, `  Comm/Integration: ${effort.communicationIntegrationHours.toFixed(1)}h`, `  Testing: ${effort.testingHours.toFixed(1)}h`, `  Commissioning: ${effort.commissioningHours.toFixed(1)}h`, ``, `OVERALL COMPLEXITY: ${overallComplexity} (${highCount}/10 High or Very High)`, ``, `Generated by B&R Engineering Estimation Tool`].join('\n');
+            const report = [`B&R Engineering Effort Report`, `View: ${viewLabel}`, ``, `TOTAL ENGINEERING EFFORT`, `  ${effort.totalHours.toFixed(1)} hours | ${Math.ceil(effort.totalDays)} days | ${timeline.totalWeeks} weeks | ${effort.totalMonths} months`, ``, `BREAKDOWN:`, ...EFFORT_KEYS.map(k => `  ${k.label}: ${effort[k.key].toFixed(1)}h`), ``, `OVERALL COMPLEXITY: ${overallComplexity} (${highCount}/10 High or Very High)`, ``, `Generated by B&R Engineering Estimation Tool`].join('\n');
             navigator.clipboard.writeText(report); toast('Report copied to clipboard');
-          }}><Share2 className="h-3.5 w-3.5" /> Copy Report</Button>
-          <Button size="sm" className="h-9 gap-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => { setWizardStep(13); setCurrentPage('new-estimate'); }}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
+          }}><Share2 className="h-3.5 w-3.5" /> Copy</Button>
+          {viewMode !== 'all' && (
+            <Button size="sm" className="h-9 gap-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => { setWizardStep(13); setCurrentPage('new-estimate'); }}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
+          )}
           <Button size="sm" className="h-9 gap-1.5 text-sm" variant="outline" onClick={() => {
             const now = new Date().toISOString().split('T')[0];
-            const project: Project = { id: 'proj-' + Date.now(), name: c.project.name || 'Untitled Project', customer: c.project.customer || 'Unknown', machineType: c.project.machineType || 'General', industry: c.project.industry || '', description: c.project.description || '', requirementClarity: c.project.requirementClarity || 'Mostly Clear', customerInvolvement: c.project.customerInvolvement || 'Medium', projectVariants: c.project.projectVariants || 1, machineStations: c.project.machineStations || 1, complexity: overallComplexity, status: 'Draft', createdAt: now, updatedAt: now, config: JSON.parse(JSON.stringify(c)) };
+            const project: ProjectType = { id: 'proj-' + Date.now(), name: displayConfig.project.name || 'Untitled Project', customer: displayConfig.project.customer || 'Unknown', machineType: displayConfig.project.machineType || 'General', industry: displayConfig.project.industry || '', description: displayConfig.project.description || '', requirementClarity: displayConfig.project.requirementClarity || 'Mostly Clear', customerInvolvement: displayConfig.project.customerInvolvement || 'Medium', projectVariants: displayConfig.project.projectVariants || 1, machineStations: displayConfig.project.machineStations || 1, complexity: overallComplexity, status: 'Draft', createdAt: now, updatedAt: now, config: JSON.parse(JSON.stringify(displayConfig)) };
             addProject(project); toast('Project saved!', { description: project.name });
           }}><Save className="h-3.5 w-3.5" /> Save</Button>
         </div>
       </div>
+
+      {/* View Mode Selector */}
+      <SectionCard title="Project Scope" description="Select which project estimates to view">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+              <BarChart3 className="h-4 w-4 text-primary" />
+            </div>
+            <span className="text-sm font-semibold text-foreground">Estimate View</span>
+          </div>
+          <Select value={viewMode} onValueChange={(val) => {
+            if (val === 'all') {
+              setViewMode('all');
+            } else {
+              handleProjectView(val);
+            }
+          }}>
+            <SelectTrigger className="w-full sm:w-[380px] h-9 font-medium border-border/80">
+              <SelectValue placeholder="Select view..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <span className="flex items-center gap-2">
+                  <FolderKanban className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-medium">All Projects (Combined)</span>
+                  <span className="text-muted-foreground ml-auto text-xs">{projectResults.length} projects</span>
+                </span>
+              </SelectItem>
+              {projects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  <span className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-sm shrink-0 ${COMPLEXITY_DOT_COLORS[p.complexity]}`} />
+                    <span className="truncate">{p.name}</span>
+                    <span className="text-muted-foreground ml-auto text-xs shrink-0">{p.customer}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {viewMode === 'all' && projectResults.length > 0 && (
+            <div className="flex items-center gap-3 text-sm animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+              <span className="text-muted-foreground">{projectResults.length} project{projectResults.length !== 1 ? 's' : ''} combined</span>
+              <span className="h-4 w-px bg-border" />
+              <span className="text-muted-foreground">Total: <span className="font-bold text-foreground">{combinedEffort.totalHours.toFixed(0)}h</span></span>
+            </div>
+          )}
+        </div>
+      </SectionCard>
 
       {/* === TOTAL ENGINEERING EFFORT HERO CARD === */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.4 }} className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent">
@@ -294,6 +464,7 @@ export function EstimateSummaryPage() {
           <div className="flex items-center gap-2 mb-4">
             <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center"><Clock className="h-4 w-4 text-primary" /></div>
             <span className="text-sm font-semibold uppercase tracking-wider text-primary">Total Engineering Effort</span>
+            {viewMode === 'all' && <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">All Projects Combined</span>}
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-lg bg-background/80 border border-border p-4 text-center">
@@ -321,6 +492,77 @@ export function EstimateSummaryPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Per-project breakdown table (shown in combined mode) */}
+      <AnimatePresence>
+        {viewMode === 'all' && projectResults.length > 1 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <SectionCard title="Per-Project Breakdown" description="Individual project estimates that contribute to the combined total">
+              <div className="overflow-x-auto -mx-4 px-4 max-h-72 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border hover:bg-transparent">
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9">Project</TableHead>
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9 hidden sm:table-cell">Customer</TableHead>
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9 text-right">Hours</TableHead>
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9 text-right hidden md:table-cell">Days</TableHead>
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9 hidden lg:table-cell">Complexity</TableHead>
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9 text-center">%</TableHead>
+                      <TableHead className="text-sm font-semibold text-muted-foreground h-9 text-right">Action</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {projectResults.map((pr) => {
+                      const pct = combinedEffort.totalHours > 0 ? (pr.effort.totalHours / combinedEffort.totalHours) * 100 : 0;
+                      return (
+                        <TableRow
+                          key={pr.project.id}
+                          className="border-border hover:bg-primary/[0.03] cursor-pointer"
+                          onClick={() => handleProjectView(pr.project.id)}
+                        >
+                          <TableCell className="text-sm font-medium text-foreground py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className={`h-2 w-2 rounded-sm shrink-0 ${COMPLEXITY_DOT_COLORS[pr.project.complexity]}`} />
+                              {pr.project.name}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground py-2.5 hidden sm:table-cell">{pr.project.customer}</TableCell>
+                          <TableCell className="text-sm font-semibold text-foreground py-2.5 text-right tabular-nums">{pr.effort.totalHours.toFixed(1)}h</TableCell>
+                          <TableCell className="text-sm text-muted-foreground py-2.5 text-right tabular-nums hidden md:table-cell">{Math.ceil(pr.effort.totalDays)}d</TableCell>
+                          <TableCell className="py-2.5 hidden lg:table-cell">
+                            <ComplexityBadge level={pr.project.complexity} />
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground py-2.5 text-center tabular-nums">{pct.toFixed(0)}%</TableCell>
+                          <TableCell className="py-2.5 text-right">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground" onClick={(e) => { e.stopPropagation(); handleProjectView(pr.project.id); }}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {/* Total row */}
+                    <TableRow className="border-border bg-muted/30 font-bold">
+                      <TableCell className="text-sm text-primary py-2.5">Combined Total</TableCell>
+                      <TableCell className="text-sm text-muted-foreground py-2.5 hidden sm:table-cell">{projectResults.length} projects</TableCell>
+                      <TableCell className="text-sm text-primary py-2.5 text-right tabular-nums">{combinedEffort.totalHours.toFixed(1)}h</TableCell>
+                      <TableCell className="text-sm text-primary py-2.5 text-right tabular-nums hidden md:table-cell">{Math.ceil(combinedEffort.totalDays)}d</TableCell>
+                      <TableCell className="py-2.5 hidden lg:table-cell" />
+                      <TableCell className="text-sm text-primary py-2.5 text-center tabular-nums">100%</TableCell>
+                      <TableCell className="py-2.5" />
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </SectionCard>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Effort Breakdown with Donut Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -451,13 +693,13 @@ export function EstimateSummaryPage() {
       <SectionCard title="Risk Assessment" description="Key risk indicators">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {(() => {
-            const clarity = c.project.requirementClarity || 'Mostly Clear';
+            const clarity = displayConfig.project.requirementClarity || 'Mostly Clear';
             const clrMap: Record<string, string> = { Clear: 'bg-emerald-500', 'Mostly Clear': 'bg-amber-500', 'Partially Clear': 'bg-orange-500', Unclear: 'bg-red-500' };
             const txtMap: Record<string, string> = { Clear: 'text-emerald-600 dark:text-emerald-400', 'Mostly Clear': 'text-amber-600 dark:text-amber-400', 'Partially Clear': 'text-orange-600 dark:text-orange-400', Unclear: 'text-red-600 dark:text-red-400' };
             return (<div className="rounded-lg border border-border bg-card p-3"><div className="text-sm text-muted-foreground mb-2">Requirement Clarity</div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${clrMap[clarity] || 'bg-muted-foreground'}`} /><span className={`text-sm font-semibold ${txtMap[clarity] || 'text-foreground'}`}>{clarity}</span></div></div>);
           })()}
           {(() => {
-            const inv = c.project.customerInvolvement || 'Medium';
+            const inv = displayConfig.project.customerInvolvement || 'Medium';
             const invMap: Record<string, string> = { Low: 'bg-red-500', Medium: 'bg-amber-500', High: 'bg-emerald-500' };
             const invTxt: Record<string, string> = { Low: 'text-red-600 dark:text-red-400', Medium: 'text-amber-600 dark:text-amber-400', High: 'text-emerald-600 dark:text-emerald-400' };
             return (<div className="rounded-lg border border-border bg-card p-3"><div className="text-sm text-muted-foreground mb-2">Customer Involvement</div><div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${invMap[inv] || 'bg-muted-foreground'}`} /><span className={`text-sm font-semibold ${invTxt[inv] || 'text-foreground'}`}>{inv}</span></div></div>);
@@ -474,7 +716,7 @@ export function EstimateSummaryPage() {
       <SectionCard title="Complexity Profile" description="All 10 engineering dimensions">
         <div className="space-y-2">
           {COMPLEXITY_DIMENSIONS.map((dim, index) => {
-            const level = c.complexity[dim.key];
+            const level = displayConfig.complexity[dim.key];
             return (
               <motion.div key={dim.key} className="flex items-center gap-3" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.04, duration: 0.3 }}>
                 <div className="w-28 shrink-0 text-sm text-muted-foreground text-right pr-3">{dim.label}</div>
@@ -501,7 +743,8 @@ export function EstimateSummaryPage() {
 
       {/* Configuration Completeness */}
       <SectionCard title="Configuration Completeness" description={`${configuredCount} of ${completeness.length} sections configured`}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">{completeness.map((section) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {completeness.map((section) => (
           <div key={section.label} className="flex items-center gap-2 text-sm">
             {section.configured ? (<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50"><Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" /></div>) : (<div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted"><Minus className="h-3 w-3 text-muted-foreground" /></div>)}
             <span className={section.configured ? 'font-medium text-foreground' : 'text-muted-foreground'}>{section.label}</span>

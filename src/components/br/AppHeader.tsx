@@ -15,7 +15,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAppStore } from '@/store';
 import { toast } from 'sonner';
-import { exportPdf } from '@/lib/export-pdf';
 import type { AppPage } from '@/types';
 import { NotificationCenter } from '@/components/br/NotificationCenter';
 
@@ -44,15 +43,34 @@ export function AppHeader() {
   const projectName = activeProject?.name || config.project.name;
   const showProjectName = activeProjectId && projectName && PROJECT_CONTEXT_PAGES.includes(currentPage);
 
-  const handlePdfExport = () => {
-    exportPdf(config, activeProjectId);
-    addNotification({ message: 'PDF exported', detail: 'Report downloaded', icon: 'FileText', color: 'text-red-500' });
-    toast('PDF exported', { description: 'Report downloaded.' });
+  const handlePdfExport = async () => {
+    try {
+      const params = activeProjectId ? `?projectId=${encodeURIComponent(activeProjectId)}` : '';
+      const res = await fetch(`/api/export/pdf${params}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `br-estimate-${(config.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      addNotification({ message: 'PDF exported', detail: 'Report downloaded', icon: 'FileText', color: 'text-red-500' });
+      toast('PDF exported', { description: 'Report downloaded.' });
+    } catch {
+      toast.error('PDF export failed');
+    }
   };
 
   const handleExcelExport = async () => {
     try {
-      const res = await fetch('/api/export/excel?XTransformPort=3000', {
+      const res = await fetch('/api/export/excel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config),
