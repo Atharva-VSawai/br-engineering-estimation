@@ -4,16 +4,16 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AppLayout } from '@/components/br/AppLayout';
 import { useAppStore } from '@/store';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { NewEstimatePage } from '@/pages/NewEstimatePage';
-import { ProjectsPage } from '@/pages/ProjectsPage';
-import { ProductExplorerPage } from '@/pages/ProductExplorerPage';
-import { EngineeringActivitiesPage } from '@/pages/EngineeringActivitiesPage';
-import { EstimateSummaryPage } from '@/pages/EstimateSummaryPage';
-import { TechnicalParamsPage } from '@/pages/TechnicalParamsPage';
-import { SettingsPage } from '@/pages/SettingsPage';
-import { ComplexityPage } from '@/pages/ComplexityPage';
-import { ComparePage } from '@/pages/ComparePage';
+import { DashboardPage } from '@/views/DashboardPage';
+import { NewEstimatePage } from '@/views/NewEstimatePage';
+import { ProjectsPage } from '@/views/ProjectsPage';
+import { ProductExplorerPage } from '@/views/ProductExplorerPage';
+import { EngineeringActivitiesPage } from '@/views/EngineeringActivitiesPage';
+import { EstimateSummaryPage } from '@/views/EstimateSummaryPage';
+import { TechnicalParamsPage } from '@/views/TechnicalParamsPage';
+import { SettingsPage } from '@/views/SettingsPage';
+import { ComplexityPage } from '@/views/ComplexityPage';
+import { ComparePage } from '@/views/ComparePage';
 import {
   useKeyboardShortcuts,
   KeyboardShortcutsDialog,
