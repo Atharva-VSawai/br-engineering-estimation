@@ -34,7 +34,7 @@ const STATUS_OPTIONS = ['All', 'Draft', 'In Review', 'Completed'] as const;
 
 type StatusOption = (typeof STATUS_OPTIONS)[number];
 
-function SortableProjectRow({ id, className, children, onDragStart }: { id: string; className?: string; children: React.ReactNode; onDragStart: () => void }) {
+function SortableProjectRow({ id, className, children, onDragStart, onClick }: { id: string; className?: string; children: React.ReactNode; onDragStart: () => void; onClick?: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -47,6 +47,7 @@ function SortableProjectRow({ id, className, children, onDragStart }: { id: stri
       style={style}
       layout
       className={cn(className, 'group/row')}
+      onClick={onClick}
     >
       <td className="py-2.5 w-8 border-r border-border/40">
         <div
@@ -244,6 +245,12 @@ export function ProjectsPage() {
                           id={p.id}
                           className={cn("border-border hover:bg-muted/50 cursor-pointer border-l-2 border-b transition-colors", COMPLEXITY_BORDER[p.complexity as ComplexityLevel], idx % 2 === 1 && 'bg-muted/20')}
                           onDragStart={() => setActiveProjectId(p.id)}
+                          onClick={() => {
+                            if (p.config) {
+                              updateConfig(JSON.parse(JSON.stringify(p.config)));
+                              setCurrentPage('estimate-summary');
+                            }
+                          }}
                         >
                           <TableCell className="text-sm font-mono text-muted-foreground py-2.5">{p.id}</TableCell>
                           <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>

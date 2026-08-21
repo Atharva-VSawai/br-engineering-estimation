@@ -32,11 +32,15 @@ const PAGE_NAMES: Record<AppPage, string> = {
   settings: 'Settings',
 };
 
+// Pages where showing the project name in breadcrumb makes sense
+const PROJECT_CONTEXT_PAGES: AppPage[] = ['new-estimate', 'estimate-summary', 'product-explorer', 'technical-params', 'engineering-activities', 'complexity', 'compare'];
+
 export function AppHeader() {
   const { config, currentPage, wizardStep, setCurrentPage } = useAppStore();
   const { theme, setTheme } = useTheme();
   const nc = useNotificationCenter();
-  const projectName = config.project.name || 'Untitled Project';
+  const projectName = config.project.name;
+  const showProjectName = projectName && PROJECT_CONTEXT_PAGES.includes(currentPage);
 
   const handlePdfExport = () => {
     exportPdf(config);
@@ -94,7 +98,6 @@ export function AppHeader() {
     toast('Configuration saved', { description: 'All changes saved locally.' });
   };
 
-  // Listen for keyboard shortcut custom events
   useEffect(() => {
     const handleDownloadEvent = () => handleJsonExport();
     const handleCopyEvent = () => handleCopy();
@@ -112,19 +115,21 @@ export function AppHeader() {
   return (
     <header className="no-print flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-sm px-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
       <div className="flex items-center gap-3">
-        {currentPage !== 'new-estimate' ? (
+        {currentPage === 'new-estimate' ? (
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="text-sm font-semibold text-foreground truncate max-w-[280px]">
+              {projectName || 'New Estimate'}
+            </span>
+          </div>
+        ) : showProjectName ? (
           <div className="flex items-center gap-1.5">
             <span className="text-sm text-muted-foreground">{PAGE_NAMES[currentPage]}</span>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
             <span className="text-sm font-medium text-foreground truncate max-w-[280px]">{projectName}</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
-            <span className="text-sm font-semibold text-foreground truncate max-w-[280px]">
-              {projectName}
-            </span>
-          </div>
+          <span className="text-sm font-semibold text-foreground">{PAGE_NAMES[currentPage]}</span>
         )}
       </div>
       <div className="flex items-center gap-3">
@@ -137,12 +142,14 @@ export function AppHeader() {
         >
           {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
-        <Badge
-          variant="outline"
-          className={`border-amber-300 bg-amber-50 text-amber-700 text-sm font-medium dark:border-amber-600/40 dark:bg-amber-900/20 dark:text-amber-400 ${currentPage === 'new-estimate' ? 'animate-pulse' : ''}`}
-        >
-          Draft
-        </Badge>
+        {currentPage !== 'dashboard' && currentPage !== 'settings' && (
+          <Badge
+            variant="outline"
+            className={`border-amber-300 bg-amber-50 text-amber-700 text-sm font-medium dark:border-amber-600/40 dark:bg-amber-900/20 dark:text-amber-400 ${currentPage === 'new-estimate' ? 'animate-pulse' : ''}`}
+          >
+            Draft
+          </Badge>
+        )}
         {currentPage === 'new-estimate' && (() => {
           const pct = Math.round(((wizardStep + 1) / 14) * 100);
           const radius = 10;
@@ -151,48 +158,20 @@ export function AppHeader() {
           return (
             <div className="relative flex items-center justify-center" style={{ width: 28, height: 28 }}>
               <svg width="28" height="28" className="-rotate-90">
-                <circle
-                  cx="14" cy="14" r={radius}
-                  fill="none"
-                  strokeWidth="2.5"
-                  className="stroke-muted"
-                />
-                <motion.circle
-                  cx="14" cy="14" r={radius}
-                  fill="none"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  className="stroke-primary"
-                  strokeDasharray={circumference}
-                  initial={{ strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: offset }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
-                />
+                <circle cx="14" cy="14" r={radius} fill="none" strokeWidth="2.5" className="stroke-muted" />
+                <motion.circle cx="14" cy="14" r={radius} fill="none" strokeWidth="2.5" strokeLinecap="round" className="stroke-primary" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 0.5, ease: 'easeOut' }} />
               </svg>
-              <span className="absolute text-[11px] font-bold text-foreground">
-                {pct}
-              </span>
+              <span className="absolute text-[11px] font-bold text-foreground">{pct}</span>
             </div>
           );
         })()}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 relative"
-          onClick={nc.toggle}
-        >
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={nc.toggle}>
           <Bell className="h-4 w-4" />
-          {nc.unreadCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />
-          )}
+          {nc.unreadCount > 0 && <span className="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 text-sm"
-            >
+            <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm">
               <Download className="h-3.5 w-3.5" />
               Export
               <ChevronDown className="h-3 w-3 opacity-50" />
@@ -214,35 +193,19 @@ export function AppHeader() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 gap-1.5 text-sm"
-          onClick={handleCopy}
-        >
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleCopy}>
           <Copy className="h-3.5 w-3.5" />
           Copy
         </Button>
         <kbd className="hidden lg:inline-flex h-6 items-center gap-1 rounded border border-border bg-muted px-1.5 text-xs font-mono text-muted-foreground">
           &#8984;K
         </kbd>
-        <Button
-          variant="default"
-          size="sm"
-          className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
-          onClick={handleSave}
-        >
+        <Button variant="default" size="sm" className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave}>
           <Save className="h-3.5 w-3.5" />
           Save
         </Button>
       </div>
-      <NotificationCenter
-        open={nc.open}
-        onClose={nc.close}
-        unreadCount={nc.unreadCount}
-        notifications={nc.notifications}
-        onMarkAllRead={nc.markAllRead}
-      />
+      <NotificationCenter open={nc.open} onClose={nc.close} unreadCount={nc.unreadCount} notifications={nc.notifications} onMarkAllRead={nc.markAllRead} />
     </header>
   );
 }
