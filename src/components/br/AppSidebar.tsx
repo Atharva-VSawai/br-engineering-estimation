@@ -123,7 +123,7 @@ export function AppSidebar() {
         <div className="text-[10px] text-muted-foreground/60 leading-tight">Frontend Prototype</div>
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/60 leading-tight">
           <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full inline-block" />
-          <span className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v0.7</span>
+          <span className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v0.8</span>
         </div>
       </div>
     </aside>

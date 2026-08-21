@@ -97,11 +97,20 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
 
             {/* Notification list */}
             <div className="flex-1 overflow-y-auto">
-              {notifications.map((item) => {
+              {unreadCount === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Bell className="h-8 w-8 text-muted-foreground/20" />
+                  <p className="text-xs text-muted-foreground mt-2">All caught up!</p>
+                </div>
+              )}
+              {notifications.map((item, index) => {
                 const Icon = item.icon;
                 return (
-                  <div
+                  <motion.div
                     key={item.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05, duration: 0.2 }}
                     className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 transition-colors hover:bg-muted/30 ${
                       item.unread ? 'bg-primary/5 border-l-2 border-l-primary/30' : ''
                     }`}
@@ -113,8 +122,8 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
                       <p className="text-xs font-medium text-foreground leading-tight">{item.action}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{item.detail}</p>
                     </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0 mt-0.5">{item.time}</span>
-                  </div>
+                    <span className={`text-[10px] shrink-0 mt-0.5 ${item.unread ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{item.time}</span>
+                  </motion.div>
                 );
               })}
             </div>

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAppStore } from '@/store';
 import { toast } from 'sonner';
+import { WIZARD_STEPS } from '@/data';
 import type { AppPage } from '@/types';
 
 // ===== Hook =====
@@ -54,23 +55,38 @@ export function useKeyboardShortcuts() {
         return;
       }
 
-      // Alt+1-9 → navigate pages
+      // Alt+1-9, Alt+0 → navigate pages OR jump wizard steps
       if (e.altKey) {
-        const pageMap: Record<string, AppPage> = {
-          '1': 'dashboard',
-          '2': 'new-estimate',
-          '3': 'projects',
-          '4': 'product-explorer',
-          '5': 'technical-params',
-          '6': 'engineering-activities',
-          '7': 'complexity',
-          '8': 'estimate-summary',
-          '9': 'settings',
-        };
-        const page = pageMap[e.key];
-        if (page) {
-          e.preventDefault();
-          useAppStore.getState().setCurrentPage(page);
+        const currentPage = useAppStore.getState().currentPage;
+        e.preventDefault();
+
+        if (currentPage === 'new-estimate') {
+          // Wizard step jump takes priority on the wizard page
+          const digit = parseInt(e.key, 10);
+          if (!isNaN(digit)) {
+            const stepIndex = digit === 0 ? 9 : digit - 1;
+            if (stepIndex < WIZARD_STEPS.length) {
+              const stepName = WIZARD_STEPS[stepIndex];
+              useAppStore.getState().setWizardStep(stepIndex);
+              toast(`Jumped to step ${digit === 0 ? 10 : digit}`, { description: stepName });
+            }
+          }
+        } else {
+          const pageMap: Record<string, AppPage> = {
+            '1': 'dashboard',
+            '2': 'new-estimate',
+            '3': 'projects',
+            '4': 'product-explorer',
+            '5': 'technical-params',
+            '6': 'engineering-activities',
+            '7': 'complexity',
+            '8': 'estimate-summary',
+            '9': 'settings',
+          };
+          const page = pageMap[e.key];
+          if (page) {
+            useAppStore.getState().setCurrentPage(page);
+          }
         }
       }
     };
@@ -144,6 +160,20 @@ export function KeyboardShortcutsDialog({
   open,
   onOpenChange,
 }: KeyboardShortcutsDialogProps) {
+  const currentPage = useAppStore((s) => s.currentPage);
+
+  const wizardShortcuts: ShortcutCategory = {
+    title: 'Wizard Step Jumps',
+    items: [
+      { keys: ['Alt+1-9'], description: 'Jump to Wizard Step 1-9' },
+      { keys: ['Alt+0'], description: 'Jump to Wizard Step 10' },
+    ],
+  };
+
+  const displayShortcuts = currentPage === 'new-estimate'
+    ? [wizardShortcuts, ...SHORTCUTS]
+    : SHORTCUTS;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -155,7 +185,7 @@ export function KeyboardShortcutsDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {SHORTCUTS.map((category) => (
+          {displayShortcuts.map((category) => (
             <div key={category.title}>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {category.title}

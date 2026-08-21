@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { SectionCard } from '@/components/br/SectionCard';
 import { ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
-import type { Project } from '@/types';
+import type { Project, ComplexityLevel } from '@/types';
 import {
   Table,
   TableBody,
@@ -30,6 +30,13 @@ import {
 const STATUS_OPTIONS = ['All', 'Draft', 'In Review', 'Completed'] as const;
 
 type StatusOption = (typeof STATUS_OPTIONS)[number];
+
+const COMPLEXITY_BORDER: Record<ComplexityLevel, string> = {
+  Low: 'border-l-emerald-400',
+  Medium: 'border-l-amber-400',
+  High: 'border-l-orange-400',
+  'Very High': 'border-l-red-400',
+};
 
 export function ProjectsPage() {
   const { projects, setCurrentPage, addProject, deleteProject, updateProject, updateConfig } = useAppStore();
@@ -82,7 +89,7 @@ export function ProjectsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-bold text-foreground">Projects</h1>
+          <h1 className="text-lg font-bold text-foreground">Projects<span className="ml-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{projects.length}</span></h1>
           <p className="text-sm text-muted-foreground">All B&R engineering estimation projects.</p>
         </div>
         <Button
@@ -106,7 +113,7 @@ export function ProjectsPage() {
             className="h-9 pl-8 text-sm"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <motion.div className="flex flex-wrap gap-2" initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.2 }}>
           {STATUS_OPTIONS.map((status) => (
             <button
               key={status}
@@ -120,7 +127,7 @@ export function ProjectsPage() {
               {status}
             </button>
           ))}
-        </div>
+        </motion.div>
       </div>
 
       {filteredProjects.length > 0 && (
@@ -174,7 +181,7 @@ export function ProjectsPage() {
               </TableHeader>
               <TableBody>
                 {filteredProjects.map((p) => (
-                  <TableRow key={p.id} className="border-border hover:bg-muted/50 cursor-pointer">
+                  <TableRow key={p.id} className={cn("border-border hover:bg-muted/50 cursor-pointer border-l-2", COMPLEXITY_BORDER[p.complexity as ComplexityLevel])}>
                     <TableCell className="text-xs font-mono text-muted-foreground py-2.5">{p.id}</TableCell>
                     <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>

@@ -10,11 +10,12 @@ interface SectionCardProps {
   action?: React.ReactNode;
   className?: string;
   noPadding?: boolean;
+  accentColor?: string;
 }
 
-export function SectionCard({ title, description, children, action, className = '', noPadding }: SectionCardProps) {
+export function SectionCard({ title, description, children, action, className = '', noPadding, accentColor }: SectionCardProps) {
   return (
-    <Card className={`rounded-lg border-border bg-card transition-all duration-200 hover:shadow-sm overflow-hidden ${className}`}>
+    <Card className={`rounded-lg border-border bg-card transition-all duration-200 hover:shadow-sm hover:-translate-y-px overflow-hidden ${className}`}>
       <CardHeader className="pt-4 px-4 pb-2">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
@@ -31,7 +32,10 @@ export function SectionCard({ title, description, children, action, className = 
         </div>
       </CardHeader>
       {/* Gradient line below header */}
-      <div className="h-0.5 bg-gradient-to-r from-primary/40 via-primary/10 to-transparent" />
+      <div
+        className="h-0.5 bg-gradient-to-r from-primary/40 via-primary/10 to-transparent"
+        style={accentColor ? { background: `linear-gradient(to right, ${accentColor}66, ${accentColor}1a, transparent)` } : undefined}
+      />
       {noPadding ? children : <CardContent className="px-4 pb-4">{children}</CardContent>}
     </Card>
   );

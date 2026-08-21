@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Check } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { WIZARD_STEPS } from '@/data';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store';
@@ -88,6 +89,16 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
         </div>
       </div>
 
+      {/* Overall progress bar */}
+      <div className="h-1 rounded-full bg-muted overflow-hidden mb-3">
+        <motion.div
+          className="h-full bg-primary rounded-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${((currentStep + 1) / WIZARD_STEPS.length) * 100}%` }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        />
+      </div>
+
       {/* Step indicators */}
       <div className="flex items-center gap-0 overflow-x-auto pb-2">
         {WIZARD_STEPS.map((label, idx) => {
@@ -108,10 +119,12 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
                 />
               )}
               <div className="relative">
-                <button
+                <motion.button
                   onClick={() => onStepClick(idx)}
                   onMouseEnter={() => setHoveredStep(idx)}
                   onMouseLeave={() => setHoveredStep(null)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.97 }}
                   className={cn(
                     'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-medium whitespace-nowrap transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     isCompleted && 'bg-emerald-500/10 text-emerald-600',
@@ -134,7 +147,7 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
                     </span>
                   )}
                   <span className="hidden xl:inline">{label}</span>
-                </button>
+                </motion.button>
                 {/* Validation indicator dot */}
                 <div className="flex justify-center mt-0.5">
                   <div
@@ -149,6 +162,7 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
                 {/* Tooltip for small screens */}
                 {isHovered && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 z-50 px-2 py-1 rounded-md bg-popover text-popover-foreground text-[10px] font-medium whitespace-nowrap shadow-md border border-border pointer-events-none xl:hidden">
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-popover border-l border-t border-border" />
                     {label}
                   </div>
                 )}

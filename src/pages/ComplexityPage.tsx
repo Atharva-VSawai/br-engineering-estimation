@@ -173,6 +173,15 @@ export function ComplexityPage() {
               >
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.short}</div>
                 <div className="text-xs font-bold mt-1">{level}</div>
+                <div className="mt-1.5 h-1 rounded-full bg-black/5 dark:bg-white/5 overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${LEVEL_MAP[level] * 25}%`,
+                      backgroundColor: level === 'Low' ? '#10b981' : level === 'Medium' ? '#f59e0b' : level === 'High' ? '#f97316' : '#ef4444',
+                    }}
+                  />
+                </div>
               </motion.div>
             );
           })}
@@ -259,8 +268,8 @@ export function ComplexityPage() {
 
       <SectionCard title="Complexity Dimensions">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
-          {categories.map((cat) => (
-            <div key={cat.key} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+          {categories.map((cat, index) => (
+            <div key={cat.key} className={`flex items-center justify-between py-2 border-b border-border/50 last:border-0 ${index % 2 === 0 ? 'bg-muted/20 -mx-4 px-4' : '-mx-4 px-4'}`}>
               <div>
                 <div className="text-xs font-medium text-foreground">{cat.label}</div>
                 <div className="text-[11px] text-muted-foreground">{cat.description}</div>

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson } from 'lucide-react';
 import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
@@ -193,35 +193,39 @@ export function DashboardPage() {
                   config.io.temperatureModules + config.io.communicationIO +
                   config.io.specialModules;
                 const estHours = totalIO * 0.5 + config.motion.totalAxes * 6 + config.hmi.screens * 8 + 40;
-                const isAllZero = totalIO === 0 && config.motion.totalAxes === 0 && config.hmi.screens === 0 && config.safety.safetyIOCount === 0 && estHours === 40;
+                const enabledProtocolCount = config.communication.protocols.filter(p => p.enabled).length;
+                const robotCount = config.robotics.enabled ? String(config.robotics.quantity) : '0';
                 const quickStats = [
                   { icon: Cable, label: 'Total I/O Points', value: String(totalIO), accent: 'border-l-blue-400', iconBg: 'text-blue-400' },
                   { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes), accent: 'border-l-amber-400', iconBg: 'text-amber-400' },
                   { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens), accent: 'border-l-cyan-400', iconBg: 'text-cyan-400' },
                   { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount), accent: 'border-l-emerald-400', iconBg: 'text-emerald-400' },
                   { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1), accent: 'border-l-primary', iconBg: 'text-primary' },
+                  { icon: Cpu, label: 'Controller', value: config.controller.family, accent: 'border-l-violet-400', iconBg: 'text-violet-400' },
+                  { icon: Radio, label: 'Protocols', value: String(enabledProtocolCount), accent: 'border-l-teal-400', iconBg: 'text-teal-400' },
+                  { icon: Bot, label: 'Robots', value: robotCount, accent: 'border-l-rose-400', iconBg: 'text-rose-400' },
                 ];
                 return (
                   <>
-                    {quickStats.map((stat) => (
-                      <div
-                        key={stat.label}
-                        className={`flex items-center gap-3 bg-muted/30 rounded-lg p-3 border-l-2 ${stat.accent}`}
-                      >
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
-                          <stat.icon className={`h-3.5 w-3.5 ${stat.iconBg}`} />
+                    {quickStats.map((stat) => {
+                      const isZero = stat.value === '0';
+                      return (
+                        <div
+                          key={stat.label}
+                          className={`flex items-center gap-3 bg-muted/30 rounded-lg p-3 border-l-2 ${stat.accent}`}
+                        >
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
+                            <stat.icon className={`h-3.5 w-3.5 ${stat.iconBg}`} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[11px] text-muted-foreground leading-tight">{stat.label}</span>
+                            <span className={`text-sm font-bold leading-tight ${isZero ? 'text-muted-foreground' : 'text-foreground'}`}>
+                              {stat.value}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-[11px] text-muted-foreground leading-tight">{stat.label}</span>
-                          <span className={`text-sm font-bold leading-tight ${isAllZero ? 'text-muted-foreground' : 'text-foreground'}`}>
-                            {isAllZero ? '—' : stat.value}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {isAllZero && (
-                      <p className="w-full text-[11px] text-muted-foreground/70 text-center pt-1">Load a configuration to see live stats</p>
-                    )}
+                      );
+                    })}
                   </>
                 );
               })()}

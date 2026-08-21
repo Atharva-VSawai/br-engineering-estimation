@@ -1377,3 +1377,114 @@ Unresolved Issues / Risks / Next Phase Recommendations:
 - **Priority 4**: Excel export for project data (using xlsx skill)
 - **Priority 4**: Real-time collaboration via WebSocket for multi-user editing
 - **Risk**: Cost estimation formulas are simplified placeholders (no historical validation)
+
+---
+Task ID: 13a-13d
+Agent: Styling Sub-agent
+Task: Visual polish across 5 files (v0.7 → v0.8 styling improvements)
+
+Work Log:
+- **ProjectsPage.tsx**: Added COMPLEXITY_BORDER color map (emerald/amber/orange/red) applied as border-l-2 on each TableRow. Wrapped status filter pills in motion.div with fade-up animation (delay 0.1s). Added project count badge (rounded-full bg-muted pill) next to 'Projects' h1.
+- **ProgressStepper.tsx**: Added framer-motion import. Replaced button with motion.button (whileHover scale 1.05, whileTap scale 0.97). Added animated progress bar (h-1 rounded-full) above step indicators showing (currentStep+1)/totalSteps with easeOut animation. Added tooltip arrow (rotate-45 div with border-l/t) above hover tooltip.
+- **NotificationCenter.tsx**: Wrapped each notification in motion.div with staggered slide-in (delay index*0.05, x:20→0). Added empty state when unreadCount===0 (Bell icon + 'All caught up!' text). Made timestamp bolder (font-medium text-foreground) for unread notifications.
+- **SectionCard.tsx**: Added hover:-translate-y-px to Card className for subtle lift. Added optional accentColor prop (CSS color string) that overrides gradient line via inline style using hex+alpha.
+- **ComplexityPage.tsx**: Added thin heatmap bar (h-1 rounded-full) inside each heatmap cell showing relative complexity (LEVEL_MAP*25% width, color-coded). Added alternating row backgrounds in Complexity Dimensions section (even rows bg-muted/20 with negative margin/padding).
+
+Stage Summary:
+- 5 files modified with pure visual polish (no new features)
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully (258ms)
+
+---
+Task ID: 14a-14b
+Agent: Features Sub-agent
+Task: Dashboard Quick Stats connected to real config + Wizard Step Keyboard Shortcut Jump
+
+Work Log:
+- **14a - DashboardPage.tsx**: Removed `isAllZero` conditional that showed "—" for all-zero config. Stats now always display actual numeric values. When a value is "0", it renders in `text-muted-foreground` style instead of `text-foreground`. Added 3 new quick stat items: Controller (Cpu icon, violet, shows controller family name), Protocols (Radio icon, teal, count of enabled protocols), Robots (Bot icon, rose, robot count or 0). Imported `Radio` and `Bot` from lucide-react (Cpu already imported). Removed the "Load a configuration to see live stats" fallback text.
+- **14b - KeyboardShortcutsDialog.tsx**: Enhanced Alt+digit handler to check `currentPage`. When on `new-estimate` page, Alt+1-9 and Alt+0 jump directly to wizard steps 1-10 (0-indexed via `setWizardStep`), with a toast notification showing step name from `WIZARD_STEPS`. On other pages, original page navigation is preserved. Added conditional "Wizard Step Jumps" section in the shortcuts dialog that only appears when `currentPage === 'new-estimate'`. Imported `WIZARD_STEPS` from `@/data`.
+
+Stage Summary:
+- 2 files modified (DashboardPage.tsx, KeyboardShortcutsDialog.tsx)
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully (215ms)
+
+---
+Task ID: 14c-14d
+Agent: Features Sub-agent
+Task: Effort Allocation Bars on Engineering Activities + Complexity Radar on Compare page
+
+Work Log:
+- **14c - EngineeringActivitiesPage.tsx**: Added `useMemo` import. Defined `effortData` array (7 categories: PLC Programming 120h, HMI Development 80h, Motion Setup 60h, Safety Engineering 40h, Vision Integration 30h, Commissioning 50h, Testing & QA 35h) wrapped in `useMemo`. Inserted new motion.div + SectionCard titled "Effort Allocation Overview" with description. Renders full-width horizontal stacked bar (h-8 rounded-md overflow-hidden flex) with proportional segment widths via inline styles. Legend grid (grid-cols-2 sm:grid-cols-4 gap-2) with colored squares (w-3 h-3 rounded-sm), names, and hours as "Xh (Y%)". Total line styled as text-sm font-semibold text-foreground. Positioned after Activity Matrix and before Engineering Lifecycle.
+- **14d - ComparePage.tsx**: Defined 10 radar dimensions (hardware, motion, hmi, vision, safety, communication, software, integration, requirement, testing) as const array. Complexity level mapping { Low: 1, Medium: 2, High: 3, Very High: 4 }. 3 project color pairs (orange/cyan/purple with fill alpha 0.2 and stroke alpha 0.8). Helper functions `vertex(i, n, r)` and `polygonPoints(r, n)` for SVG coordinate calculation using angle formula starting from top. `ComplexityRadar` component renders SVG (300x300 viewBox, center 150/150, max radius 110). 4 concentric polygon rings at 25%/50%/75%/100% with text-muted-foreground/40 stroke. 10 axis lines from center to vertices. Filled data polygons per selected project. Dimension labels at vertices (fontSize 9, text-muted-foreground, text-anchor middle). Legend below radar with colored circles + project names. All geometry data computed in `useMemo`. Conditionally rendered when selectedProjects.length >= 2, placed after comparison table SectionCard inside the AnimatePresence block.
+
+Stage Summary:
+- 2 files modified (EngineeringActivitiesPage.tsx, ComparePage.tsx)
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully (305ms)
+
+---
+Task ID: 13
+Agent: Main Orchestrator (Round 13)
+Task: QA, styling improvements, new features, version bump to v0.8
+
+Work Log:
+- **Initial QA**: Read worklog.md, assessed v0.7 status. Opened app via agent-browser — zero errors, zero hydration issues, all 10 pages load.
+- **Parallel Task 13a-13d (Styling)**: Launched sub-agent for 9 styling improvements across 5 files:
+  - ProjectsPage: complexity color strips on rows, status filter pills animation, project count badge
+  - ProgressStepper: motion.button hover/tap animations, animated progress bar above stepper, tooltip arrow
+  - NotificationCenter: staggered notification animation, empty state when all read, bold timestamps for unread
+  - SectionCard: hover lift effect, optional accentColor prop for custom gradient lines
+  - ComplexityPage: heatmap item bars showing relative complexity, alternating row backgrounds
+- **Parallel Task 14a-14b (Features Part 1)**: Launched sub-agent for 2 features:
+  - Dashboard Quick Stats: always shows values (0 instead of —), added 3 new stats (Controller family, Protocol count, Robot count)
+  - Wizard Step Jump: Alt+1-9/Alt+0 jumps directly to wizard steps 1-10 when on wizard page, toast notification, shortcuts dialog conditional section
+- **Parallel Task 14c-14d (Features Part 2)**: Launched sub-agent for 2 features:
+  - Engineering Activities: Effort Allocation Overview with stacked horizontal bar chart (7 disciplines, 415 total hours), responsive legend grid
+  - Compare Page: Complexity Radar Chart (SVG spider chart, 10 dimensions, 4 concentric rings, multi-project polygon overlay with distinct colors, legend)
+- **Version Bump**: v0.7→v0.8 in AppSidebar, AppLayout, SettingsPage
+- **Settings Update**: Added 4 new Completed items (Complexity Radar Chart, Effort Allocation Bars, Wizard Step Jump, Enhanced Quick Stats)
+- **Final QA**: Verified all 10 pages load (0 errors), v0.8 visible in sidebar/footer, quick stats show 8 metrics, effort allocation bars render with 415h total, complexity radar chart shows when 2+ projects selected, dark mode works.
+
+Stage Summary:
+- Version bumped to v0.8 with 9 styling improvements and 4 new features
+- Zero bugs found, zero runtime errors
+- 10+ files modified total
+- ESLint: Clean (0 errors)
+- All pages verified via agent-browser QA
+
+---
+Project Status: Feature-rich working prototype (v0.8)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Browser QA: Verified across 10+ rounds (zero runtime errors, zero hydration issues)
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Projects page: complexity color strips, filter pills animation, count badge
+- ✅ ProgressStepper: motion button animations, animated progress bar, tooltip arrow
+- ✅ NotificationCenter: staggered animation, empty state, unread timestamp styling
+- ✅ SectionCard: hover lift, optional accentColor prop
+- ✅ ComplexityPage: heatmap bars, alternating row backgrounds
+- ✅ Dashboard: 8 quick stats (added Controller, Protocols, Robots), always-visible values
+- ✅ Wizard: Alt+1-9/Alt+0 step jump with toast, shortcuts dialog conditional section
+- ✅ Engineering Activities: effort allocation stacked bar chart (7 disciplines, 415h)
+- ✅ Compare: complexity radar chart (SVG, 10 dimensions, multi-project overlay)
+- ✅ Version bumped to v0.8
+- ✅ ESLint clean, zero errors
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: None — all identified issues resolved
+- **Priority 2**: Effort allocation values are static/hardcoded — could compute from actual config
+- **Priority 2**: Notification center still uses static data — connect to real app events
+- **Priority 2**: Cost estimation formulas use simplified multipliers — integrate with historical data
+- **Priority 3**: Persist project data to database via Prisma
+- **Priority 3**: Add user authentication via NextAuth
+- **Priority 3**: Excel export for project data
+- **Priority 3**: Inline editing expanded to all wizard fields
+- **Priority 4**: Responsive design improvements for mobile viewports
+- **Priority 4**: HMI screen preview reflecting actual configuration
+- **Priority 4**: Real-time collaboration via WebSocket
+- **Risk**: Cost estimation formulas are simplified placeholders

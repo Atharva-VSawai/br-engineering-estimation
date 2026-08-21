@@ -1,0 +1,535 @@
+     1→'use client';
+     2→
+     3→import React, { useMemo, useState } from 'react';
+     4→import { motion } from 'framer-motion';
+     5→import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson } from 'lucide-react';
+     6→import { StatCard } from '@/components/br/StatCard';
+     7→import { SectionCard } from '@/components/br/SectionCard';
+     8→import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
+     9→import { useAppStore } from '@/store';
+    10→import type { ComplexityLevel } from '@/types';
+    11→import { Button } from '@/components/ui/button';
+    12→import {
+    13→  Table,
+    14→  TableBody,
+    15→  TableCell,
+    16→  TableHead,
+    17→  TableHeader,
+    18→  TableRow,
+    19→} from '@/components/ui/table';
+    20→
+    21→const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
+    22→  Low: 'bg-emerald-500',
+    23→  Medium: 'bg-amber-500',
+    24→  High: 'bg-orange-500',
+    25→  'Very High': 'bg-red-500',
+    26→};
+    27→
+    28→const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
+    29→  Low: 'text-emerald-600',
+    30→  Medium: 'text-amber-600',
+    31→  High: 'text-orange-600',
+    32→  'Very High': 'text-red-600',
+    33→};
+    34→
+    35→const ALL_LEVELS: ComplexityLevel[] = ['Low', 'Medium', 'High', 'Very High'];
+    36→
+    37→const COMPLEXITY_LEFT_BORDER: Record<ComplexityLevel, string> = {
+    38→  Low: 'border-l-emerald-400',
+    39→  Medium: 'border-l-amber-400',
+    40→  High: 'border-l-orange-400',
+    41→  'Very High': 'border-l-red-400',
+    42→};
+    43→
+    44→const ACTIVITY_AVATAR_CONFIG: Record<string, { icon: React.ElementType; iconColor: string; bgLight: string; bgDark: string }> = {
+    45→  edit: { icon: Pencil, iconColor: 'text-blue-400', bgLight: 'bg-blue-50', bgDark: 'dark:bg-blue-950/40' },
+    46→  info: { icon: Info, iconColor: 'text-amber-400', bgLight: 'bg-amber-50', bgDark: 'dark:bg-amber-950/40' },
+    47→  create: { icon: Plus, iconColor: 'text-emerald-400', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+    48→  complete: { icon: CheckCircle2, iconColor: 'text-emerald-500', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+    49→  export: { icon: FileJson, iconColor: 'text-purple-400', bgLight: 'bg-purple-50', bgDark: 'dark:bg-purple-950/40' },
+    50→};
+    51→
+    52→const ACTIVITY_BORDER_COLORS: Record<string, string> = {
+    53→  edit: 'border-l-blue-400',
+    54→  info: 'border-l-amber-400',
+    55→  create: 'border-l-emerald-400',
+    56→  complete: 'border-l-emerald-500',
+    57→  export: 'border-l-purple-400',
+    58→};
+    59→
+    60→const recentActivity = [
+    61→  { time: '2 hours ago', action: 'Configuration updated', detail: 'Motion axes changed from 6 to 8', type: 'edit' },
+    62→  { time: '5 hours ago', action: 'Sample data loaded', detail: 'Automated Packaging Machine configuration', type: 'info' },
+    63→  { time: '1 day ago', action: 'New estimate created', detail: 'ACOPOStrak Transport System', type: 'create' },
+    64→  { time: '2 days ago', action: 'Estimate completed', detail: 'Bottle Inspection Machine \u2013 Medium complexity', type: 'complete' },
+    65→  { time: '3 days ago', action: 'Project exported', detail: 'Servo Press Machine configuration as JSON', type: 'export' },
+    66→];
+    67→
+    68→export function DashboardPage() {
+    69→  const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+    70→  const [hourlyRate, setHourlyRate] = useState(85);
+    71→  const [contingency, setContingency] = useState(15);
+    72→
+    73→  const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
+    74→  const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
+    75→  const completedEstimates = projects.filter((p) => p.status === 'Completed').length;
+    76→
+    77→  // Complexity distribution
+    78→  const complexityDist = useMemo(() => {
+    79→    const dist: Record<ComplexityLevel, number> = { Low: 0, Medium: 0, High: 0, 'Very High': 0 };
+    80→    projects.forEach((p) => {
+    81→      dist[p.complexity]++;
+    82→    });
+    83→    return dist;
+    84→  }, [projects]);
+    85→
+    86→  const totalProjects = projects.length;
+    87→
+    88→  // Average complexity label
+    89→  const avgComplexityLabel = useMemo(() => {
+    90→    if (totalProjects === 0) return 'N/A';
+    91→    const scoreMap: Record<ComplexityLevel, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+    92→    const avg = projects.reduce((sum, p) => sum + scoreMap[p.complexity], 0) / totalProjects;
+    93→    if (avg <= 1.5) return 'Low';
+    94→    if (avg <= 2.5) return 'Medium';
+    95→    if (avg <= 3.5) return 'High';
+    96→    return 'Very High';
+    97→  }, [projects, totalProjects]) as ComplexityLevel | 'N/A';
+    98→
+    99→  return (
+   100→    <div className="max-w-[1400px] mx-auto w-full">
+   101→      <motion.div
+   102→        className="space-y-6"
+   103→        initial={{ opacity: 0, y: 8 }}
+   104→        animate={{ opacity: 1, y: 0 }}
+   105→        transition={{ duration: 0.3 }}
+   106→      >
+   107→        {/* Welcome Banner */}
+   108→        <div className="rounded-xl border border-primary/10 bg-gradient-to-r from-primary/[0.03] to-transparent p-4">
+   109→          <div className="flex items-center justify-between flex-wrap gap-4">
+   110→            <div className="flex items-center gap-3">
+   111→              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+   112→                <Cpu className="h-6 w-6" />
+   113→              </div>
+   114→              <div>
+   115→                <h2 className="text-sm font-bold text-foreground">Welcome to B&R Engineering Estimation</h2>
+   116→                <p className="text-xs text-muted-foreground mt-0.5">Configure your automation project and generate effort estimates</p>
+   117→              </div>
+   118→            </div>
+   119→            <div className="flex items-center gap-2">
+   120→              <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">5 Projects</span>
+   121→              <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">3 Config Domains</span>
+   122→              <span className="rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">14 Wizard Steps</span>
+   123→            </div>
+   124→          </div>
+   125→        </div>
+   126→
+   127→        {/* Header */}
+   128→        <div>
+   129→          <h1 className="text-lg font-bold text-foreground">Engineering Estimation Dashboard</h1>
+   130→          <p className="text-sm text-muted-foreground">
+   131→            Configure the B&R automation system and estimate engineering effort.
+   132→          </p>
+   133→        </div>
+   134→
+   135→        {/* Stat Cards */}
+   136→        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   137→          <StatCard
+   138→            label="Active Projects"
+   139→            value={activeProjects}
+   140→            icon={<FolderKanban className="h-4 w-4" />}
+   141→            accentColor="bg-blue-400"
+   142→          />
+   143→          <StatCard
+   144→            label="Draft Estimates"
+   145→            value={draftEstimates}
+   146→            icon={<FileEdit className="h-4 w-4" />}
+   147→            accentColor="bg-amber-400"
+   148→          />
+   149→          <StatCard
+   150→            label="Completed Estimates"
+   151→            value={completedEstimates}
+   152→            icon={<CheckCircle2 className="h-4 w-4" />}
+   153→            accentColor="bg-emerald-400"
+   154→          />
+   155→          <div>
+   156→            <StatCard
+   157→              label="Avg. Project Complexity"
+   158→              value={avgComplexityLabel}
+   159→              icon={<BarChart3 className="h-4 w-4" />}
+   160→              accentColor="bg-orange-400"
+   161→            />
+   162→            {totalProjects > 0 && (
+   163→              <div className="flex h-1.5 rounded-full overflow-hidden mt-1 mx-4 mb-2">
+   164→                {ALL_LEVELS.map((level) => {
+   165→                  const count = complexityDist[level];
+   166→                  if (count === 0) return null;
+   167→                  return (
+   168→                    <div
+   169→                      key={level}
+   170→                      className={`${COMPLEXITY_COLORS[level]} transition-all duration-300`}
+   171→                      style={{ width: `${(count / totalProjects) * 100}%` }}
+   172→                    />
+   173→                  );
+   174→                })}
+   175→              </div>
+   176→            )}
+   177→          </div>
+   178→        </div>
+   179→
+   180→        {/* Quick Stats Row */}
+   181→        <motion.div
+   182→          initial={{ opacity: 0, y: 8 }}
+   183→          animate={{ opacity: 1, y: 0 }}
+   184→          transition={{ delay: 0.15, duration: 0.3 }}
+   185→        >
+   186→          <SectionCard title="Quick Configuration Overview">
+   187→            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+   188→              {(() => {
+   189→                const totalIO =
+   190→                  config.io.digitalInputs + config.io.digitalOutputs +
+   191→                  config.io.analogInputs + config.io.analogOutputs +
+   192→                  config.io.safetyIO + config.io.encoderCounterModules +
+   193→                  config.io.temperatureModules + config.io.communicationIO +
+   194→                  config.io.specialModules;
+   195→                const estHours = totalIO * 0.5 + config.motion.totalAxes * 6 + config.hmi.screens * 8 + 40;
+   196→                const isAllZero = totalIO === 0 && config.motion.totalAxes === 0 && config.hmi.screens === 0 && config.safety.safetyIOCount === 0 && estHours === 40;
+   197→                const quickStats = [
+   198→                  { icon: Cable, label: 'Total I/O Points', value: String(totalIO), accent: 'border-l-blue-400', iconBg: 'text-blue-400' },
+   199→                  { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes), accent: 'border-l-amber-400', iconBg: 'text-amber-400' },
+   200→                  { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens), accent: 'border-l-cyan-400', iconBg: 'text-cyan-400' },
+   201→                  { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount), accent: 'border-l-emerald-400', iconBg: 'text-emerald-400' },
+   202→                  { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1), accent: 'border-l-primary', iconBg: 'text-primary' },
+   203→                ];
+   204→                return (
+   205→                  <>
+   206→                    {quickStats.map((stat) => (
+   207→                      <div
+   208→                        key={stat.label}
+   209→                        className={`flex items-center gap-3 bg-muted/30 rounded-lg p-3 border-l-2 ${stat.accent}`}
+   210→                      >
+   211→                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
+   212→                          <stat.icon className={`h-3.5 w-3.5 ${stat.iconBg}`} />
+   213→                        </div>
+   214→                        <div className="flex flex-col">
+   215→                          <span className="text-[11px] text-muted-foreground leading-tight">{stat.label}</span>
+   216→                          <span className={`text-sm font-bold leading-tight ${isAllZero ? 'text-muted-foreground' : 'text-foreground'}`}>
+   217→                            {isAllZero ? '—' : stat.value}
+   218→                          </span>
+   219→                        </div>
+   220→                      </div>
+   221→                    ))}
+   222→                    {isAllZero && (
+   223→                      <p className="w-full text-[11px] text-muted-foreground/70 text-center pt-1">Load a configuration to see live stats</p>
+   224→                    )}
+   225→                  </>
+   226→                );
+   227→              })()}
+   228→            </div>
+   229→          </SectionCard>
+   230→        </motion.div>
+   231→
+   232→        {/* Cost Estimator */}
+   233→        <motion.div
+   234→          initial={{ opacity: 0, y: 8 }}
+   235→          animate={{ opacity: 1, y: 0 }}
+   236→          transition={{ delay: 0.2, duration: 0.3 }}
+   237→        >
+   238→          <SectionCard title="Cost Estimator">
+   239→            {(() => {
+   240→              const hwHours = (config.io.digitalInputs + config.io.digitalOutputs + config.io.analogInputs + config.io.analogOutputs) * 0.5 + config.motion.totalAxes * 4;
+   241→              const swHours = config.hmi.screens * 8 + (config.vision.enabled ? config.vision.cameras * 16 : 0) + 40;
+   242→              const msHours = config.motion.totalAxes * 6 + (config.motion.electronicCamming ? 20 : 0) + (config.motion.coordinatedMotion ? 16 : 0) + (config.safety.enabled ? config.safety.safetyIOCount * 2 + 16 : 0);
+   243→              const intHours = (hwHours + swHours + msHours) * 0.3;
+   244→              const totalHours = hwHours + swHours + msHours + intHours;
+   245→              const subtotal = totalHours * hourlyRate;
+   246→              const contingencyAmount = subtotal * (contingency / 100);
+   247→              const grandTotal = subtotal + contingencyAmount;
+   248→
+   249→              const fmt = (val: number) => val.toLocaleString('de-AT', { style: 'currency', currency: 'EUR' });
+   250→
+   251→              const costCards = [
+   252→                { label: 'Hardware Engineering', hours: hwHours, color: 'border-l-blue-400' },
+   253→                { label: 'Software Development', hours: swHours, color: 'border-l-violet-400' },
+   254→                { label: 'Motion & Safety', hours: msHours, color: 'border-l-orange-400' },
+   255→                { label: 'Integration & Testing', hours: intHours, color: 'border-l-emerald-400' },
+   256→              ];
+   257→
+   258→              return (
+   259→                <div className="space-y-4">
+   260→                  <div className="flex flex-wrap items-center gap-3">
+   261→                    <div className="flex items-center gap-2">
+   262→                      <label className="text-xs text-muted-foreground whitespace-nowrap">Hourly Rate (€)</label>
+   263→                      <input
+   264→                        type="number"
+   265→                        value={hourlyRate}
+   266→                        onChange={(e) => setHourlyRate(Number(e.target.value) || 0)}
+   267→                        className="h-8 text-sm rounded-md border border-border bg-transparent px-2 w-24"
+   268→                      />
+   269→                    </div>
+   270→                    <div className="flex items-center gap-2">
+   271→                      <label className="text-xs text-muted-foreground whitespace-nowrap">Contingency %</label>
+   272→                      <input
+   273→                        type="number"
+   274→                        value={contingency}
+   275→                        min={0}
+   276→                        max={50}
+   277→                        onChange={(e) => setContingency(Math.min(50, Math.max(0, Number(e.target.value) || 0)))}
+   278→                        className="h-8 text-sm rounded-md border border-border bg-transparent px-2 w-20"
+   279→                      />
+   280→                    </div>
+   281→                  </div>
+   282→                  <div className="grid grid-cols-2 gap-3">
+   283→                    {costCards.map((card) => (
+   284→                      <div
+   285→                        key={card.label}
+   286→                        className={`rounded-lg border border-border border-l-2 ${card.color} bg-card p-3`}
+   287→                      >
+   288→                        <div className="text-xs text-muted-foreground">{card.label}</div>
+   289→                        <div className="text-sm font-semibold text-foreground mt-1">{card.hours.toFixed(1)} hours</div>
+   290→                        <div className="text-sm font-bold text-foreground mt-0.5">{fmt(card.hours * hourlyRate)}</div>
+   291→                      </div>
+   292→                    ))}
+   293→                  </div>
+   294→                  <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+   295→                    <div className="flex items-center justify-between text-xs">
+   296→                      <span className="text-muted-foreground">Total Hours</span>
+   297→                      <span className="font-semibold text-foreground">{totalHours.toFixed(1)} h</span>
+   298→                    </div>
+   299→                    <div className="flex items-center justify-between text-xs">
+   300→                      <span className="text-muted-foreground">Subtotal</span>
+   301→                      <span className="font-semibold text-foreground">{fmt(subtotal)}</span>
+   302→                    </div>
+   303→                    <div className="flex items-center justify-between text-xs">
+   304→                      <span className="text-muted-foreground">Contingency ({contingency}%)</span>
+   305→                      <span className="font-semibold text-foreground">{fmt(contingencyAmount)}</span>
+   306→                    </div>
+   307→                    <div className="flex items-center justify-between border-t border-border pt-1.5">
+   308→                      <span className="text-sm font-semibold text-foreground">Grand Total</span>
+   309→                      <span className="text-lg font-bold text-primary">{fmt(grandTotal)}</span>
+   310→                    </div>
+   311→                  </div>
+   312→                </div>
+   313→              );
+   314→            })()}
+   315→          </SectionCard>
+   316→        </motion.div>
+   317→
+   318→        {/* Quick Actions & Complexity Distribution */}
+   319→        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   320→          {/* Quick Actions */}
+   321→          <SectionCard title="Quick Actions" description="Get started with your engineering estimate">
+   322→            <div className="flex flex-col gap-3 sm:flex-row">
+   323→              <Button
+   324→                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+   325→                onClick={() => setCurrentPage('new-estimate')}
+   326→              >
+   327→                <PlusCircle className="h-4 w-4 mr-2" />
+   328→                New Estimate
+   329→              </Button>
+   330→              <Button
+   331→                variant="outline"
+   332→                className="flex-1 border-border"
+   333→                onClick={() => loadSampleConfig()}
+   334→              >
+   335→                <Download className="h-4 w-4 mr-2" />
+   336→                Load Sample Data
+   337→              </Button>
+   338→            </div>
+   339→          </SectionCard>
+   340→
+   341→          {/* Complexity Distribution */}
+   342→          <SectionCard title="Complexity Distribution" description="Projects by complexity level">
+   343→            <div className="space-y-3">
+   344→              {/* Stacked bar */}
+   345→              <div className="flex h-8 rounded-md overflow-hidden">
+   346→                {totalProjects === 0 ? (
+   347→                  <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground bg-muted">
+   348→                    No projects yet
+   349→                  </div>
+   350→                ) : (
+   351→                  ALL_LEVELS.map((level) => {
+   352→                    const count = complexityDist[level];
+   353→                    if (count === 0) return null;
+   354→                    return (
+   355→                      <div
+   356→                        key={level}
+   357→                        className={`${COMPLEXITY_COLORS[level]} flex items-center justify-center text-white text-xs font-semibold transition-all duration-300`}
+   358→                        style={{ width: `${(count / totalProjects) * 100}%`, minWidth: count > 0 ? '2rem' : 0 }}
+   359→                        title={`${level}: ${count} project${count !== 1 ? 's' : ''}`}
+   360→                      >
+   361→                        {count}
+   362→                      </div>
+   363→                    );
+   364→                  })
+   365→                )}
+   366→              </div>
+   367→              {/* Legend */}
+   368→              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+   369→                {ALL_LEVELS.map((level) => (
+   370→                  <div key={level} className="flex items-center gap-1.5">
+   371→                    <span className={`h-2.5 w-2.5 rounded-sm ${COMPLEXITY_COLORS[level]}`} />
+   372→                    <span className={`text-xs font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}> 
+   373→                      {level}{complexityDist[level] > 0 ? ` (${complexityDist[level]})` : ''}
+   374→                    </span>
+   375→                  </div>
+   376→                ))}
+   377→              </div>
+   378→            </div>
+   379→          </SectionCard>
+   380→        </div>
+   381→
+   382→        {/* Project Templates */}
+   383→        <SectionCard title="Project Templates" description="Start from a pre-configured template">
+   384→          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   385→            <div
+   386→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   387→              onClick={() => {
+   388→                resetConfig();
+   389→                loadSampleConfig();
+   390→                setCurrentPage('new-estimate');
+   391→              }}
+   392→            >
+   393→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   394→                <Package className="h-5 w-5 text-primary" />
+   395→              </div>
+   396→              <span className="text-sm font-semibold text-foreground">Packaging Line</span>
+   397→              <span className="text-[11px] text-muted-foreground">Automated packaging with multi-station layout</span>
+   398→              <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
+   399→            </div>
+   400→            <div
+   401→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   402→              onClick={() => {
+   403→                resetConfig();
+   404→                updateProjectInfo({ name: 'Assembly Cell', machineType: 'Assembly' });
+   405→                updateMotion({ totalAxes: 12 });
+   406→                updateRobotics({ enabled: true });
+   407→                updateVision({ enabled: true });
+   408→                setCurrentPage('new-estimate');
+   409→              }}
+   410→            >
+   411→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   412→                <Wrench className="h-5 w-5 text-primary" />
+   413→              </div>
+   414→              <span className="text-sm font-semibold text-foreground">Assembly Cell</span>
+   415→              <span className="text-[11px] text-muted-foreground">Robot-assisted assembly with vision</span>
+   416→              <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
+   417→            </div>
+   418→            <div
+   419→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   420→              onClick={() => {
+   421→                resetConfig();
+   422→                updateProjectInfo({ name: 'Inspection System', machineType: 'Inspection' });
+   423→                updateVision({ enabled: true, cameras: 4 });
+   424→                updateHMI({ screens: 3 });
+   425→                setCurrentPage('new-estimate');
+   426→              }}
+   427→            >
+   428→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   429→                <ScanSearch className="h-5 w-5 text-primary" />
+   430→              </div>
+   431→              <span className="text-sm font-semibold text-foreground">Inspection System</span>
+   432→              <span className="text-[11px] text-muted-foreground">Quality inspection with camera systems</span>
+   433→              <Button variant="outline" size="sm" className="text-xs mt-auto w-fit">Quick Start</Button>
+   434→            </div>
+   435→          </div>
+   436→        </SectionCard>
+   437→
+   438→        {/* Recent Projects Table */}
+   439→        <SectionCard title="Recent Projects" description="All B&R automation estimation projects">
+   440→          <div className="overflow-x-auto -mx-4 px-4">
+   441→            <Table>
+   442→              <TableHeader>
+   443→                <TableRow className="border-border hover:bg-transparent">
+   444→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Project</TableHead>
+   445→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Customer</TableHead>
+   446→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Machine Type</TableHead>
+   447→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">B&R Configuration</TableHead>
+   448→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Complexity</TableHead>
+   449→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Status</TableHead>
+   450→                  <TableHead className="text-xs font-semibold text-muted-foreground h-9">Last Updated</TableHead>
+   451→                </TableRow>
+   452→              </TableHeader>
+   453→              <TableBody>
+   454→                {projects.map((p) => (
+   455→                  <TableRow
+   456→                    key={p.id}
+   457→                    className={`border-border cursor-pointer transition-colors duration-150 hover:bg-primary/[0.03] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
+   458→                    onClick={() => setCurrentPage('projects')}
+   459→                  >
+   460→                    <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
+   461→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
+   462→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
+   463→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.industry || p.machineType}</TableCell>
+   464→                    <TableCell className="py-2.5">
+   465→                      <ComplexityBadge level={p.complexity} />
+   466→                    </TableCell>
+   467→                    <TableCell className="py-2.5">
+   468→                      <StatusBadge status={p.status} />
+   469→                    </TableCell>
+   470→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
+   471→                  </TableRow>
+   472→                ))}
+   473→              </TableBody>
+   474→            </Table>
+   475→          </div>
+   476→        </SectionCard>
+   477→
+   478→        {/* Recent Activity */}
+   479→        <SectionCard title="Recent Activity" description="Latest actions and events">
+   480→          <div>
+   481→            {recentActivity.map((item, idx) => (
+   482→              <motion.div
+   483→                key={idx}
+   484→                initial={{ opacity: 0, x: -4 }}
+   485→                animate={{ opacity: 1, x: 0 }}
+   486→                transition={{ delay: idx * 0.05, duration: 0.3 }}
+   487→                className={`flex items-start gap-2.5 py-1.5 border-l-2 pl-3 ${ACTIVITY_BORDER_COLORS[item.type] || 'border-l-gray-400'} ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
+   488→              >
+   489→                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgLight} ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgDark}`}>
+   490→                  {(() => {
+   491→                    const avatarCfg = ACTIVITY_AVATAR_CONFIG[item.type];
+   492→                    const AvatarIcon = avatarCfg?.icon;
+   493→                    return AvatarIcon ? <AvatarIcon className={`h-3 w-3 ${avatarCfg.iconColor}`} /> : null;
+   494→                  })()}
+   495→                </div>
+   496→                <div className="flex-1 min-w-0">
+   497→                  <div className="text-xs font-medium text-foreground">{item.action}</div>
+   498→                  <div className="text-[11px] text-muted-foreground truncate">{item.detail}</div>
+   499→                </div>
+   500→                <span className="text-[11px] font-medium text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
+   501→              </motion.div>
+   502→            ))}
+   503→            <div className="group pt-2">
+   504→              <button className="flex items-center gap-0.5 text-primary text-[11px] font-medium group-hover:underline">
+   505→                View All
+   506→                <ChevronRight className="h-3 w-3" />
+   507→              </button>
+   508→            </div>
+   509→          </div>
+   510→        </SectionCard>
+   511→
+   512→        {/* Prototype Information */}
+   513→        <SectionCard title={<span className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-primary animate-pulse" />Prototype Information</span>}>
+   514→          <div className="flex items-start gap-3">
+   515→            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+   516→              <Info className="h-4 w-4" />
+   517→            </div>
+   518→            <div className="text-xs text-muted-foreground leading-relaxed space-y-1">
+   519→              <p>
+   520→                <strong className="text-foreground">Current version:</strong> Technical configuration prototype (frontend only)
+   521→              </p>
+   522→              <p>
+   523→                <strong className="text-foreground">Effort estimation engine</strong> — planned for future integration with validated company data.
+   524→              </p>
+   525→              <p>
+   526→                This tool demonstrates how an engineer enters technical requirements of a B&R industrial automation project to assess engineering complexity and prepare for effort estimation.
+   527→              </p>
+   528→            </div>
+   529→          </div>
+   530→        </SectionCard>
+   531→      </motion.div>
+   532→    </div>
+   533→  );
+   534→}
+   535→

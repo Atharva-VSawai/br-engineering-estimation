@@ -380,10 +380,151 @@ export function ComparePage() {
                 </table>
               </div>
             </SectionCard>
+
+            {/* Complexity Radar */}
+            {selectedProjects.length >= 2 && <ComplexityRadar projects={selectedProjects} />}
           </motion.div>
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+const DIMENSIONS = ['hardware','motion','hmi','vision','safety','communication','software','integration','requirement','testing'] as const;
+
+const COMPLEXITY_VALUE: Record<ComplexityLevel, number> = {
+  Low: 1,
+  Medium: 2,
+  High: 3,
+  'Very High': 4,
+};
+
+const PROJECT_COLORS = [
+  { fill: 'rgba(249,115,22,0.2)', stroke: 'rgba(249,115,22,0.8)' },
+  { fill: 'rgba(6,182,212,0.2)', stroke: 'rgba(6,182,212,0.8)' },
+  { fill: 'rgba(168,85,247,0.2)', stroke: 'rgba(168,85,247,0.8)' },
+];
+
+const CX = 150;
+const CY = 150;
+const MAX_R = 110;
+
+function vertex(i: number, n: number, r: number) {
+  const angle = (2 * Math.PI * i) / n - Math.PI / 2;
+  return { x: CX + r * Math.cos(angle), y: CY + r * Math.sin(angle) };
+}
+
+function polygonPoints(r: number, n: number) {
+  return Array.from({ length: n }, (_, i) => {
+    const v = vertex(i, n, r);
+    return `${v.x},${v.y}`;
+  }).join(' ');
+}
+
+function ComplexityRadar({ projects }: { projects: Project[] }) {
+  const N = DIMENSIONS.length;
+
+  const projectPolygons = useMemo(() => {
+    return projects.map((p) => {
+      const assessment = p.config?.complexity;
+      return DIMENSIONS.map((dim, i) => {
+        const level: ComplexityLevel = assessment?.[dim] ?? 'Medium';
+        const val = COMPLEXITY_VALUE[level];
+        const r = (val / 4) * MAX_R;
+        const v = vertex(i, N, r);
+        return `${v.x},${v.y}`;
+      }).join(' ');
+    });
+  }, [projects]);
+
+  const ringPoints = useMemo(() => {
+    return [0.25, 0.5, 0.75, 1].map((pct) => polygonPoints(MAX_R * pct, N));
+  }, []);
+
+  const labelPositions = useMemo(() => {
+    return DIMENSIONS.map((dim, i) => {
+      const v = vertex(i, N, MAX_R + 14);
+      return { dim, x: v.x, y: v.y };
+    });
+  }, []);
+
+  const axisLines = useMemo(() => {
+    return Array.from({ length: N }, (_, i) => {
+      const v = vertex(i, N, MAX_R);
+      return `${CX},${CY} ${v.x},${v.y}`;
+    });
+  }, []);
+
+  return (
+    <SectionCard title="Complexity Radar" description="Multi-dimensional complexity comparison across engineering disciplines">
+      <div className="flex flex-col items-center gap-4">
+        <svg viewBox="0 0 300 300" className="w-full max-w-[300px]">
+          {/* Concentric rings */}
+          {ringPoints.map((pts, idx) => (
+            <polygon
+              key={`ring-${idx}`}
+              points={pts}
+              fill="none"
+              stroke="currentColor"
+              className="text-muted-foreground/40"
+              strokeWidth={1}
+            />
+          ))}
+          {/* Axis lines */}
+          {axisLines.map((line, idx) => (
+            <line
+              key={`axis-${idx}`}
+              x1={Number(line.split(' ')[0].split(',')[0])}
+              y1={Number(line.split(' ')[0].split(',')[1])}
+              x2={Number(line.split(' ')[1].split(',')[0])}
+              y2={Number(line.split(' ')[1].split(',')[1])}
+              stroke="currentColor"
+              className="text-muted-foreground/40"
+              strokeWidth={1}
+            />
+          ))}
+          {/* Project polygons */}
+          {projectPolygons.map((pts, idx) => (
+            <polygon
+              key={`project-${idx}`}
+              points={pts}
+              fill={PROJECT_COLORS[idx % PROJECT_COLORS.length].fill}
+              stroke={PROJECT_COLORS[idx % PROJECT_COLORS.length].stroke}
+              strokeWidth={2}
+            />
+          ))}
+          {/* Labels */}
+          {labelPositions.map(({ dim, x, y }) => (
+            <text
+              key={dim}
+              x={x}
+              y={y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={9}
+              className="fill-muted-foreground"
+            >
+              {dim.charAt(0).toUpperCase() + dim.slice(1)}
+            </text>
+          ))}
+        </svg>
+        {/* Legend */}
+        <div className="flex flex-wrap justify-center gap-4">
+          {projects.map((p, idx) => {
+            const c = PROJECT_COLORS[idx % PROJECT_COLORS.length];
+            return (
+              <div key={p.id} className="flex items-center gap-1.5">
+                <div
+                  className="h-3 w-3 rounded-full shrink-0"
+                  style={{ backgroundColor: c.stroke }}
+                />
+                <span className="text-xs text-muted-foreground font-medium">{p.name}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </SectionCard>
   );
 }
 
