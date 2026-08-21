@@ -65,7 +65,7 @@ export function TechnicalParamsPage() {
               transition={{ delay: index * 0.05, duration: 0.25 }}
               className="flex items-center gap-3"
             >
-              <div className="w-28 shrink-0 text-xs text-muted-foreground text-right">{row.label}</div>
+              <div className="w-28 shrink-0 text-sm text-muted-foreground text-right">{row.label}</div>
               <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden">
                 <motion.div
                   className={`relative h-full rounded-sm ${row.value > 0 ? row.colorClass : 'bg-muted'}`}
@@ -74,11 +74,11 @@ export function TechnicalParamsPage() {
                   transition={{ delay: index * 0.05 + 0.1, duration: 0.4, ease: 'easeOut' }}
                 >
                   {row.value > 0 && (row.value / maxValue) > 0.15 && (
-                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-white/90">{row.value}</span>
+                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-sm font-bold text-white/90">{row.value}</span>
                   )}
                 </motion.div>
               </div>
-              <div className={`w-8 text-xs font-medium text-right ${row.value > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>{row.value}</div>
+              <div className={`w-8 text-sm font-medium text-right ${row.value > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>{row.value}</div>
             </motion.div>
           ))}
         </div>
@@ -86,30 +86,30 @@ export function TechnicalParamsPage() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-md border border-border bg-card p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Controller</div>
+          <div className="text-sm text-muted-foreground uppercase tracking-wide">Controller</div>
           <div className="text-sm font-bold text-foreground mt-1">{c.controller.family}</div>
-          <div className="text-[11px] text-muted-foreground">{c.controller.performance} · {c.controller.quantity}x</div>
+          <div className="text-sm text-muted-foreground">{c.controller.performance} · {c.controller.quantity}x</div>
         </div>
         <div className="rounded-md border border-border bg-card p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Total I/O</div>
+          <div className="text-sm text-muted-foreground uppercase tracking-wide">Total I/O</div>
           <div className="text-sm font-bold text-foreground mt-1">{totalIO}</div>
-          <div className="text-[11px] text-muted-foreground">DI:{c.io.digitalInputs} DO:{c.io.digitalOutputs} AI:{c.io.analogInputs}</div>
+          <div className="text-sm text-muted-foreground">DI:{c.io.digitalInputs} DO:{c.io.digitalOutputs} AI:{c.io.analogInputs}</div>
         </div>
         <div className="rounded-md border border-border bg-card p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Motion Axes</div>
+          <div className="text-sm text-muted-foreground uppercase tracking-wide">Motion Axes</div>
           <div className="text-sm font-bold text-foreground mt-1">{c.motion.totalAxes}</div>
-          <div className="text-[11px] text-muted-foreground">Linear:{c.motion.linearAxes} Rotary:{c.motion.rotaryAxes}</div>
+          <div className="text-sm text-muted-foreground">Linear:{c.motion.linearAxes} Rotary:{c.motion.rotaryAxes}</div>
         </div>
         <div className="rounded-md border border-border bg-card p-3">
-          <div className="text-[10px] text-muted-foreground uppercase tracking-wide">HMI</div>
+          <div className="text-sm text-muted-foreground uppercase tracking-wide">HMI</div>
           <div className="text-sm font-bold text-foreground mt-1">{c.hmi.type}</div>
-          <div className="text-[11px] text-muted-foreground">{c.hmi.screens} screens · {c.hmi.screenComplexity}</div>
+          <div className="text-sm text-muted-foreground">{c.hmi.screens} screens · {c.hmi.screenComplexity}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="System Components">
-          <div className="space-y-1.5 text-xs">
+          <div className="space-y-1.5 text-sm">
             {systemComponents.map((comp) => (
               <div key={comp.label} className="flex justify-between">
                 <span className="text-muted-foreground">{comp.label}</span>
@@ -125,26 +125,26 @@ export function TechnicalParamsPage() {
         <SectionCard title="Communication & Features">
           <div className="space-y-3">
             <div>
-              <div className="text-xs font-medium text-foreground mb-1">Protocols</div>
+              <div className="text-sm font-medium text-foreground mb-1">Protocols</div>
               <div className="flex flex-wrap gap-1.5">
                 {activeProtocols.length > 0 ? activeProtocols.map((p) => (
-                  <span key={p.name} className="inline-flex items-center rounded-md border border-border border-l-2 border-l-primary/40 bg-card px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  <span key={p.name} className="inline-flex items-center rounded-md border border-border border-l-2 border-l-primary/40 bg-card px-2 py-0.5 text-sm font-medium text-foreground">
                     {p.name} ({p.devices})
                   </span>
                 )) : (
-                  <span className="text-xs text-muted-foreground">None configured</span>
+                  <span className="text-sm text-muted-foreground">None configured</span>
                 )}
               </div>
             </div>
             <div>
-              <div className="text-xs font-medium text-foreground mb-1">Additional Features</div>
+              <div className="text-sm font-medium text-foreground mb-1">Additional Features</div>
               <div className="flex flex-wrap gap-1.5">
                 {enabledFeatures.length > 0 ? enabledFeatures.map((f) => (
-                  <span key={f.name} className="inline-flex items-center rounded-md border border-border border-l-2 border-l-emerald-400/40 bg-card px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  <span key={f.name} className="inline-flex items-center rounded-md border border-border border-l-2 border-l-emerald-400/40 bg-card px-2 py-0.5 text-sm font-medium text-foreground">
                     {f.name}
                   </span>
                 )) : (
-                  <span className="text-xs text-muted-foreground">None configured</span>
+                  <span className="text-sm text-muted-foreground">None configured</span>
                 )}
               </div>
             </div>

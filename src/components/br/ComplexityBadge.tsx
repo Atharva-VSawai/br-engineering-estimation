@@ -18,7 +18,7 @@ interface ComplexityBadgeProps {
 export function ComplexityBadge({ level, className = '' }: ComplexityBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${STYLES[level]} ${className}`}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${STYLES[level]} ${className}`}
     >
       {level}
     </span>
@@ -39,7 +39,7 @@ const STATUS_STYLES: Record<string, string> = {
 export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${STATUS_STYLES[status] || 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'} ${className}`}
+      className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${STATUS_STYLES[status] || 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'} ${className}`}
     >
       {status}
     </span>

@@ -30,13 +30,13 @@ export function StepComplexity() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8">
           {categories.map(({ key, label }) => (
             <div key={key} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-              <span className="text-xs font-medium text-foreground">{label}</span>
+              <span className="text-sm font-medium text-foreground">{label}</span>
               <div className="flex gap-1">
                 {COMPLEXITY_LEVELS.map((level) => (
                   <button
                     key={level}
                     onClick={() => updateComplexity({ [key]: level })}
-                    className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    className={`rounded border px-2 py-0.5 text-sm font-medium transition-colors ${
                       c[key] === level
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -55,13 +55,13 @@ export function StepComplexity() {
         <SectionCard title="Project Context">
           <div className="space-y-3">
             <div>
-              <div className="text-xs font-medium text-foreground mb-1.5">Requirement Clarity</div>
+              <div className="text-sm font-medium text-foreground mb-1.5">Requirement Clarity</div>
               <div className="flex gap-1.5">
                 {(['Clear', 'Mostly Clear', 'Partially Clear', 'Unclear'] as const).map((level) => (
                   <button
                     key={level}
                     onClick={() => updateComplexity({ requirementClarity: level })}
-                    className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    className={`rounded border px-2 py-0.5 text-sm font-medium transition-colors ${
                       c.requirementClarity === level
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -74,13 +74,13 @@ export function StepComplexity() {
             </div>
 
             <div>
-              <div className="text-xs font-medium text-foreground mb-1.5">Customer Change Frequency</div>
+              <div className="text-sm font-medium text-foreground mb-1.5">Customer Change Frequency</div>
               <div className="flex gap-1.5">
                 {(['Low', 'Medium', 'High'] as const).map((level) => (
                   <button
                     key={level}
                     onClick={() => updateComplexity({ customerChangeFrequency: level })}
-                    className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    className={`rounded border px-2 py-0.5 text-sm font-medium transition-colors ${
                       c.customerChangeFrequency === level
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -93,13 +93,13 @@ export function StepComplexity() {
             </div>
 
             <div>
-              <div className="text-xs font-medium text-foreground mb-1.5">Reuse Level</div>
+              <div className="text-sm font-medium text-foreground mb-1.5">Reuse Level</div>
               <div className="flex gap-1.5">
                 {(['High', 'Medium', 'Low'] as const).map((level) => (
                   <button
                     key={level}
                     onClick={() => updateComplexity({ reuseLevel: level })}
-                    className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors ${
+                    className={`rounded border px-2 py-0.5 text-sm font-medium transition-colors ${
                       c.reuseLevel === level
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -116,11 +116,11 @@ export function StepComplexity() {
         <SectionCard title="Scope Metrics">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-foreground">Product Variants</span>
+              <span className="text-sm font-medium text-foreground">Product Variants</span>
               <span className="text-sm font-bold text-foreground">{c.productVariants}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-foreground">Machine Stations</span>
+              <span className="text-sm font-medium text-foreground">Machine Stations</span>
               <span className="text-sm font-bold text-foreground">{c.machineStations}</span>
             </div>
           </div>

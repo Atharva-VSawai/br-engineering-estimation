@@ -1680,3 +1680,103 @@ Unresolved Issues / Risks / Next Phase Recommendations:
 - **Priority 4**: Mobile responsive improvements
 - **Priority 4**: HMI screen preview reflecting configuration
 - **Priority 4**: WebSocket real-time collaboration
+
+---
+Task ID: 2
+Agent: Font Size Overhaul Agent
+Task: Increase all font sizes across the application
+
+Work Log:
+- Read worklog.md to understand project context
+- Modified AppLayout.tsx: footer h-8→h-9, text-[10px]→text-xs, kbd text-[9px]→text-[11px], kbd h-4→h-5
+- Modified AppSidebar.tsx: w-56→w-60, logo text-sm→text-base, subtitle text-[9px]→text-[11px], nav items text-[13px]→text-sm, wizard step badge text-[9px]→text-[11px], tooltip text-xs→text-sm, config name text-[11px]→text-xs, footer text-[10px]→text-xs
+- Modified AppHeader.tsx: breadcrumb text-xs→text-sm, progress text-[9px]→text-[11px], badge text-xs→text-sm, buttons h-8→h-9 text-xs→text-sm, kbd text-[10px]→text-xs h-5→h-6
+- Modified StatCard.tsx: label text-xs→text-sm, value text-2xl→text-3xl, sublabel text-xs→text-sm
+- Modified SectionCard.tsx: title text-sm→text-base, description text-xs→text-sm
+- Modified ParamRow.tsx: label text-xs→text-sm, description text-[11px]→text-xs, unit text-xs→text-sm, inputs h-8→h-9, checkbox label text-xs→text-sm, toggle/checkbox description text-[11px]→text-xs
+- Modified ProgressStepper.tsx: progress text text-xs→text-sm, step buttons text-[11px]→text-xs, step numbers text-[10px]→text-xs h-4→h-5, tooltip text-[10px]→text-xs, step labels text-[9px]→text-[11px]
+- Modified NotificationCenter.tsx: title text-sm→text-base, mark-all-read text-[11px]→text-xs, action text-xs→text-sm, detail text-[11px]→text-xs, time text-[10px]→text-xs, empty text-xs→text-sm
+- Modified ComplexityBadge.tsx: text-[11px]→text-xs (both ComplexityBadge and StatusBadge)
+- Modified KeyboardShortcutsDialog.tsx: kbd text-[11px]→text-xs, category title text-xs→text-sm, description text-xs→text-sm, plus sign text-[10px]→text-xs, footer text-[10px]→text-xs
+- Modified DashboardPage.tsx: welcome text-sm→text-base, description text-xs→text-sm, badges text-[10px]→text-sm, stat labels text-[11px]→text-sm, cost labels text-xs→text-sm, input h-8→h-9, table headers text-xs→text-sm, table cells text-xs→text-sm, activity feed text-xs→text-sm, buttons text-xs→text-sm
+- Modified NewEstimatePage.tsx: text-[10px]→text-xs, text-[11px]→text-xs, buttons h-8→h-9 text-xs→text-sm, footer hints text-xs→text-sm
+- Modified ProjectsPage.tsx: table headers text-xs→text-sm, cells text-xs→text-sm, buttons h-8→h-9 text-xs→text-sm, filters text-xs→text-sm
+- Modified EstimateSummaryPage.tsx: all text-xs→text-sm, buttons h-8→h-9 text-xs→text-sm, complexity badges text-xs→text-sm
+- Modified ComparePage.tsx: all text-xs→text-sm, select h-8→h-9 text-xs→text-sm, table text-xs→text-sm
+- Modified EngineeringActivitiesPage.tsx: table headers text-xs→text-sm, cells text-xs→text-sm, stat labels text-xs→text-sm, badges text-xs→text-sm
+- Modified ComplexityPage.tsx: legend text-xs→text-sm, dimension labels text-xs→text-sm, stat cards text-xs→text-sm, table cells text-xs→text-sm, category text-xs→text-sm
+- Modified ArchitecturePage.tsx: node badges text-xs→text-sm, node labels text-xs→text-sm, descriptions text-xs→text-sm
+- Modified TechnicalParamsPage.tsx: param labels text-xs→text-sm, detail text text-xs→text-sm, bar labels text-xs→text-sm, badges text-xs→text-sm
+- Modified ProductExplorerPage.tsx: count text-xs→text-sm, filters text-xs→text-sm, product info text-xs→text-sm, buttons h-7→h-8 text-xs→text-sm
+- Modified SettingsPage.tsx: all text-xs→text-sm, kbd text-xs→text-sm, shortcut items text-xs→text-sm, list items text-xs→text-sm
+- Modified all 14 wizard step files: bulk text-[9px]→text-[11px], text-[10px]→text-xs, text-[11px]→text-xs, text-[12px]→text-sm, text-[13px]→text-sm, then text-xs→text-sm for all labels, headers, cells, badges, buttons, descriptions, notes
+- Fixed sed mangled B&R Configuration table header in DashboardPage.tsx
+- Cleaned up all .bak files
+- Ran lint successfully with no errors
+
+Stage Summary:
+- Systematically increased ALL font sizes across 36 files (10 components, 11 pages, 14 wizard steps, 1 layout)
+- Key improvements: labels 10-11px → 12-14px, values 12-14px → 14-16px, stat values 24px → 30px, section titles 14px → 16px
+- Increased input/select heights from h-8 to h-9, button heights from h-8 to h-9 (text buttons only)
+- Widened sidebar from w-56 to w-60
+- Lint passes cleanly with zero errors---
+Task ID: 3-a
+Agent: Draggable Interfaces Agent
+Task: Add drag-and-drop to dashboard, wizard, engineering activities, projects
+
+Work Log:
+- Added `stepOrder: number[] | null` and `setStepOrder` to zustand store for wizard step reordering
+- Added `reorderProjects(fromIndex, toIndex)` action to zustand store for project row reordering
+- Modified DashboardPage.tsx: Added DndContext + SortableContext with rectSortingStrategy around stat cards grid (Active Projects, Draft Estimates, Completed Estimates, Avg Project Complexity)
+- Created SortableStatCardWrapper component with GripVertical drag handle (opacity-0 group-hover:opacity-100), cursor-grab/grabbing, and motion.div layout animation
+- Added DragOverlay with scale-105 shadow-xl for dashboard stat cards
+- Dashboard stat card order persisted in localStorage key 'br-dashboard-order'
+- Modified ProgressStepper.tsx: Added DndContext + SortableContext with horizontalListSortingStrategy for wizard step reordering
+- Created SortableStepItem component with GripVertical handle visible on group/step hover
+- Progress bar and step labels now respect the reordered display position
+- Modified NewEstimatePage.tsx: Back/Next buttons and arrow key navigation now respect stepOrder for sequential navigation
+- Step counter text shows display position (currentDisplayPos + 1) instead of raw wizardStep
+- Modified EngineeringActivitiesPage.tsx: Added DndContext + SortableContext with rectSortingStrategy for effort allocation legend items
+- Created SortableEffortItem component with GripVertical handle, motion.div layout
+- Effort allocation order persisted in localStorage key 'br-activities-order'
+- Stacked bar and legend grid both follow the user-reordered sequence
+- Modified ProjectsPage.tsx: Added DndContext + SortableContext with verticalListSortingStrategy for project table rows
+- Created SortableProjectRow component (motion.tr) with GripVertical drag handle in first column, group/row hover visibility
+- Added empty TableHead for drag handle column
+- On drag end, reorders projects array in zustand store via reorderProjects action
+- All drag sensors use PointerSensor with activationConstraint distance: 5 to avoid accidental drags
+- ESLint passes cleanly, dev server returns HTTP 200
+
+Stage Summary:
+- 4 drag-and-drop interfaces implemented across the application using @dnd-kit/core + @dnd-kit/sortable
+- Dashboard stat cards: reorderable grid with localStorage persistence
+- Wizard steps: horizontally reorderable stepper stored in zustand (stepOrder), navigation respects new order
+- Engineering activities: effort allocation items reorderable with localStorage persistence  
+- Projects table: vertically reorderable rows with zustand store sync
+- All draggable items show GripVertical handle on hover (opacity-0 group-hover:opacity-100) with cursor-grab/grabbing
+- DragOverlays provide visual feedback with scale and shadow effects
+- framer-motion AnimatePresence + layout used for smooth reordering animations
+
+---
+Task ID: 3-b
+Agent: Styling Polish Agent
+Task: Detailed styling improvements across the app
+
+Work Log:
+- **globals.css**: Added smooth scroll-behavior, explicit 16px base font-size, heading text-shadow (0 0 0.5px currentColor) for crisper rendering, interactive element transitions (button, a, [role=button] 0.15s ease), enhanced selection styles with moz-selection fallback, global focus-visible ring using primary color with opacity
+- **AppLayout.tsx**: Changed main padding from p-6 to p-6 lg:p-8 for more breathing room on large screens; made footer top border more visible (border-border instead of border-border/60)
+- **AppSidebar.tsx**: Added inset shadow on right edge for depth; changed brand stripe to gradient (from-primary via-primary/80 to-primary/60); added shadow glow on active nav item (shadow-[0_0_12px_oklch(0.55_0.2_35/0.15)]); added sticky bottom fade gradient overlay on nav area
+- **DashboardPage.tsx**: Added mesh/grid pattern overlay on welcome banner (repeating-linear-gradient at 45°/-45°); added bottom gradient shadow below banner; added tabular-nums to stat card values, quick stat values, cost estimator amounts; added colored rounded-full dot indicators on activity feed avatar circles (ring-2 ring-card for clean edge)
+- **StatCard.tsx**: Added tabular-nums class to value display
+- **SectionCard.tsx**: Added hover:border-primary/20 for border glow; added group class; gradient line below header now animates width on hover (w-1/2 → group-hover:w-full with transition)
+- **ProjectsPage.tsx**: Added alternating row backgrounds (bg-muted/20 on odd rows); added border-r border-border/40 separator on drag handle column; added idx parameter to map for row index
+- **NewEstimatePage.tsx**: Added direction-aware slide animation using framer-motion AnimatePresence (mode="wait") with motion.div wrapper; slides left/right based on forward/back navigation; navigateToStep callback tracks direction via state
+- **ProgressStepper.tsx**: Added pulsing glow on current step indicator (shadow-[0_0_8px_oklch(0.55_0.2_35/0.2)] replacing shadow-sm)
+- **ComparePage.tsx**: Reduced radar chart background circle/axis opacity (from /40 to /20, strokeWidth from 1 to 0.5); added hover tooltips on polygon vertices showing dimension name and complexity level; added SVG tooltip with dark rect background and white text
+
+Stage Summary:
+- Applied 9 categories of visual polish across 10 files
+- All changes are additive and non-breaking — no functionality was altered
+- ESLint passes cleanly with zero errors
+- Focus ring enhancement covers all interactive elements globally via CSS
+- Animation and interaction improvements enhance perceived quality without affecting performance

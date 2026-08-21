@@ -31,7 +31,7 @@ export function StepMechatronics() {
               <button
                 key={type}
                 onClick={() => updateMechatronics({ type })}
-                className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                   m.type === type
                     ? 'border-primary bg-primary/10 text-primary'
                     : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -56,7 +56,7 @@ export function StepMechatronics() {
           </SectionCard>
 
           <SectionCard title="Track Architecture" noPadding>
-            <div className="py-3 px-4 font-mono text-xs text-muted-foreground leading-relaxed">
+            <div className="py-3 px-4 font-mono text-sm text-muted-foreground leading-relaxed">
               <div>Track</div>
               <div className="ml-4">
                 {Array.from({ length: Math.min(4, Math.max(m.movers, 1)) }).map((_, i) => (
@@ -87,7 +87,7 @@ export function StepMechatronics() {
       {m.type !== 'None' && (
         <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50/50 p-3">
           <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 leading-relaxed">
+          <p className="text-sm text-amber-800 leading-relaxed">
             Mechatronic transport systems introduce engineering considerations beyond conventional conveyor systems, including mover control, routing, synchronization and station interaction.
           </p>
         </div>

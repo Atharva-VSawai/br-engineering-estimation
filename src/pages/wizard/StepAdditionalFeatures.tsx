@@ -15,15 +15,15 @@ export function StepAdditionalFeatures() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pr-4">Feature</th>
-                <th className="text-center text-xs font-semibold text-muted-foreground pb-2 px-3">Enable</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pl-3">Complexity</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2 pr-4">Feature</th>
+                <th className="text-center text-sm font-semibold text-muted-foreground pb-2 px-3">Enable</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2 pl-3">Complexity</th>
               </tr>
             </thead>
             <tbody>
               {features.map((f) => (
                 <tr key={f.name} className="border-b border-border/50 last:border-0">
-                  <td className="py-2 pr-4 text-xs font-medium text-foreground">{f.name}</td>
+                  <td className="py-2 pr-4 text-sm font-medium text-foreground">{f.name}</td>
                   <td className="py-2 px-3 text-center">
                     <input
                       type="checkbox"
@@ -39,7 +39,7 @@ export function StepAdditionalFeatures() {
                           key={level}
                           disabled={!f.enabled}
                           onClick={() => updateAdditionalFeature(f.name, { complexity: level })}
-                          className={`rounded border px-2 py-0.5 text-[11px] font-medium transition-colors disabled:opacity-40 ${
+                          className={`rounded border px-2 py-0.5 text-sm font-medium transition-colors disabled:opacity-40 ${
                             f.complexity === level
                               ? 'border-primary bg-primary/10 text-primary'
                               : 'border-border bg-card text-muted-foreground hover:border-primary/50'

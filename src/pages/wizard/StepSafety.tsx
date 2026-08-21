@@ -25,7 +25,7 @@ export function StepSafety() {
                 <button
                   key={String(val)}
                   onClick={() => updateSafety({ enabled: val })}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     s.enabled === val
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -76,7 +76,7 @@ export function StepSafety() {
               <div className="flex flex-col items-center gap-0 py-3 px-4">
                 {['Safety Design', 'Configuration', 'Programming', 'Validation', 'Testing', 'Commissioning'].map((item, idx, arr) => (
                   <React.Fragment key={item}>
-                    <div className="rounded-md border border-border bg-card px-4 py-1.5 text-xs font-medium text-foreground">
+                    <div className="rounded-md border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground">
                       {item}
                     </div>
                     {idx < arr.length - 1 && <ArrowDown className="h-4 w-4 text-muted-foreground" />}
@@ -87,7 +87,7 @@ export function StepSafety() {
 
             <SectionCard title="Safety Complexity">
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-semibold rounded-md px-2 py-0.5 border ${
+                <span className={`text-sm font-semibold rounded-md px-2 py-0.5 border ${
                   safetyComplexity === 'High' ? 'bg-red-50 text-red-700 border-red-200' :
                   safetyComplexity === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                   safetyComplexity === 'Low' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :

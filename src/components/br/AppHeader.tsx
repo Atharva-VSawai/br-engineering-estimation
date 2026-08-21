@@ -73,9 +73,9 @@ export function AppHeader() {
       <div className="flex items-center gap-3">
         {currentPage !== 'new-estimate' ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-muted-foreground">{PAGE_NAMES[currentPage]}</span>
+            <span className="text-sm text-muted-foreground">{PAGE_NAMES[currentPage]}</span>
             <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-            <span className="text-xs font-medium text-foreground truncate max-w-[280px]">{projectName}</span>
+            <span className="text-sm font-medium text-foreground truncate max-w-[280px]">{projectName}</span>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -98,7 +98,7 @@ export function AppHeader() {
         </Button>
         <Badge
           variant="outline"
-          className={`border-amber-300 bg-amber-50 text-amber-700 text-xs font-medium dark:border-amber-600/40 dark:bg-amber-900/20 dark:text-amber-400 ${currentPage === 'new-estimate' ? 'animate-pulse' : ''}`}
+          className={`border-amber-300 bg-amber-50 text-amber-700 text-sm font-medium dark:border-amber-600/40 dark:bg-amber-900/20 dark:text-amber-400 ${currentPage === 'new-estimate' ? 'animate-pulse' : ''}`}
         >
           Draft
         </Badge>
@@ -128,7 +128,7 @@ export function AppHeader() {
                   transition={{ duration: 0.5, ease: 'easeOut' }}
                 />
               </svg>
-              <span className="absolute text-[9px] font-bold text-foreground">
+              <span className="absolute text-[11px] font-bold text-foreground">
                 {pct}
               </span>
             </div>
@@ -148,7 +148,7 @@ export function AppHeader() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="h-9 gap-1.5 text-sm"
           onClick={handleDownload}
         >
           <FileJson className="h-3.5 w-3.5" />
@@ -157,19 +157,19 @@ export function AppHeader() {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="h-9 gap-1.5 text-sm"
           onClick={handleCopy}
         >
           <Copy className="h-3.5 w-3.5" />
           Copy
         </Button>
-        <kbd className="hidden lg:inline-flex h-5 items-center gap-1 rounded border border-border bg-muted px-1.5 text-[10px] font-mono text-muted-foreground">
+        <kbd className="hidden lg:inline-flex h-6 items-center gap-1 rounded border border-border bg-muted px-1.5 text-xs font-mono text-muted-foreground">
           &#8984;K
         </kbd>
         <Button
           variant="default"
           size="sm"
-          className="h-8 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+          className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
           onClick={handleSave}
         >
           <Save className="h-3.5 w-3.5" />

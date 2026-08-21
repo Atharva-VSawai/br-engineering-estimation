@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Save, RotateCcw, RotateCw, Download, HeartPulse } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,14 +51,22 @@ const STEP_COMPONENTS = [
 ];
 
 export function NewEstimatePage() {
-  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config, undo, redo, pushHistory, history, historyIndex } = useAppStore();
+  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config, undo, redo, pushHistory, history, historyIndex, stepOrder } = useAppStore();
   const [resetOpen, setResetOpen] = useState(false);
+  const [direction, setDirection] = useState(1);
+  // Track direction for step animation
+  const navigateToStep = useCallback((step: number) => {
+    setDirection(step > wizardStep ? 1 : -1);
+    setWizardStep(step);
+  }, [wizardStep, setWizardStep]);
   const totalSteps = STEP_COMPONENTS.length;
-  const isLastStep = wizardStep === totalSteps - 1;
-  const isFirstStep = wizardStep === 0;
+  const displayOrder = stepOrder ?? STEP_COMPONENTS.map((_, i) => i);
+  const currentDisplayPos = displayOrder.indexOf(wizardStep);
+  const isLastStep = currentDisplayPos === totalSteps - 1;
+  const isFirstStep = currentDisplayPos === 0;
   const StepComponent = STEP_COMPONENTS[wizardStep];
   const isWizardActive = currentPage === 'new-estimate';
-  const progressPct = Math.round(((wizardStep + 1) / totalSteps) * 100);
+  const progressPct = Math.round(((currentDisplayPos + 1) / totalSteps) * 100);
 
   // Configuration Health Score
   const healthScore = (() => {
@@ -119,26 +128,38 @@ export function NewEstimatePage() {
         return;
       }
       if (e.key === 'ArrowRight' && !isLastStep) {
-        setWizardStep(wizardStep + 1);
+        const nextStep = displayOrder[currentDisplayPos + 1];
+        if (nextStep !== undefined) navigateToStep(nextStep);
       } else if (e.key === 'ArrowLeft' && !isFirstStep) {
-        setWizardStep(wizardStep - 1);
+        const prevStepVal = displayOrder[currentDisplayPos - 1];
+        if (prevStepVal !== undefined) navigateToStep(prevStepVal);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [wizardStep, isLastStep, isFirstStep, isWizardActive, setWizardStep]);
+  }, [wizardStep, isLastStep, isFirstStep, isWizardActive, navigateToStep, displayOrder, currentDisplayPos]);
 
   return (
     <div className="space-y-4">
-      <ProgressStepper currentStep={wizardStep} onStepClick={setWizardStep} />
+      <ProgressStepper currentStep={wizardStep} onStepClick={navigateToStep} />
 
       {isWizardActive && (
-        <div className="text-[10px] text-muted-foreground text-center">Use ← → arrow keys to navigate steps</div>
+        <div className="text-sm text-muted-foreground text-center">Use ← → arrow keys to navigate steps</div>
       )}
 
       <div className="min-h-[calc(100vh-260px)]">
-        <StepComponent />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={wizardStep}
+            initial={{ opacity: 0, x: direction * 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -direction * 30 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+          >
+            <StepComponent />
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Gradient divider */}
@@ -146,18 +167,18 @@ export function NewEstimatePage() {
 
       <div className="flex items-center justify-between pt-2">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground mr-1">
-            Step {wizardStep + 1} of {totalSteps} — {progressPct}% complete
+          <span className="text-sm text-muted-foreground mr-1">
+            Step {currentDisplayPos + 1} of {totalSteps} — {progressPct}% complete
           </span>
-          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${healthColor}`}>
+          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-sm font-medium ${healthColor}`}>
             <HeartPulse className="h-3 w-3" />
             Health: {healthScore}/{totalSections} sections
           </span>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setResetOpen(true)} title="Reset configuration">
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => setResetOpen(true)} title="Reset configuration">
             <RotateCcw className="h-3.5 w-3.5" />
             Reset
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleLoadSample} title="Load sample packaging machine configuration">
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleLoadSample} title="Load sample packaging machine configuration">
             <Download className="h-3.5 w-3.5" />
             Load Sample
           </Button>
@@ -174,7 +195,7 @@ export function NewEstimatePage() {
             <RotateCcw className="h-3.5 w-3.5" />
           </Button>
           {history.length > 0 && (
-            <span className="text-[10px] text-muted-foreground">Step {historyIndex + 1}/{history.length}</span>
+            <span className="text-sm text-muted-foreground">Step {historyIndex + 1}/{history.length}</span>
           )}
           <Button
             variant="ghost"
@@ -186,7 +207,7 @@ export function NewEstimatePage() {
           >
             <RotateCw className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" disabled={isFirstStep} onClick={() => setWizardStep(wizardStep - 1)}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" disabled={isFirstStep} onClick={() => navigateToStep(displayOrder[currentDisplayPos - 1])}>
             <ArrowLeft className="h-3.5 w-3.5" />
             Back
           </Button>
@@ -194,7 +215,7 @@ export function NewEstimatePage() {
             variant="default"
             size="sm"
             className={cn(
-              'h-8 gap-1.5 text-xs',
+              'h-9 gap-1.5 text-sm',
               isLastStep
                 ? 'bg-emerald-600 text-white hover:bg-emerald-600/90'
                 : 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -203,14 +224,14 @@ export function NewEstimatePage() {
               if (isLastStep) {
                 useAppStore.getState().setCurrentPage('estimate-summary');
               } else {
-                setWizardStep(wizardStep + 1);
+                navigateToStep(displayOrder[currentDisplayPos + 1]);
               }
             }}
           >
             {isLastStep ? 'View Summary' : 'Next'}
             <ArrowRight className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleSaveDraft}>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleSaveDraft}>
             <Save className="h-3.5 w-3.5" />
             Save Draft
           </Button>
@@ -219,8 +240,8 @@ export function NewEstimatePage() {
 
       {/* Keyboard shortcuts hint */}
       <div className="flex items-center justify-center gap-4 pb-2">
-        <span className="text-[10px] text-muted-foreground">⌘S Save</span>
-        <span className="text-[10px] text-muted-foreground">← → Navigate</span>
+        <span className="text-sm text-muted-foreground">⌘S Save</span>
+        <span className="text-sm text-muted-foreground">← → Navigate</span>
       </div>
 
       <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>

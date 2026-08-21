@@ -52,7 +52,7 @@ export function StepHMI() {
                 <button
                   key={level}
                   onClick={() => updateHMI({ screenComplexity: level })}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     h.screenComplexity === level
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -70,10 +70,10 @@ export function StepHMI() {
         <div className="rounded-lg border-2 border-gray-300 bg-gray-50 overflow-hidden aspect-[16/10]">
           {/* Top bar */}
           <div className="h-8 bg-primary/90 flex items-center px-3">
-            <span className="text-white text-[10px] font-bold">Automated Packaging Machine</span>
+            <span className="text-white text-sm font-bold">Automated Packaging Machine</span>
             <div className="ml-auto flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="text-white text-[9px]">Running</span>
+              <span className="text-white text-sm">Running</span>
             </div>
           </div>
           {/* Body */}
@@ -83,7 +83,7 @@ export function StepHMI() {
               {HMI_NAV_ITEMS.map((item, idx) => (
                 <div
                   key={item}
-                  className={`h-5 rounded text-[9px] flex items-center px-1.5 mb-0.5 ${
+                  className={`h-5 rounded text-sm flex items-center px-1.5 mb-0.5 ${
                     idx === 0
                       ? 'bg-primary/10 text-primary'
                       : 'text-gray-400'
@@ -98,36 +98,36 @@ export function StepHMI() {
               <div className="grid grid-cols-2 gap-2 h-full">
                 {/* Machine Status widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Machine Status</div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">Machine Status</div>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-[10px] text-foreground">Conveyor</span>
+                      <span className="text-sm text-foreground">Conveyor</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-green-400" />
-                      <span className="text-[10px] text-foreground">Sealer</span>
+                      <span className="text-sm text-foreground">Sealer</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-[10px] text-foreground">Labeler</span>
+                      <span className="text-sm text-foreground">Labeler</span>
                     </div>
                   </div>
                 </div>
                 {/* Production Count widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Production Count</div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Production Count</div>
                   <div className="text-lg font-bold text-foreground leading-none mt-2">1,247</div>
-                  <div className="text-[9px] text-gray-400 mt-0.5">units</div>
+                  <div className="text-sm text-gray-400 mt-0.5">units</div>
                 </div>
                 {/* Alarm Status widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Alarm Status</div>
-                  <div className="text-[10px] text-green-600 font-medium mt-1.5">No Active Alarms</div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Alarm Status</div>
+                  <div className="text-sm text-green-600 font-medium mt-1.5">No Active Alarms</div>
                 </div>
                 {/* Temperature widget */}
                 <div className="rounded border border-gray-200 bg-card p-2">
-                  <div className="text-[9px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Temperature</div>
+                  <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Temperature</div>
                   <div className="text-sm font-bold text-foreground mt-1.5">42.3°C</div>
                   <div className="mt-1.5 h-1 rounded-full bg-gray-100 overflow-hidden">
                     <div className="h-full rounded-full bg-amber-400" style={{ width: '56%' }} />
@@ -159,7 +159,7 @@ export function StepHMI() {
               {engPreview.map((item) => {
                 const active = item === 'UI Development' || item === 'PLC Tag Integration' || item === 'Testing';
                 return (
-                  <div key={item} className="flex items-center gap-2 text-xs">
+                  <div key={item} className="flex items-center gap-2 text-sm">
                     <div className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-primary' : 'bg-border'}`} />
                     <span className={active ? 'text-foreground font-medium' : 'text-muted-foreground'}>{item}</span>
                   </div>
@@ -170,14 +170,14 @@ export function StepHMI() {
 
           <SectionCard title="Estimated HMI Complexity">
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-semibold rounded-md px-2 py-0.5 border ${
+              <span className={`text-sm font-semibold rounded-md px-2 py-0.5 border ${
                 hmiComplexity === 'Complex' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                 hmiComplexity === 'Moderate' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                 'bg-emerald-50 text-emerald-700 border-emerald-200'
               }`}>
                 {hmiComplexity}
               </span>
-              <span className="text-xs text-muted-foreground">{activeFeatures.length} features active · {h.screens} screens</span>
+              <span className="text-sm text-muted-foreground">{activeFeatures.length} features active · {h.screens} screens</span>
             </div>
           </SectionCard>
         </div>

@@ -23,12 +23,15 @@ interface AppState {
   // Wizard
   wizardStep: number;
   setWizardStep: (step: number) => void;
+  stepOrder: number[] | null;
+  setStepOrder: (order: number[] | null) => void;
 
   // Projects
   projects: Project[];
   addProject: (project: Project) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   deleteProject: (id: string) => void;
+  reorderProjects: (fromIndex: number, toIndex: number) => void;
 
   // Current Configuration
   config: ProjectConfig;
@@ -232,6 +235,9 @@ export const useAppStore = create<AppState>((set) => ({
   wizardStep: 0,
   setWizardStep: (step) => set({ wizardStep: step }),
 
+  stepOrder: null,
+  setStepOrder: (order) => set({ stepOrder: order }),
+
   projects: SAMPLE_PROJECTS,
   addProject: (project) =>
     set((state) => ({ projects: [project, ...state.projects] })),
@@ -245,6 +251,13 @@ export const useAppStore = create<AppState>((set) => ({
     })),
   deleteProject: (id) =>
     set((state) => ({ projects: state.projects.filter((p) => p.id !== id) })),
+  reorderProjects: (fromIndex, toIndex) =>
+    set((state) => {
+      const newProjects = [...state.projects];
+      const [moved] = newProjects.splice(fromIndex, 1);
+      newProjects.splice(toIndex, 0, moved);
+      return { projects: newProjects };
+    }),
 
   config: createDefaultConfig(),
   updateConfig: (updates) =>

@@ -88,8 +88,8 @@ export function StepIO() {
                 />
               </div>
               <div className="mt-1 flex items-center justify-between">
-                <span className="text-[9px] text-muted-foreground">{bar.label}</span>
-                <span className="text-[9px] font-medium text-foreground tabular-nums">{bar.value}</span>
+                <span className="text-sm text-muted-foreground">{bar.label}</span>
+                <span className="text-sm font-medium text-foreground tabular-nums">{bar.value}</span>
               </div>
             </div>
           ))}
@@ -107,10 +107,10 @@ export function StepIO() {
 
         {/* I/O Breakdown Bar Chart */}
         <div className="mt-6 rounded-lg bg-muted/30 p-4 space-y-2.5">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">I/O Breakdown</h4>
+          <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">I/O Breakdown</h4>
           {ioItems.map((item, index) => (
             <div key={item.key} className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-28 shrink-0 text-right truncate">
+              <span className="text-sm text-muted-foreground w-28 shrink-0 text-right truncate">
                 {item.label}
               </span>
               <div className="flex-1 h-5 rounded-sm bg-muted/50 overflow-hidden relative">
@@ -119,7 +119,7 @@ export function StepIO() {
                   style={{ width: `${maxValue > 0 ? (item.value / maxValue) * 100 : 0}%`, minWidth: item.value > 0 ? '4px' : '0' }}
                 />
               </div>
-              <span className="text-xs font-medium text-foreground w-10 text-right tabular-nums">
+              <span className="text-sm font-medium text-foreground w-10 text-right tabular-nums">
                 {item.value}
               </span>
             </div>
@@ -132,7 +132,7 @@ export function StepIO() {
         <SectionCard title="I/O Complexity Preview">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Total I/O Points</span>
+              <span className="text-sm text-muted-foreground">Total I/O Points</span>
               <span className="text-sm font-bold text-foreground">{totalIO}</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -142,8 +142,8 @@ export function StepIO() {
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">I/O Complexity:</span>
-              <span className={`text-xs font-semibold rounded-md px-2 py-0.5 border ${
+              <span className="text-sm text-muted-foreground">I/O Complexity:</span>
+              <span className={`text-sm font-semibold rounded-md px-2 py-0.5 border ${
                 ioComplexity === 'Simple' ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800' :
                 ioComplexity === 'Moderate' ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800' :
                 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800'
@@ -156,7 +156,7 @@ export function StepIO() {
 
         <div className="flex items-start gap-2.5 rounded-md border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-950/20 p-3 self-start">
           <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+          <p className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed">
             Raw I/O count is not the only factor. Signal type, special modules, safety requirements, scaling and device integration can affect engineering complexity.
           </p>
         </div>

@@ -150,7 +150,7 @@ const SHORTCUTS: ShortcutCategory[] = [
 
 function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex h-6 min-w-[24px] items-center justify-center rounded border border-border bg-muted px-1.5 text-[11px] font-mono text-muted-foreground">
+    <kbd className="inline-flex h-6 min-w-[24px] items-center justify-center rounded border border-border bg-muted px-1.5 text-xs font-mono text-muted-foreground">
       {children}
     </kbd>
   );
@@ -187,7 +187,7 @@ export function KeyboardShortcutsDialog({
         <div className="space-y-4">
           {displayShortcuts.map((category) => (
             <div key={category.title}>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 {category.title}
               </h3>
               <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
@@ -196,14 +196,14 @@ export function KeyboardShortcutsDialog({
                     key={item.description}
                     className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
                   >
-                    <span className="text-xs text-foreground truncate">
+                    <span className="text-sm text-foreground truncate">
                       {item.description}
                     </span>
                     <span className="flex shrink-0 items-center gap-0.5">
                       {item.keys.map((key, i) => (
                         <React.Fragment key={i}>
                           {i > 0 && (
-                            <span className="text-[10px] text-muted-foreground/60">
+                            <span className="text-xs text-muted-foreground/60">
                               +
                             </span>
                           )}
@@ -218,7 +218,7 @@ export function KeyboardShortcutsDialog({
           ))}
         </div>
 
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Shortcuts work when not focused on input fields
         </p>
       </DialogContent>

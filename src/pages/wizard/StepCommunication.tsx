@@ -27,15 +27,15 @@ export function StepCommunication() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pr-4">Protocol</th>
-                <th className="text-center text-xs font-semibold text-muted-foreground pb-2 px-3">Enable</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pl-3">Devices</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2 pr-4">Protocol</th>
+                <th className="text-center text-sm font-semibold text-muted-foreground pb-2 px-3">Enable</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2 pl-3">Devices</th>
               </tr>
             </thead>
             <tbody>
               {c.protocols.map((proto) => (
                 <tr key={proto.name} className="border-b border-border/50 last:border-0">
-                  <td className="py-2 pr-4 text-xs font-medium text-foreground">{proto.name}</td>
+                  <td className="py-2 pr-4 text-sm font-medium text-foreground">{proto.name}</td>
                   <td className="py-2 px-3 text-center">
                     <input
                       type="checkbox"
@@ -74,14 +74,14 @@ export function StepCommunication() {
             {engActivities.map((item) => {
               const active = activeProtocols.length > 0;
               return (
-                <div key={item} className="flex items-center gap-2 text-xs">
+                <div key={item} className="flex items-center gap-2 text-sm">
                   <div className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-primary' : 'bg-border'}`} />
                   <span className={active ? 'text-foreground font-medium' : 'text-muted-foreground'}>{item}</span>
                 </div>
               );
             })}
           </div>
-          <div className="mt-3 text-xs text-muted-foreground">
+          <div className="mt-3 text-sm text-muted-foreground">
             {activeProtocols.length} protocol(s) active
           </div>
         </SectionCard>

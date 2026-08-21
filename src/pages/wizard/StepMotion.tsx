@@ -57,13 +57,13 @@ export function StepMotion() {
       {/* Compact Axis Grid */}
       {totalAxes > 0 && (
         <div className="rounded-md border border-border bg-muted/30 p-3">
-          <div className="text-[9px] text-muted-foreground uppercase tracking-wide mb-2">Axis Overview</div>
+          <div className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Axis Overview</div>
           <div className="flex gap-2 flex-wrap">
             {Array.from({ length: Math.min(totalAxes, 8) }).map((_, i) => {
               const axisType = getAxisType(i);
               return (
                 <div key={i} className="rounded-md border border-border p-2 w-16 shrink-0">
-                  <div className="text-[10px] font-semibold text-foreground">A{i + 1}</div>
+                  <div className="text-sm font-semibold text-foreground">A{i + 1}</div>
                   <div className="mt-0.5">
                     <span className={`text-[8px] rounded px-1 inline-block ${
                       axisType === 'linear' ? 'bg-blue-50 text-blue-600' :
@@ -78,7 +78,7 @@ export function StepMotion() {
             })}
             {totalAxes > 8 && (
               <div className="rounded-md border border-border p-2 w-16 shrink-0 flex items-center justify-center">
-                <span className="text-[10px] text-muted-foreground font-medium">+{totalAxes - 8} more</span>
+                <span className="text-sm text-muted-foreground font-medium">+{totalAxes - 8} more</span>
               </div>
             )}
           </div>
@@ -125,7 +125,7 @@ export function StepMotion() {
             <div className="flex flex-col items-center gap-0 py-3 px-4">
               {['Controller', 'Motion Control', 'Axis', 'Drive', 'Motor', 'Mechanical System'].map((item, idx, arr) => (
                 <React.Fragment key={item}>
-                  <div className="rounded-md border border-border bg-card px-4 py-1.5 text-xs font-medium text-foreground">
+                  <div className="rounded-md border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground">
                     {item}
                   </div>
                   {idx < arr.length - 1 && (
@@ -138,14 +138,14 @@ export function StepMotion() {
 
           <SectionCard title="Motion Complexity">
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-semibold rounded-md px-2 py-0.5 border ${
+              <span className={`text-sm font-semibold rounded-md px-2 py-0.5 border ${
                 motionComplexity === 'High' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                 motionComplexity === 'Medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                 'bg-emerald-50 text-emerald-700 border-emerald-200'
               }`}>
                 {motionComplexity}
               </span>
-              <span className="text-xs text-muted-foreground">{activeFunctions.length} motion functions active</span>
+              <span className="text-sm text-muted-foreground">{activeFunctions.length} motion functions active</span>
             </div>
           </SectionCard>
         </div>
@@ -153,7 +153,7 @@ export function StepMotion() {
 
       <SectionCard title="Axis Overview" description="Visual overview of configured motion axes">
         {totalAxes === 0 ? (
-          <div className="text-xs text-muted-foreground text-center py-6">
+          <div className="text-sm text-muted-foreground text-center py-6">
             No axes configured. Set the Total Motion Axes above.
           </div>
         ) : (
@@ -169,22 +169,22 @@ export function StepMotion() {
                   transition={{ delay: i * 0.04, duration: 0.3 }}
                   className="rounded-md border border-border bg-card p-2.5 w-full"
                 >
-                  <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                     Axis {i + 1}
                   </div>
                   <div className="mt-1.5">
                     {axisType === 'linear' && (
-                      <span className="text-[10px] text-blue-600 bg-blue-50 rounded px-1.5 py-0.5 inline-block">
+                      <span className="text-sm text-blue-600 bg-blue-50 rounded px-1.5 py-0.5 inline-block">
                         LINEAR
                       </span>
                     )}
                     {axisType === 'rotary' && (
-                      <span className="text-[10px] text-purple-600 bg-purple-50 rounded px-1.5 py-0.5 inline-block">
+                      <span className="text-sm text-purple-600 bg-purple-50 rounded px-1.5 py-0.5 inline-block">
                         ROTARY
                       </span>
                     )}
                     {axisType === 'generic' && (
-                      <span className="text-[10px] text-gray-600 bg-gray-50 rounded px-1.5 py-0.5 inline-block">
+                      <span className="text-sm text-gray-600 bg-gray-50 rounded px-1.5 py-0.5 inline-block">
                         GENERIC
                       </span>
                     )}
@@ -209,7 +209,7 @@ export function StepMotion() {
             return (
               <span
                 key={activity}
-                className={`inline-flex items-center rounded-md border px-2.5 py-1 text-[11px] font-medium ${
+                className={`inline-flex items-center rounded-md border px-2.5 py-1 text-sm font-medium ${
                   isActive
                     ? 'border-primary/30 bg-primary/10 text-primary'
                     : 'border-border bg-card text-muted-foreground'

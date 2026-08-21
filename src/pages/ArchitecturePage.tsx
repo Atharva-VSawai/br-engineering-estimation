@@ -48,7 +48,7 @@ function ArchBlockItem({ item, index, isActive }: { item: ArchBlock; index: numb
         </>
       )}
       {!item.isController && item.label}
-      <span className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold ${isActive ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+      <span className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-sm font-bold ${isActive ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
         {index + 1}
       </span>
     </motion.div>
@@ -98,7 +98,7 @@ export function ArchitecturePage() {
 
       <SectionCard title="System Architecture Diagram" noPadding>
         <div className="py-8 px-4">
-          <div className="flex flex-col items-center gap-1.5 text-xs">
+          <div className="flex flex-col items-center gap-1.5 text-sm">
             {/* Row 1: HMI (index 0) */}
             <ArchBlockItem item={ARCH_ITEMS[0]} index={0} isActive={activeMap['HMI']} />
             <ConnectingLine index={0} isActive={activeMap['HMI']} />
@@ -155,8 +155,8 @@ export function ArchitecturePage() {
         ].map((item) => (
           <div key={item.label} className={`relative rounded-md border p-3 hover:bg-muted/50 hover:border-primary/20 hover:shadow-sm transition-all duration-150 ${item.color}`}>
             <div className={`absolute top-2 right-2 h-2 w-2 rounded-full ${item.active ? 'bg-emerald-400' : 'bg-muted-foreground/20'}`} />
-            <div className="text-xs font-semibold text-foreground">{item.label}</div>
-            <div className="text-[11px] text-muted-foreground/80 mt-1">{item.desc}</div>
+            <div className="text-sm font-semibold text-foreground">{item.label}</div>
+            <div className="text-sm text-muted-foreground/80 mt-1">{item.desc}</div>
           </div>
         ))}
       </div>
@@ -166,7 +166,7 @@ export function ArchitecturePage() {
           {['B&R Product', '→', 'Technology', '→', 'Engineering Function', '→', 'Configuration', '→', 'Programming', '→', 'Integration', '→', 'Testing', '→', 'Commissioning', '→', 'Complexity', '→', 'Engineering Effort'].map((item, idx) => (
             <span
               key={idx}
-              className={`px-2 py-1 text-[11px] rounded ${
+              className={`px-2 py-1 text-sm rounded ${
                 item === '→' ? 'text-muted-foreground' :
                 item === 'B&R Product' || item === 'Engineering Effort' ? 'bg-primary/10 text-primary font-semibold' :
                 'bg-card border border-border text-foreground'

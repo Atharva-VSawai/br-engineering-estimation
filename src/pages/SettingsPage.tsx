@@ -121,10 +121,10 @@ export function SettingsPage() {
         >
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="dark-mode" className="text-xs font-medium">
+              <Label htmlFor="dark-mode" className="text-sm font-medium">
                 Dark Mode
               </Label>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Switch between light and dark themes
               </p>
             </div>
@@ -145,7 +145,7 @@ export function SettingsPage() {
               />
             </div>
           </div>
-          <p className="mt-3 text-[11px] text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             Theme preference is saved in your browser
           </p>
         </SectionCard>
@@ -159,16 +159,16 @@ export function SettingsPage() {
           <div className="grid grid-cols-2 gap-2">
             {shortcuts.map((s) => (
               <div key={s.key} className="flex items-center gap-2">
-                <kbd className="inline-flex h-6 min-w-[24px] items-center justify-center rounded border border-border bg-muted px-1.5 text-[11px] font-mono text-muted-foreground">
+                <kbd className="inline-flex h-6 min-w-[24px] items-center justify-center rounded border border-border bg-muted px-1.5 text-sm font-mono text-muted-foreground">
                   {s.key}
                 </kbd>
-                <span className="text-xs text-muted-foreground truncate">
+                <span className="text-sm text-muted-foreground truncate">
                   {s.desc}
                 </span>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-[11px] text-muted-foreground">
+          <p className="mt-3 text-sm text-muted-foreground">
             Press ⌘K anywhere to see all shortcuts
           </p>
         </SectionCard>
@@ -178,7 +178,7 @@ export function SettingsPage() {
           title="Application Info"
           action={<Info className="h-4 w-4 text-muted-foreground" />}
         >
-          <div className="space-y-0 text-xs">
+          <div className="space-y-0 text-sm">
             {infoRows.map((row) => (
               <div
                 key={row.label}
@@ -198,7 +198,7 @@ export function SettingsPage() {
           title="Planned Integrations"
           action={<Code2 className="h-4 w-4 text-muted-foreground" />}
         >
-          <div className="space-y-0 text-xs">
+          <div className="space-y-0 text-sm">
             {plannedIntegrations.map((item) => (
               <div
                 key={item.name}
@@ -234,11 +234,11 @@ export function SettingsPage() {
               <h2 className="text-sm font-semibold text-foreground">
                 B&R Engineering Estimation Tool
               </h2>
-              <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+              <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-sm text-muted-foreground">
                 v0.9 — Frontend Prototype
               </span>
             </div>
-            <p className="text-xs text-muted-foreground max-w-lg leading-relaxed">
+            <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
               A comprehensive estimation tool designed for B&R Industrial Automation
               engineers. Configure controller hardware, I/O modules, motion systems,
               HMI panels, safety components, and more. Generate detailed effort
@@ -249,13 +249,13 @@ export function SettingsPage() {
               {techBadges.map((badge) => (
                 <span
                   key={badge}
-                  className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
+                  className="rounded-full bg-muted px-2 py-0.5 text-sm text-muted-foreground"
                 >
                   {badge}
                 </span>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Built for B&R Industrial Automation engineers
             </p>
           </div>

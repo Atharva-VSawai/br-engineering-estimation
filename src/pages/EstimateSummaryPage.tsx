@@ -236,7 +236,7 @@ export function EstimateSummaryPage() {
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5 text-xs"
+          className="gap-1.5 text-sm"
           onClick={() => {
             const RATE = 85;
             const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
@@ -396,7 +396,7 @@ export function EstimateSummaryPage() {
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5 text-xs"
+          className="gap-1.5 text-sm"
           onClick={() => {
             const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
             const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
@@ -466,7 +466,7 @@ export function EstimateSummaryPage() {
           <span className={`text-base font-bold rounded-lg border-2 px-4 py-2 ${COMPLEXITY_COLORS[overallComplexity]} ${overallComplexity === 'Very High' ? 'animate-pulse' : ''}`}>
             {overallComplexity.toUpperCase()}
           </span>
-          <div className="text-xs text-muted-foreground leading-relaxed">
+          <div className="text-sm text-muted-foreground leading-relaxed">
             Based on the configured parameters, the overall engineering complexity is assessed as <strong className="text-foreground">{overallComplexity}</strong>.<br />
             {highCount} out of 10 complexity dimensions are rated High or Very High.
           </div>
@@ -479,7 +479,7 @@ export function EstimateSummaryPage() {
           {completeness.map((section) => (
             <div
               key={section.label}
-              className="flex items-center gap-2 text-xs"
+              className="flex items-center gap-2 text-sm"
             >
               {section.configured ? (
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
@@ -517,7 +517,7 @@ export function EstimateSummaryPage() {
             };
             return (
               <div className="rounded-lg border border-border bg-card p-3">
-                <div className="text-[11px] text-muted-foreground mb-2">Requirement Clarity</div>
+                <div className="text-sm text-muted-foreground mb-2">Requirement Clarity</div>
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${clarityColorMap[clarity] || 'bg-muted-foreground'}`} />
                   <span className={`text-sm font-semibold ${clarityTextMap[clarity] || 'text-foreground'}`}>{clarity}</span>
@@ -539,7 +539,7 @@ export function EstimateSummaryPage() {
             };
             return (
               <div className="rounded-lg border border-border bg-card p-3">
-                <div className="text-[11px] text-muted-foreground mb-2">Customer Involvement</div>
+                <div className="text-sm text-muted-foreground mb-2">Customer Involvement</div>
                 <div className="flex items-center gap-2">
                   <span className={`h-2.5 w-2.5 rounded-full ${involvementColorMap[involvement] || 'bg-muted-foreground'}`} />
                   <span className={`text-sm font-semibold ${involvementTextMap[involvement] || 'text-foreground'}`}>{involvement}</span>
@@ -548,7 +548,7 @@ export function EstimateSummaryPage() {
             );
           })()}
           <div className="rounded-lg border border-border bg-card p-3">
-            <div className="text-[11px] text-muted-foreground mb-2">Scope Complexity</div>
+            <div className="text-sm text-muted-foreground mb-2">Scope Complexity</div>
             <div className="text-sm font-semibold text-foreground mb-2">{highCount}/10 dimensions</div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
@@ -556,7 +556,7 @@ export function EstimateSummaryPage() {
                 style={{ width: `${(highCount / 10) * 100}%` }}
               />
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">High or Very High</div>
+            <div className="text-sm text-muted-foreground mt-1">High or Very High</div>
           </div>
         </div>
       </SectionCard>
@@ -574,7 +574,7 @@ export function EstimateSummaryPage() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.04, duration: 0.3 }}
               >
-                <div className="w-28 shrink-0 text-xs text-muted-foreground text-right pr-3">
+                <div className="w-28 shrink-0 text-sm text-muted-foreground text-right pr-3">
                   {dim.label}
                 </div>
                 <div className="flex-1 h-5 bg-muted rounded-full overflow-hidden">
@@ -583,7 +583,7 @@ export function EstimateSummaryPage() {
                     style={{ width: COMPLEXITY_WIDTH[level] }}
                   />
                 </div>
-                <div className={`w-20 shrink-0 text-xs font-semibold ${COMPLEXITY_TEXT_COLORS[level]}`}>
+                <div className={`w-20 shrink-0 text-sm font-semibold ${COMPLEXITY_TEXT_COLORS[level]}`}>
                   {level}
                 </div>
               </motion.div>
@@ -620,7 +620,7 @@ export function EstimateSummaryPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.06, duration: 0.3 }}
                   >
-                    <div className="w-40 shrink-0 text-xs text-muted-foreground">{row.name}</div>
+                    <div className="w-40 shrink-0 text-sm text-muted-foreground">{row.name}</div>
                     <div className="flex-1">
                       <div className="h-4 bg-muted rounded-full overflow-hidden">
                         <div
@@ -635,7 +635,7 @@ export function EstimateSummaryPage() {
                         />
                       </div>
                     </div>
-                    <div className="w-16 shrink-0 text-xs font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
+                    <div className="w-16 shrink-0 text-sm font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
                   </motion.div>
                 ))}
                 <motion.div
@@ -644,19 +644,19 @@ export function EstimateSummaryPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: rows.length * 0.06, duration: 0.3 }}
                 >
-                  <div className="w-40 shrink-0 text-xs font-bold text-primary">Total</div>
+                  <div className="w-40 shrink-0 text-sm font-bold text-primary">Total</div>
                   <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-4 rounded-full bg-primary transition-all duration-500"
                       style={{ width: '100%' }}
                     />
                   </div>
-                  <div className="w-16 shrink-0 text-xs font-bold text-right text-primary">{totalHours.toFixed(1)}h</div>
+                  <div className="w-16 shrink-0 text-sm font-bold text-right text-primary">{totalHours.toFixed(1)}h</div>
                 </motion.div>
               </>
             );
           })()}
-          <p className="text-[11px] text-muted-foreground mt-2">Estimated engineering hours based on configuration complexity. Actual effort may vary.</p>
+          <p className="text-sm text-muted-foreground mt-2">Estimated engineering hours based on configuration complexity. Actual effort may vary.</p>
         </div>
       </SectionCard>
 
@@ -696,9 +696,9 @@ export function EstimateSummaryPage() {
                     transition={{ delay: index * 0.08, duration: 0.3 }}
                   >
                     {index > 0 && (
-                      <span className="absolute -top-2 left-40 text-[10px] text-muted-foreground/40 leading-none">◆</span>
+                      <span className="absolute -top-2 left-40 text-sm text-muted-foreground/40 leading-none">◆</span>
                     )}
-                    <div className="w-36 shrink-0 flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="w-36 shrink-0 flex items-center gap-2 text-sm text-muted-foreground">
                       <span className={`w-2 h-2 rounded-full ${phase.dotColor} shrink-0`} />
                       {phase.name}
                     </div>
@@ -708,7 +708,7 @@ export function EstimateSummaryPage() {
                         style={{ width: `${(phase.weeks / maxWeeks) * 100}%` }}
                       />
                     </div>
-                    <div className="w-16 shrink-0 text-xs font-medium text-right text-foreground">{phase.weeks} week{phase.weeks !== 1 ? 's' : ''}</div>
+                    <div className="w-16 shrink-0 text-sm font-medium text-right text-foreground">{phase.weeks} week{phase.weeks !== 1 ? 's' : ''}</div>
                   </motion.div>
                 ))}
                 <motion.div
@@ -717,9 +717,9 @@ export function EstimateSummaryPage() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: phases.length * 0.08, duration: 0.3 }}
                 >
-                  <div className="w-36 shrink-0 text-xs font-bold text-primary">Estimated Total</div>
+                  <div className="w-36 shrink-0 text-sm font-bold text-primary">Estimated Total</div>
                   <div className="flex-1" />
-                  <div className="w-16 shrink-0 text-xs font-bold text-right text-primary">{totalWeeks} weeks</div>
+                  <div className="w-16 shrink-0 text-sm font-bold text-right text-primary">{totalWeeks} weeks</div>
                 </motion.div>
               </>
             );
@@ -733,9 +733,9 @@ export function EstimateSummaryPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pr-4">Area</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2 pr-4">Complexity</th>
-                <th className="text-left text-xs font-semibold text-muted-foreground pb-2">Potential Effort Driver</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2 pr-4">Area</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2 pr-4">Complexity</th>
+                <th className="text-left text-sm font-semibold text-muted-foreground pb-2">Potential Effort Driver</th>
               </tr>
             </thead>
             <tbody>
@@ -743,16 +743,16 @@ export function EstimateSummaryPage() {
                 const complexity = areaComplexities[area.name] || 'Medium';
                 return (
                   <tr key={area.name} className="border-b border-border/50 last:border-0">
-                    <td className="py-2.5 pr-4 text-xs font-medium text-foreground">{area.name}</td>
+                    <td className="py-2.5 pr-4 text-sm font-medium text-foreground">{area.name}</td>
                     <td className="py-2.5 pr-4">
                       <div className="flex items-center gap-2">
                         <div className={`w-[2px] h-5 rounded-full ${COMPLEXITY_DOT_COLORS[complexity]}`} />
-                        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${COMPLEXITY_COLORS[complexity]}`}>
+                        <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${COMPLEXITY_COLORS[complexity]}`}>
                           {complexity}
                         </span>
                       </div>
                     </td>
-                    <td className="py-2.5 text-xs text-muted-foreground">{area.driver}</td>
+                    <td className="py-2.5 text-sm text-muted-foreground">{area.driver}</td>
                   </tr>
                 );
               })}
@@ -766,7 +766,7 @@ export function EstimateSummaryPage() {
         <div className="flex flex-wrap items-center gap-2">
           {['B&R Product', 'Technology', 'Engineering Function', 'Configuration', 'Programming', 'Integration', 'Testing', 'Commissioning', 'Complexity', 'Engineering Effort'].map((item, idx, arr) => (
             <React.Fragment key={item}>
-              <div className="rounded-md border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground">
+              <div className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground">
                 {item}
               </div>
               {idx < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
@@ -778,7 +778,7 @@ export function EstimateSummaryPage() {
       {/* Placeholder Notice */}
       <div className="flex items-start gap-3 rounded-md border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 p-4">
         <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-        <div className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed space-y-1">
+        <div className="text-sm text-amber-800 dark:text-amber-200 leading-relaxed space-y-1">
           <p><strong>Engineering effort calculation will be connected to validated company data in a future version.</strong></p>
           <p>This prototype demonstrates technical configuration and complexity assessment. Actual engineering hours require backend integration with historical project data and validated estimation formulas.</p>
         </div>
@@ -786,13 +786,13 @@ export function EstimateSummaryPage() {
 
       {/* Version Info */}
       <div className="flex items-center justify-between">
-        <div className="text-xs text-muted-foreground">
+        <div className="text-sm text-muted-foreground">
           Current version: technical configuration prototype
         </div>
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs"
+          className="h-9 gap-1.5 text-sm"
           onClick={() => { setWizardStep(13); setCurrentPage('new-estimate'); }}
         >
           Edit Configuration

@@ -96,12 +96,12 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-              <h2 className="text-sm font-semibold text-foreground">Notifications</h2>
+              <h2 className="text-base font-semibold text-foreground">Notifications</h2>
               <div className="flex items-center gap-2">
                 {unreadCount > 0 && (
                   <button
                     onClick={onMarkAllRead}
-                    className="text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+                    className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
                   >
                     Mark all read
                   </button>
@@ -117,7 +117,7 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
               {unreadCount === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Bell className="h-8 w-8 text-muted-foreground/20" />
-                  <p className="text-xs text-muted-foreground mt-2">All caught up!</p>
+                  <p className="text-sm text-muted-foreground mt-2">All caught up!</p>
                 </div>
               )}
               {notifications.map((item, index) => {
@@ -136,10 +136,10 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
                       <Icon className={`h-3.5 w-3.5 ${item.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground leading-tight">{item.action}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-tight">{item.detail}</p>
+                      <p className="text-sm font-medium text-foreground leading-tight">{item.action}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.detail}</p>
                     </div>
-                    <span className={`text-[10px] shrink-0 mt-0.5 ${item.unread ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{item.time}</span>
+                    <span className={`text-xs shrink-0 mt-0.5 ${item.unread ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{item.time}</span>
                   </motion.div>
                 );
               })}

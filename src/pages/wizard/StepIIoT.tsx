@@ -32,7 +32,7 @@ export function StepIIoT() {
                 <button
                   key={String(val)}
                   onClick={() => updateIIoT({ ipcRequired: val })}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     i.ipcRequired === val
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -60,7 +60,7 @@ export function StepIIoT() {
                 <button
                   key={String(val)}
                   onClick={() => updateIIoT({ iiotRequired: val })}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     i.iiotRequired === val
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/50'

@@ -178,7 +178,7 @@ export function ComparePage() {
           <GitCompareArrows className="h-5 w-5 text-primary" />
           <h1 className="text-lg font-semibold text-foreground">Project Comparison</h1>
         </div>
-        <p className="text-xs text-muted-foreground">Compare up to 3 projects side by side to evaluate scope, complexity, and technical parameters.</p>
+        <p className="text-sm text-muted-foreground">Compare up to 3 projects side by side to evaluate scope, complexity, and technical parameters.</p>
       </div>
 
       {/* Selector Row */}
@@ -192,12 +192,12 @@ export function ComparePage() {
                 value={id || ''}
                 onValueChange={(v) => handleSelect(slotIdx, v)}
               >
-                <SelectTrigger className="w-56 h-8 text-xs">
+                <SelectTrigger className="w-56 h-9 text-sm">
                   <SelectValue placeholder={`Project ${slotIdx + 1}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {opts.map((p) => (
-                    <SelectItem key={p.id} value={p.id} className="text-xs">
+                    <SelectItem key={p.id} value={p.id} className="text-sm">
                       {p.name}
                     </SelectItem>
                   ))}
@@ -252,7 +252,7 @@ export function ComparePage() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-muted-foreground">No projects selected for comparison</p>
-                <p className="text-xs text-muted-foreground/70 mt-1 max-w-xs">
+                <p className="text-sm text-muted-foreground/70 mt-1 max-w-xs">
                   Choose at least 2 projects from the dropdown above. You can compare up to 3 projects side by side to evaluate scope, complexity, and technical parameters.
                 </p>
               </div>
@@ -288,7 +288,7 @@ export function ComparePage() {
 
             <SectionCard title="Comparison Table" description={`${selectedProjects.length} projects selected`}>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/30">
                       <th className="text-left py-2 px-3 font-medium text-muted-foreground w-36">Property</th>
@@ -303,10 +303,10 @@ export function ComparePage() {
                     {comparisonSections.map((section) => (
                       <React.Fragment key={section.title}>
                         <tr className="bg-muted/20">
-                          <td colSpan={selectedProjects.length + 1} className="py-1.5 px-3 text-[11px] font-semibold text-muted-foreground">
+                          <td colSpan={selectedProjects.length + 1} className="py-1.5 px-3 text-sm font-semibold text-muted-foreground">
                             <span className="flex items-center gap-2">
                               {section.title}
-                              <span className="rounded-full bg-muted text-[10px] px-1.5 py-0.5 font-medium">{section.rows.length}</span>
+                              <span className="rounded-full bg-muted text-sm px-1.5 py-0.5 font-medium">{section.rows.length}</span>
                             </span>
                           </td>
                         </tr>
@@ -369,7 +369,8 @@ export function ComparePage() {
                         const isWinner = count === maxWinnerCount && count > 0;
                         return (
                           <td key={p.id} className="py-2.5 px-3">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${isWinner ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-bold 
+${isWinner ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
                               {count} best
                             </span>
                           </td>
@@ -423,6 +424,7 @@ function polygonPoints(r: number, n: number) {
 
 function ComplexityRadar({ projects }: { projects: Project[] }) {
   const N = DIMENSIONS.length;
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; dim: string; value: string; color: string } | null>(null);
 
   const projectPolygons = useMemo(() => {
     return projects.map((p) => {
@@ -466,8 +468,8 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               points={pts}
               fill="none"
               stroke="currentColor"
-              className="text-muted-foreground/40"
-              strokeWidth={1}
+              className="text-muted-foreground/20"
+              strokeWidth={0.5}
             />
           ))}
           {/* Axis lines */}
@@ -479,8 +481,8 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               x2={Number(line.split(' ')[1].split(',')[0])}
               y2={Number(line.split(' ')[1].split(',')[1])}
               stroke="currentColor"
-              className="text-muted-foreground/40"
-              strokeWidth={1}
+              className="text-muted-foreground/20"
+              strokeWidth={0.5}
             />
           ))}
           {/* Project polygons */}
@@ -493,6 +495,37 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={2}
             />
           ))}
+          {/* Hover points on polygon vertices */}
+          {projectPolygons.map((pts, idx) => {
+            const points = pts.split(' ');
+            return points.map((pt, ptIdx) => {
+              const [px, py] = pt.split(',').map(Number);
+              const dim = DIMENSIONS[ptIdx];
+              const level = projects[idx]?.config?.complexity?.[dim] ?? 'Medium';
+              return (
+                <circle
+                  key={`point-${idx}-${ptIdx}`}
+                  cx={px}
+                  cy={py}
+                  r={4}
+                  fill={PROJECT_COLORS[idx % PROJECT_COLORS.length].stroke}
+                  stroke="white"
+                  strokeWidth={1.5}
+                  className="cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
+                  onMouseEnter={() => setTooltip({ x: px, y: py, dim: dim.charAt(0).toUpperCase() + dim.slice(1), value: level, color: PROJECT_COLORS[idx % PROJECT_COLORS.length].stroke })}
+                  onMouseLeave={() => setTooltip(null)}
+                />
+              );
+            });
+          })}
+          {tooltip && (
+            <g>
+              <rect x={tooltip.x - 40} y={tooltip.y - 24} width={80} height={20} rx={4} fill="oklch(0.15 0.01 250)" opacity={0.9} />
+              <text x={tooltip.x} y={tooltip.y - 14} textAnchor="middle" fontSize={8} fill="white" fontWeight={600}>
+                {tooltip.dim}: {tooltip.value}
+              </text>
+            </g>
+          )}
           {/* Labels */}
           {labelPositions.map(({ dim, x, y }) => (
             <text
@@ -518,7 +551,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
                   className="h-3 w-3 rounded-full shrink-0"
                   style={{ backgroundColor: c.stroke }}
                 />
-                <span className="text-xs text-muted-foreground font-medium">{p.name}</span>
+                <span className="text-sm text-muted-foreground font-medium">{p.name}</span>
               </div>
             );
           })}

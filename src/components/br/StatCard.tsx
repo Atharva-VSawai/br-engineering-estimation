@@ -80,10 +80,10 @@ export function StatCard({ label, value, sublabel, icon, accentColor, sparkline 
       <CardContent className="p-4 relative">
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-muted-foreground truncate">{label}</p>
-            <p className="mt-1 text-2xl font-bold text-foreground leading-tight">{renderedValue}</p>
+            <p className="text-sm font-medium text-muted-foreground truncate">{label}</p>
+            <p className="mt-1 text-3xl font-bold text-foreground leading-tight tabular-nums">{renderedValue}</p>
             {sublabel && (
-              <p className="mt-0.5 text-xs text-muted-foreground truncate">{sublabel}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground truncate">{sublabel}</p>
             )}
             {sparkline && sparkline.length >= 2 && sparklinePath && (
               <svg

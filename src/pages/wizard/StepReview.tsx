@@ -71,7 +71,7 @@ export function StepReview() {
         step: 0,
         configured: !!c.project.name && c.project.name.trim() !== '',
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Name:</span> <span className="font-medium text-foreground ml-1">{c.project.name || '—'}</span></div>
             <div><span className="text-muted-foreground">Customer:</span> <span className="font-medium text-foreground ml-1">{c.project.customer || '—'}</span></div>
             <div><span className="text-muted-foreground">Machine Type:</span> <span className="font-medium text-foreground ml-1">{c.project.machineType || '—'}</span></div>
@@ -93,7 +93,7 @@ export function StepReview() {
         step: 1,
         configured: !!c.controller.family && c.controller.family.trim() !== '',
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Family:</span> <span className="font-medium text-foreground ml-1">{c.controller.family}</span></div>
             <div><span className="text-muted-foreground">Quantity:</span> <span className="font-medium text-foreground ml-1">{c.controller.quantity}</span></div>
             <div><span className="text-muted-foreground">Performance:</span> <span className="font-medium text-foreground ml-1">{c.controller.performance}</span></div>
@@ -112,7 +112,7 @@ export function StepReview() {
         step: 2,
         configured: ioTotal > 0,
         staticContent: (
-          <div className="grid grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-3 lg:grid-cols-5 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">DI:</span> <span className="font-medium text-foreground ml-1">{c.io.digitalInputs}</span></div>
             <div><span className="text-muted-foreground">DO:</span> <span className="font-medium text-foreground ml-1">{c.io.digitalOutputs}</span></div>
             <div><span className="text-muted-foreground">AI:</span> <span className="font-medium text-foreground ml-1">{c.io.analogInputs}</span></div>
@@ -137,7 +137,7 @@ export function StepReview() {
         step: 3,
         configured: c.motion.totalAxes > 0,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Total Axes:</span> <span className="font-medium text-foreground ml-1">{c.motion.totalAxes}</span></div>
             <div><span className="text-muted-foreground">Linear:</span> <span className="font-medium text-foreground ml-1">{c.motion.linearAxes}</span></div>
             <div><span className="text-muted-foreground">Rotary:</span> <span className="font-medium text-foreground ml-1">{c.motion.rotaryAxes}</span></div>
@@ -161,7 +161,7 @@ export function StepReview() {
         step: 4,
         configured: c.hmi.screens > 0,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Type:</span> <span className="font-medium text-foreground ml-1">{c.hmi.type}</span></div>
             <div><span className="text-muted-foreground">Screens:</span> <span className="font-medium text-foreground ml-1">{c.hmi.screens}</span></div>
             <div><span className="text-muted-foreground">Complexity:</span> <span className="font-medium text-foreground ml-1">{c.hmi.screenComplexity}</span></div>
@@ -180,7 +180,7 @@ export function StepReview() {
         step: 5,
         configured: c.vision.enabled,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Enabled:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.vision.enabled)}</span></div>
             <div><span className="text-muted-foreground">Cameras:</span> <span className="font-medium text-foreground ml-1">{c.vision.cameras}</span></div>
             <div><span className="text-muted-foreground">Triggering:</span> <span className="font-medium text-foreground ml-1">{c.vision.triggering || '—'}</span></div>
@@ -198,7 +198,7 @@ export function StepReview() {
         step: 6,
         configured: c.safety.enabled,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Enabled:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.safety.enabled)}</span></div>
             <div><span className="text-muted-foreground">Controller:</span> <span className="font-medium text-foreground ml-1">{c.safety.controller}</span></div>
             <div><span className="text-muted-foreground">Safety I/O:</span> <span className="font-medium text-foreground ml-1">{c.safety.safetyIOCount}</span></div>
@@ -217,7 +217,7 @@ export function StepReview() {
         step: 7,
         configured: c.communication.protocols.some((p) => p.enabled),
         staticContent: (
-          <div className="text-xs">
+          <div className="text-sm">
             <span className="text-muted-foreground">Protocols: </span>
             <span className="font-medium text-foreground">{listEnabled(c.communication.protocols).join(', ') || 'None'}</span>
             <span className="text-muted-foreground ml-3">MES: </span>
@@ -239,7 +239,7 @@ export function StepReview() {
         step: 8,
         configured: c.mechatronics.type !== 'None',
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Type:</span> <span className="font-medium text-foreground ml-1">{c.mechatronics.type}</span></div>
             {c.mechatronics.type !== 'None' && (
               <>
@@ -259,7 +259,7 @@ export function StepReview() {
         step: 9,
         configured: c.robotics.enabled,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">Enabled:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.robotics.enabled)}</span></div>
             {c.robotics.enabled && (
               <>
@@ -280,7 +280,7 @@ export function StepReview() {
         step: 10,
         configured: c.iiot.ipcRequired || c.iiot.iiotRequired,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1 text-sm">
             <div><span className="text-muted-foreground">IPC:</span> <span className="font-medium text-foreground ml-1">{c.iiot.ipcRequired ? c.iiot.ipcModel : 'Not required'}</span></div>
             <div><span className="text-muted-foreground">IIoT:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.iiot.iiotRequired)}</span></div>
             <div><span className="text-muted-foreground">Cloud:</span> <span className="font-medium text-foreground ml-1">{yesNo(c.iiot.cloudConnectivity)}</span></div>
@@ -296,7 +296,7 @@ export function StepReview() {
         step: 11,
         configured: c.additionalFeatures.some((f) => f.enabled),
         staticContent: (
-          <div className="text-xs">
+          <div className="text-sm">
             <span className="text-muted-foreground">Enabled: </span>
             <span className="font-medium text-foreground">{listEnabled(c.additionalFeatures).join(', ') || 'None'}</span>
           </div>
@@ -307,7 +307,7 @@ export function StepReview() {
         step: 12,
         configured: true,
         staticContent: (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-1 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-1 text-sm">
             {(['hardware', 'motion', 'hmi', 'vision', 'safety', 'communication', 'software', 'integration', 'requirement', 'testing'] as const).map((key) => (
               <div key={key} className="flex justify-between">
                 <span className="text-muted-foreground capitalize">{key}:</span>
@@ -346,9 +346,9 @@ export function StepReview() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-sm font-bold text-foreground">Configuration Review</h2>
-          <p className="text-xs text-muted-foreground">Review and edit all configured parameters before generating the estimate.</p>
+          <p className="text-sm text-muted-foreground">Review and edit all configured parameters before generating the estimate.</p>
         </div>
-        <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={handleExportReview}>
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleExportReview}>
           <FileText className="h-3.5 w-3.5" />
           Export Review
         </Button>
@@ -357,10 +357,10 @@ export function StepReview() {
         {/* Summary Bar */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-foreground">
+            <span className="text-sm font-medium text-foreground">
               {configuredCount} of {totalCount} sections configured
             </span>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {Math.round(progressPct)}%
             </span>
           </div>
@@ -387,7 +387,7 @@ export function StepReview() {
                 <div className="min-w-0 flex-1 flex items-start gap-2.5">
                   <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${configured ? 'bg-emerald-500' : 'bg-gray-300'}`} />
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-foreground mb-1.5">{title}</div>
+                    <div className="text-sm font-semibold text-foreground mb-1.5">{title}</div>
                     <AnimatePresence mode="wait">
                       {isEditing && editFields ? (
                         <motion.div
@@ -400,10 +400,10 @@ export function StepReview() {
                         >
                           {editFields.map((field) => (
                             <div key={field.key} className="flex flex-col gap-1">
-                              <span className="text-[11px] text-muted-foreground">{field.label}</span>
+                              <span className="text-sm text-muted-foreground">{field.label}</span>
                               {field.type === 'text' && (
                                 <Input
-                                  className="h-7 text-xs"
+                                  className="h-8 text-sm"
                                   defaultValue={String(field.value)}
                                   onBlur={(e) => field.onUpdate(e.target.value)}
                                   onKeyDown={(e) => { if (e.key === 'Enter') field.onUpdate((e.target as HTMLInputElement).value); }}
@@ -412,7 +412,7 @@ export function StepReview() {
                               {field.type === 'number' && (
                                 <Input
                                   type="number"
-                                  className="h-7 text-xs w-24"
+                                  className="h-8 text-sm w-24"
                                   defaultValue={Number(field.value)}
                                   onBlur={(e) => field.onUpdate(Number(e.target.value) || 0)}
                                 />
@@ -422,12 +422,12 @@ export function StepReview() {
                                   value={String(field.value)}
                                   onValueChange={field.onUpdate}
                                 >
-                                  <SelectTrigger size="sm" className="h-7 text-xs w-full">
+                                  <SelectTrigger size="sm" className="h-8 text-sm w-full">
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
                                     {field.options.map((opt) => (
-                                      <SelectItem key={opt} value={opt} className="text-xs">
+                                      <SelectItem key={opt} value={opt} className="text-sm">
                                         {opt}
                                       </SelectItem>
                                     ))}
@@ -462,7 +462,7 @@ export function StepReview() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="shrink-0 ml-2 h-7 gap-1 text-xs bg-primary text-primary-foreground"
+                      className="shrink-0 ml-2 h-7 gap-1 text-sm bg-primary text-primary-foreground"
                       onClick={() => setEditingSection(null)}
                     >
                       <CheckCircle className="h-3 w-3" />
@@ -472,7 +472,7 @@ export function StepReview() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="shrink-0 ml-2 h-7 gap-1 text-[11px] text-muted-foreground hover:text-primary"
+                      className="shrink-0 ml-2 h-7 gap-1 text-sm text-muted-foreground hover:text-primary"
                       onClick={() => setEditingSection(title)}
                     >
                       <Pencil className="h-3 w-3" />

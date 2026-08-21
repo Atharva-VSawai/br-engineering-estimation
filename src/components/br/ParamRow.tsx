@@ -24,9 +24,9 @@ export function ParamRow({ label, children, description }: ParamRowProps) {
   return (
     <div className="flex flex-col gap-1.5 py-2">
       <div className="flex items-center justify-between">
-        <Label className="text-xs font-medium text-foreground">{label}</Label>
+        <Label className="text-sm font-medium text-foreground">{label}</Label>
         {description && (
-          <span className="text-[11px] text-muted-foreground">{description}</span>
+          <span className="text-xs text-muted-foreground">{description}</span>
         )}
       </div>
       {children}
@@ -63,7 +63,7 @@ export function NumberField({ value, onChange, min = 0, max = 9999, placeholder,
           max={max}
           placeholder={placeholder}
           disabled={disabled}
-          className={`h-8 w-28 text-sm transition-colors duration-150 ${showIndicator ? 'pr-8' : ''}`}
+          className={`h-9 w-28 text-sm transition-colors duration-150 ${showIndicator ? 'pr-8' : ''}`}
         />
         {valid === true && (
           <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-500 pointer-events-none" />
@@ -72,7 +72,7 @@ export function NumberField({ value, onChange, min = 0, max = 9999, placeholder,
           <X className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-red-400 pointer-events-none" />
         )}
       </div>
-      {unit && <span className="text-xs text-muted-foreground">{unit}</span>}
+      {unit && <span className="text-sm text-muted-foreground">{unit}</span>}
     </div>
   );
 }
@@ -90,7 +90,7 @@ export function SelectField({ value, onChange, options, placeholder, className =
   return (
     <div className="flex items-center gap-1.5">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className={`h-8 w-full max-w-xs text-sm transition-colors duration-150 ${className}`}>
+        <SelectTrigger className={`h-9 w-full max-w-xs text-sm transition-colors duration-150 ${className}`}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -128,7 +128,7 @@ export function TextField({ value, onChange, placeholder, className = '', valid 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`h-8 text-sm transition-colors duration-150 ${showIndicator ? 'pr-8' : ''} ${className}`}
+        className={`h-9 text-sm transition-colors duration-150 ${showIndicator ? 'pr-8' : ''} ${className}`}
       />
       {valid === true && (
         <Check className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-emerald-500 pointer-events-none" />
@@ -181,7 +181,7 @@ export function ToggleField({ checked, onChange, description }: ToggleFieldProps
   return (
     <div className="flex items-center gap-2">
       <Switch checked={checked} onCheckedChange={onChange} className="data-[state=checked]:bg-primary transition-colors duration-150" />
-      {description && <span className="text-[11px] text-muted-foreground">{description}</span>}
+      {description && <span className="text-xs text-muted-foreground">{description}</span>}
     </div>
   );
 }
@@ -203,8 +203,8 @@ export function CheckboxField({ label, checked, onChange, description }: Checkbo
         className="h-3.5 w-3.5 rounded border-input text-primary accent-primary cursor-pointer"
       />
       <div className="flex flex-col">
-        <span className="text-xs font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
-        {description && <span className="text-[11px] text-muted-foreground">{description}</span>}
+        <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">{label}</span>
+        {description && <span className="text-xs text-muted-foreground">{description}</span>}
       </div>
     </label>
   );

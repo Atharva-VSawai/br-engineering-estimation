@@ -104,7 +104,7 @@ export function ProductExplorerPage() {
             Explore the B&R product ecosystem for industrial automation.
           </p>
         </div>
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
           {usedCount} of {products.length} selected
         </span>
       </div>
@@ -124,12 +124,12 @@ export function ProductExplorerPage() {
       {/* Selected count badge */}
       {usedCount > 0 && (
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-medium text-primary">
+          <span className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary">
             {usedCount} product(s) selected for project
           </span>
           <button
             onClick={handleClearSelection}
-            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-destructive hover:bg-destructive/5"
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-destructive hover:bg-destructive/5"
           >
             <X className="h-3 w-3" />
             Clear Selection
@@ -143,7 +143,7 @@ export function ProductExplorerPage() {
           <div className="sticky top-0 space-y-0.5">
             <button
               onClick={() => setSelectedCategory('All')}
-              className={`w-full text-left rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`w-full text-left rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                 selectedCategory === 'All'
                   ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -158,7 +158,7 @@ export function ProductExplorerPage() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`w-full flex items-center gap-2 text-left rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`w-full flex items-center gap-2 text-left rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     selectedCategory === cat
                       ? 'bg-primary/10 text-primary'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -166,7 +166,7 @@ export function ProductExplorerPage() {
                 >
                   {IconComponent && <IconComponent className="h-3.5 w-3.5 shrink-0" />}
                   <span className="flex-1 truncate">{cat}</span>
-                  <span className="text-[10px] opacity-60">{count}</span>
+                  <span className="text-sm opacity-60">{count}</span>
                 </button>
               );
             })}
@@ -175,7 +175,7 @@ export function ProductExplorerPage() {
 
         {/* Products grid */}
         <div className="flex-1">
-          <div className="text-xs text-muted-foreground mb-3">
+          <div className="text-sm text-muted-foreground mb-3">
             {filteredProducts.length} product(s)
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
@@ -192,13 +192,13 @@ export function ProductExplorerPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-foreground">{product.name}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">{product.category}</div>
+                    <div className="text-sm font-semibold text-foreground">{product.name}</div>
+                    <div className="text-sm text-muted-foreground mt-0.5">{product.category}</div>
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <span className="text-[8px] bg-primary/10 text-primary rounded px-1 shrink-0">B&R</span>
-                      <span className="text-[13px] text-foreground leading-relaxed">{product.description}</span>
+                      <span className="text-sm text-foreground leading-relaxed">{product.description}</span>
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-1.5">
+                    <div className="text-sm text-muted-foreground mt-1.5">
                       <span className="font-medium text-foreground">Engineering Role:</span> {product.engineeringRole}
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export function ProductExplorerPage() {
                     onClick={() => handleToggle(product.name)}
                     className={`shrink-0 flex items-center justify-center rounded-md transition-colors ${
                       product.usedInProject
-                        ? 'h-7 px-2.5 bg-primary text-primary-foreground text-[11px] font-medium gap-1'
+                        ? 'h-8 px-2.5 bg-primary text-primary-foreground text-sm font-medium gap-1'
                         : 'h-6 w-6 border border-border bg-card text-transparent hover:border-primary/50 hover:text-primary/50'
                     }`}
                     title={product.usedInProject ? 'Remove from project' : 'Add to project'}

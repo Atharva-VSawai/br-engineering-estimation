@@ -32,7 +32,7 @@ export function StepRobotics() {
                 <button
                   key={String(val)}
                   onClick={() => updateRobotics({ enabled: val })}
-                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     r.enabled === val
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-card text-muted-foreground hover:border-primary/50'
@@ -76,7 +76,7 @@ export function StepRobotics() {
             <div className="flex flex-col items-center gap-0 py-3 px-4">
               {['Robot', 'Motion', 'Controller', 'Machine Sequence'].map((item, idx, arr) => (
                 <React.Fragment key={item}>
-                  <div className="rounded-md border border-border bg-card px-4 py-1.5 text-xs font-medium text-foreground">
+                  <div className="rounded-md border border-border bg-card px-4 py-1.5 text-sm font-medium text-foreground">
                     {item}
                   </div>
                   {idx < arr.length - 1 && <ArrowDown className="h-4 w-4 text-muted-foreground" />}
