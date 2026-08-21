@@ -675,5 +675,13 @@ export function exportPdf(config: ProjectConfig, projectId?: string | null): voi
 
   // ── Download ──────────────────────────────────────────────────────────────
   const filename = `br-estimate-${(config.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-  doc.save(filename);
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }

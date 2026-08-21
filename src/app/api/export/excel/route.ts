@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
-import type { ProjectConfig, ComplexityLevel } from '@/types';
+import type { ProjectConfig } from '@/types';
 import { calculateEngineeringEffort } from '@/lib/effort-calculation';
 
 // ===== Helpers =====
@@ -22,80 +22,20 @@ const PROTOCOL_DESCRIPTIONS: Record<string, string> = {
   Other: 'Other communication protocol',
 };
 
-function headerStyle(): XLSX.CellStyle {
-  return {
-    font: { bold: true, color: { rgb: 'FFFFFF' } },
-    fill: { fgColor: { rgb: 'C75B12' } },
-    alignment: { vertical: 'center', horizontal: 'center' },
-    border: { bottom: { style: 'thin', color: { rgb: 'A04510' } } },
-  };
-}
-
-function labelStyle(): XLSX.CellStyle {
-  return { font: { bold: true }, alignment: { vertical: 'center' } };
-}
-
-function boldStyle(): XLSX.CellStyle {
-  return { font: { bold: true }, alignment: { vertical: 'center' } };
-}
-
-function sectionTitleStyle(): XLSX.CellStyle {
-  return { font: { bold: true, sz: 12 }, alignment: { vertical: 'center' } };
-}
-
-function addSheetHeaders(
-  ws: XLSX.WorkSheet,
-  headers: string[],
+/** Build a worksheet from an array of rows. Each row is (string|number|boolean)[] */
+function sheetFromRows(
+  rows: (string | number | boolean)[][],
   colWidths?: number[],
-  startRow: number = 0,
-) {
-  const hStyle = headerStyle();
-  headers.forEach((h, i) => {
-    const cell = XLSX.utils.encode_cell({ r: startRow, c: i });
-    if (!ws[cell]) ws[cell] = { v: h, t: 's' };
-    ws[cell].v = h;
-    ws[cell].t = 's';
-    ws[cell].s = hStyle;
-  });
+): XLSX.WorkSheet {
+  // Convert booleans to strings for display
+  const cleaned = rows.map(row =>
+    row.map(v => (typeof v === 'boolean' ? bool(v) : v))
+  );
+  const ws = XLSX.utils.aoa_to_sheet(cleaned);
   if (colWidths) {
-    ws['!cols'] = colWidths.map((w) => ({ wch: w }));
+    ws['!cols'] = colWidths.map(w => ({ wch: w }));
   }
-}
-
-function addRow(
-  ws: XLSX.WorkSheet,
-  row: number,
-  values: (string | number | boolean)[],
-) {
-  values.forEach((v, col) => {
-    const cell = XLSX.utils.encode_cell({ r: row, c: col });
-    if (typeof v === 'boolean') {
-      ws[cell] = { v: bool(v), t: 's' };
-    } else if (typeof v === 'number') {
-      ws[cell] = { v, t: 'n' };
-    } else {
-      ws[cell] = { v: v ?? '', t: 's' };
-    }
-  });
-}
-
-function addLabeledRow(
-  ws: XLSX.WorkSheet,
-  row: number,
-  label: string,
-  value: string | number | boolean,
-) {
-  const lStyle = labelStyle();
-  const labelCell = XLSX.utils.encode_cell({ r: row, c: 0 });
-  ws[labelCell] = { v: label, t: 's', s: lStyle };
-  const valCell = XLSX.utils.encode_cell({ r: row, c: 1 });
-  if (typeof value === 'boolean') {
-    ws[valCell] = { v: bool(value), t: 's' };
-  } else if (typeof value === 'number') {
-    ws[valCell] = { v: value, t: 'n' };
-  } else {
-    ws[valCell] = { v: value ?? '', t: 's' };
-  }
+  return ws;
 }
 
 // ===== Configuration Completeness Check =====
@@ -131,29 +71,28 @@ function buildProjectSummarySheet(
   config: ProjectConfig,
   result: ReturnType<typeof calculateEngineeringEffort>,
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([['']]);
-  ws['!cols'] = [{ wch: 35 }, { wch: 50 }];
-
-  let r = 0;
-  addLabeledRow(ws, r++, 'Project Name', config.project.name);
-  addLabeledRow(ws, r++, 'Customer', config.project.customer);
-  addLabeledRow(ws, r++, 'Machine Type', config.project.machineType);
-  addLabeledRow(ws, r++, 'Industry', config.project.industry);
-  addLabeledRow(ws, r++, 'Requirement Clarity', config.project.requirementClarity);
-  addLabeledRow(ws, r++, 'Customer Involvement', config.project.customerInvolvement);
-  addLabeledRow(ws, r++, 'Overall Complexity', result.overallComplexity);
-  r++;
-
   const e = result.effort;
-  addLabeledRow(ws, r++, 'Total Engineering Effort (hours)', Math.round(e.totalHours));
-  addLabeledRow(ws, r++, 'Total Working Days', Math.round(e.totalDays * 10) / 10);
-  addLabeledRow(ws, r++, 'Estimated Timeline (weeks)', Math.round(e.totalWeeks * 10) / 10);
-  addLabeledRow(ws, r++, 'Estimated Duration (months)', Math.round(e.totalMonths * 10) / 10);
-  r++;
-  addLabeledRow(ws, r++, 'Export Date', new Date().toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  }));
-
+  const ws = sheetFromRows(
+    [
+      ['Project Name', config.project.name || ''],
+      ['Customer', config.project.customer || ''],
+      ['Machine Type', config.project.machineType || ''],
+      ['Industry', config.project.industry || ''],
+      ['Requirement Clarity', config.project.requirementClarity || ''],
+      ['Customer Involvement', config.project.customerInvolvement || ''],
+      ['Overall Complexity', result.overallComplexity],
+      [],
+      ['Total Engineering Effort (hours)', Math.round(e.totalHours)],
+      ['Total Working Days', Math.round(e.totalDays * 10) / 10],
+      ['Estimated Timeline (weeks)', Math.round(e.totalWeeks * 10) / 10],
+      ['Estimated Duration (months)', Math.round(e.totalMonths * 10) / 10],
+      [],
+      ['Export Date', new Date().toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      })],
+    ],
+    [35, 50],
+  );
   XLSX.utils.book_append_sheet(wb, ws, 'Project Summary');
 }
 
@@ -162,188 +101,148 @@ function buildTechnicalConfigSheet(
   wb: XLSX.WorkBook,
   config: ProjectConfig,
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([['']]);
-  ws['!cols'] = [{ wch: 32 }, { wch: 50 }];
+  const c = config;
+  const rows: (string | number | boolean)[][] = [
+    ['CONTROLLER'],
+    ['Family', c.controller.family],
+    ['Quantity', c.controller.quantity],
+    ['Performance', c.controller.performance],
+    ['Communication Interfaces', c.controller.communicationInterfaces || 'None'],
+    ['Redundancy Required', c.controller.redundancyRequired],
+    ['Simulation Required', c.controller.simulationRequired],
+    ['Diagnostics Required', c.controller.diagnosticsRequired],
+    [],
+    ['I/O'],
+    ['Digital Inputs', c.io.digitalInputs],
+    ['Digital Outputs', c.io.digitalOutputs],
+    ['Analog Inputs', c.io.analogInputs],
+    ['Analog Outputs', c.io.analogOutputs],
+    ['Safety I/O', c.io.safetyIO],
+    ['Encoder/Counter Modules', c.io.encoderCounterModules],
+    ['Temperature Modules', c.io.temperatureModules],
+    ['Communication Modules', c.io.communicationIO],
+    ['Special Modules', c.io.specialModules],
+    [],
+    ['MOTION'],
+    ['Total Axes', c.motion.totalAxes],
+    ['Linear Axes', c.motion.linearAxes],
+    ['Rotary Axes', c.motion.rotaryAxes],
+    ['Servo Drives', c.motion.servoDrives],
+    ['Servo Motors', c.motion.servoMotors],
+    ['Homing', c.motion.homingRequired],
+    ['Positioning', c.motion.positioning],
+    ['Velocity Control', c.motion.velocityControl],
+    ['Torque Control', c.motion.torqueControl],
+    ['Synchronization', c.motion.synchronization],
+    ['Master/Slave', c.motion.masterSlave],
+    ['Electronic Gearing', c.motion.electronicGearing],
+    ['Electronic Camming', c.motion.electronicCamming],
+    ['Coordinated Motion', c.motion.coordinatedMotion],
+    ['Interpolation', c.motion.interpolation],
+    ['Complex Motion Profiles', c.motion.complexMotionProfiles],
+    ['Axis Diagnostics', c.motion.axisDiagnostics],
+    [],
+    ['HMI'],
+    ['Type', c.hmi.type],
+    ['Number of Screens', c.hmi.screens],
+    ['Screen Complexity', c.hmi.screenComplexity],
+    ['Alarm Management', c.hmi.alarmManagement],
+    ['Recipe Management', c.hmi.recipeManagement],
+    ['Trend Visualization', c.hmi.trendVisualization],
+    ['User Management', c.hmi.userManagement],
+    ['Machine Diagnostics', c.hmi.machineDiagnostics],
+    ['Manual Mode', c.hmi.manualMode],
+    ['Automatic Mode', c.hmi.automaticMode],
+    ['Maintenance Screens', c.hmi.maintenanceScreens],
+    ['Parameter Management', c.hmi.parameterManagement],
+    [],
+    ['VISION'],
+    ['Enabled', c.vision.enabled],
+    ['Cameras', c.vision.cameras],
+    ['Lighting Systems', c.vision.lightingSystems],
+    ['Inspection', c.vision.inspection],
+    ['Measurement', c.vision.measurement],
+    ['Detection', c.vision.detection],
+    ['Identification', c.vision.identification],
+    ['OCR', c.vision.ocr],
+    ['Barcode/QR', c.vision.barcodeQR],
+    ['Pattern Matching', c.vision.patternMatching],
+    ['Position Detection', c.vision.positionDetection],
+    ['Quality Control', c.vision.qualityControl],
+    ['PLC Integration', c.vision.plcIntegration],
+    ['Motion-Vision Sync', c.vision.motionVisionSync],
+    [],
+    ['SAFETY'],
+    ['Enabled', c.safety.enabled],
+    ['Controller', c.safety.controller],
+    ['Safety I/O Count', c.safety.safetyIOCount],
+    ['Emergency Stops', c.safety.emergencyStops],
+    ['Safety Doors', c.safety.safetyDoors],
+    ['Light Curtains', c.safety.lightCurtains],
+    ['Safe Motion', c.safety.safeMotion],
+    ['Safety Functions', Array.isArray(c.safety.safetyFunctions) ? c.safety.safetyFunctions.join(', ') : ''],
+    ['Validation Required', c.safety.validationRequired],
+    ['Testing Required', c.safety.testingRequired],
+    ['Documentation Required', c.safety.documentationRequired],
+    [],
+    ['COMMUNICATION'],
+    ['Protocol', 'Enabled', 'Devices', 'Description'],
+  ];
 
-  let r = 0;
-
-  // Controller
-  const secCell = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell] = { v: 'CONTROLLER', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Family', config.controller.family);
-  addLabeledRow(ws, r++, 'Quantity', config.controller.quantity);
-  addLabeledRow(ws, r++, 'Performance', config.controller.performance);
-  addLabeledRow(ws, r++, 'Communication Interfaces', config.controller.communicationInterfaces || 'None');
-  addLabeledRow(ws, r++, 'Redundancy Required', config.controller.redundancyRequired);
-  addLabeledRow(ws, r++, 'Simulation Required', config.controller.simulationRequired);
-  addLabeledRow(ws, r++, 'Diagnostics Required', config.controller.diagnosticsRequired);
-  r++;
-
-  // I/O
-  const secCell2 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell2] = { v: 'I/O', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Digital Inputs', config.io.digitalInputs);
-  addLabeledRow(ws, r++, 'Digital Outputs', config.io.digitalOutputs);
-  addLabeledRow(ws, r++, 'Analog Inputs', config.io.analogInputs);
-  addLabeledRow(ws, r++, 'Analog Outputs', config.io.analogOutputs);
-  addLabeledRow(ws, r++, 'Safety I/O', config.io.safetyIO);
-  addLabeledRow(ws, r++, 'Encoder/Counter Modules', config.io.encoderCounterModules);
-  addLabeledRow(ws, r++, 'Temperature Modules', config.io.temperatureModules);
-  addLabeledRow(ws, r++, 'Communication Modules', config.io.communicationIO);
-  addLabeledRow(ws, r++, 'Special Modules', config.io.specialModules);
-  r++;
-
-  // Motion
-  const secCell3 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell3] = { v: 'MOTION', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Total Axes', config.motion.totalAxes);
-  addLabeledRow(ws, r++, 'Linear Axes', config.motion.linearAxes);
-  addLabeledRow(ws, r++, 'Rotary Axes', config.motion.rotaryAxes);
-  addLabeledRow(ws, r++, 'Servo Drives', config.motion.servoDrives);
-  addLabeledRow(ws, r++, 'Servo Motors', config.motion.servoMotors);
-  addLabeledRow(ws, r++, 'Homing', config.motion.homingRequired);
-  addLabeledRow(ws, r++, 'Positioning', config.motion.positioning);
-  addLabeledRow(ws, r++, 'Velocity Control', config.motion.velocityControl);
-  addLabeledRow(ws, r++, 'Torque Control', config.motion.torqueControl);
-  addLabeledRow(ws, r++, 'Synchronization', config.motion.synchronization);
-  addLabeledRow(ws, r++, 'Master/Slave', config.motion.masterSlave);
-  addLabeledRow(ws, r++, 'Electronic Gearing', config.motion.electronicGearing);
-  addLabeledRow(ws, r++, 'Electronic Camming', config.motion.electronicCamming);
-  addLabeledRow(ws, r++, 'Coordinated Motion', config.motion.coordinatedMotion);
-  addLabeledRow(ws, r++, 'Interpolation', config.motion.interpolation);
-  addLabeledRow(ws, r++, 'Complex Motion Profiles', config.motion.complexMotionProfiles);
-  addLabeledRow(ws, r++, 'Axis Diagnostics', config.motion.axisDiagnostics);
-  r++;
-
-  // HMI
-  const secCell4 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell4] = { v: 'HMI', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Type', config.hmi.type);
-  addLabeledRow(ws, r++, 'Number of Screens', config.hmi.screens);
-  addLabeledRow(ws, r++, 'Screen Complexity', config.hmi.screenComplexity);
-  addLabeledRow(ws, r++, 'Alarm Management', config.hmi.alarmManagement);
-  addLabeledRow(ws, r++, 'Recipe Management', config.hmi.recipeManagement);
-  addLabeledRow(ws, r++, 'Trend Visualization', config.hmi.trendVisualization);
-  addLabeledRow(ws, r++, 'User Management', config.hmi.userManagement);
-  addLabeledRow(ws, r++, 'Machine Diagnostics', config.hmi.machineDiagnostics);
-  addLabeledRow(ws, r++, 'Manual Mode', config.hmi.manualMode);
-  addLabeledRow(ws, r++, 'Automatic Mode', config.hmi.automaticMode);
-  addLabeledRow(ws, r++, 'Maintenance Screens', config.hmi.maintenanceScreens);
-  addLabeledRow(ws, r++, 'Parameter Management', config.hmi.parameterManagement);
-  r++;
-
-  // Vision
-  const secCell5 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell5] = { v: 'VISION', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Enabled', config.vision.enabled);
-  addLabeledRow(ws, r++, 'Cameras', config.vision.cameras);
-  addLabeledRow(ws, r++, 'Lighting Systems', config.vision.lightingSystems);
-  addLabeledRow(ws, r++, 'Inspection', config.vision.inspection);
-  addLabeledRow(ws, r++, 'Measurement', config.vision.measurement);
-  addLabeledRow(ws, r++, 'Detection', config.vision.detection);
-  addLabeledRow(ws, r++, 'Identification', config.vision.identification);
-  addLabeledRow(ws, r++, 'OCR', config.vision.ocr);
-  addLabeledRow(ws, r++, 'Barcode/QR', config.vision.barcodeQR);
-  addLabeledRow(ws, r++, 'Pattern Matching', config.vision.patternMatching);
-  addLabeledRow(ws, r++, 'Position Detection', config.vision.positionDetection);
-  addLabeledRow(ws, r++, 'Quality Control', config.vision.qualityControl);
-  addLabeledRow(ws, r++, 'PLC Integration', config.vision.plcIntegration);
-  addLabeledRow(ws, r++, 'Motion-Vision Sync', config.vision.motionVisionSync);
-  r++;
-
-  // Safety
-  const secCell6 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell6] = { v: 'SAFETY', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Enabled', config.safety.enabled);
-  addLabeledRow(ws, r++, 'Controller', config.safety.controller);
-  addLabeledRow(ws, r++, 'Safety I/O Count', config.safety.safetyIOCount);
-  addLabeledRow(ws, r++, 'Emergency Stops', config.safety.emergencyStops);
-  addLabeledRow(ws, r++, 'Safety Doors', config.safety.safetyDoors);
-  addLabeledRow(ws, r++, 'Light Curtains', config.safety.lightCurtains);
-  addLabeledRow(ws, r++, 'Safe Motion', config.safety.safeMotion);
-  addLabeledRow(ws, r++, 'Safety Functions', config.safety.safetyFunctions);
-  addLabeledRow(ws, r++, 'Validation Required', config.safety.validationRequired);
-  addLabeledRow(ws, r++, 'Testing Required', config.safety.testingRequired);
-  addLabeledRow(ws, r++, 'Documentation Required', config.safety.documentationRequired);
-  r++;
-
-  // Communication (protocols table + integrations)
-  const secCell7 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell7] = { v: 'COMMUNICATION', t: 's', s: sectionTitleStyle() };
-  r++;
-  // Sub-table for protocols
-  addSheetHeaders(ws, ['Protocol', 'Enabled', 'Devices', 'Description'], [20, 12, 12, 50], r);
-  r++;
-  for (const proto of config.communication.protocols) {
-    const desc = PROTOCOL_DESCRIPTIONS[proto.name] || '';
-    addRow(ws, r, [proto.name, proto.enabled, proto.devices, desc]);
-    r++;
+  for (const proto of c.communication.protocols) {
+    rows.push([proto.name, proto.enabled, proto.devices, PROTOCOL_DESCRIPTIONS[proto.name] || '']);
   }
-  r++;
-  addLabeledRow(ws, r++, 'PLC-to-PLC', config.communication.plcToPlc);
-  addLabeledRow(ws, r++, 'MES Integration', config.communication.mesIntegration);
-  addLabeledRow(ws, r++, 'SCADA Integration', config.communication.scadaIntegration);
-  addLabeledRow(ws, r++, 'Cloud/IIoT Integration', config.communication.cloudIIoTIntegration);
-  r++;
 
-  // Mechatronics
-  const secCell8 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell8] = { v: 'MECHATRONICS', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Type', config.mechatronics.type);
-  addLabeledRow(ws, r++, 'Movers', config.mechatronics.movers);
-  addLabeledRow(ws, r++, 'Processing Stations', config.mechatronics.processingStations);
-  addLabeledRow(ws, r++, 'Mover Routing', config.mechatronics.moverRouting);
-  addLabeledRow(ws, r++, 'Independent Mover Control', config.mechatronics.independentMoverControl);
-  addLabeledRow(ws, r++, 'Synchronization', config.mechatronics.synchronization);
-  addLabeledRow(ws, r++, 'Transport Sequences', config.mechatronics.transportSequences);
-  addLabeledRow(ws, r++, 'Product Handling', config.mechatronics.productHandling);
-  addLabeledRow(ws, r++, 'Vision Integration', config.mechatronics.visionIntegration);
-  addLabeledRow(ws, r++, 'HMI Integration', config.mechatronics.hmiIntegration);
-  addLabeledRow(ws, r++, 'Safety Integration', config.mechatronics.safetyIntegration);
-  addLabeledRow(ws, r++, 'Diagnostics', config.mechatronics.diagnostics);
-  r++;
+  rows.push(
+    [],
+    ['PLC-to-PLC', c.communication.plcToPlc],
+    ['MES Integration', c.communication.mesIntegration],
+    ['SCADA Integration', c.communication.scadaIntegration],
+    ['Cloud/IIoT Integration', c.communication.cloudIIoTIntegration],
+    [],
+    ['MECHATRONICS'],
+    ['Type', c.mechatronics.type],
+    ['Movers', c.mechatronics.movers],
+    ['Processing Stations', c.mechatronics.processingStations],
+    ['Mover Routing', c.mechatronics.moverRouting],
+    ['Independent Mover Control', c.mechatronics.independentMoverControl],
+    ['Synchronization', c.mechatronics.synchronization],
+    ['Transport Sequences', Array.isArray(c.mechatronics.transportSequences) ? c.mechatronics.transportSequences.join(', ') : ''],
+    ['Product Handling', c.mechatronics.productHandling],
+    ['Vision Integration', c.mechatronics.visionIntegration],
+    ['HMI Integration', c.mechatronics.hmiIntegration],
+    ['Safety Integration', c.mechatronics.safetyIntegration],
+    ['Diagnostics', c.mechatronics.diagnostics],
+    [],
+    ['ROBOTICS'],
+    ['Enabled', c.robotics.enabled],
+    ['Robot Type', c.robotics.robotType],
+    ['Quantity', c.robotics.quantity],
+    ['Motion Integration', c.robotics.motionIntegration],
+    ['Vision Integration', c.robotics.visionIntegration],
+    ['Pick and Place', c.robotics.pickAndPlace],
+    ['Trajectory Programming', c.robotics.trajectoryProgramming],
+    ['Synchronization', c.robotics.synchronization],
+    ['Simulation', c.robotics.simulation],
+    ['Safety', c.robotics.safety],
+    ['Robot Diagnostics', c.robotics.robotDiagnostics],
+    [],
+    ['IIoT'],
+    ['IPC Required', c.iiot.ipcRequired],
+    ['IPC Model', c.iiot.ipcModel],
+    ['IIoT Required', c.iiot.iiotRequired],
+    ['IIoT Connector', c.iiot.iiotConnector],
+    ['IIoT Services', c.iiot.iiotServices],
+    ['IIoT Edge Device', c.iiot.iiotEdgeDevice],
+    ['Cloud Connectivity', c.iiot.cloudConnectivity],
+    ['Machine Data Collection', c.iiot.machineDataCollection],
+    ['Remote Maintenance', c.iiot.remoteMaintenance],
+    ['OPC UA', c.iiot.opcUa],
+    ['Data Logging', c.iiot.dataLogging],
+    ['Analytics Integration', c.iiot.analyticsIntegration],
+  );
 
-  // Robotics
-  const secCell9 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell9] = { v: 'ROBOTICS', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'Enabled', config.robotics.enabled);
-  addLabeledRow(ws, r++, 'Robot Type', config.robotics.robotType);
-  addLabeledRow(ws, r++, 'Quantity', config.robotics.quantity);
-  addLabeledRow(ws, r++, 'Motion Integration', config.robotics.motionIntegration);
-  addLabeledRow(ws, r++, 'Vision Integration', config.robotics.visionIntegration);
-  addLabeledRow(ws, r++, 'Pick and Place', config.robotics.pickAndPlace);
-  addLabeledRow(ws, r++, 'Trajectory Programming', config.robotics.trajectoryProgramming);
-  addLabeledRow(ws, r++, 'Synchronization', config.robotics.synchronization);
-  addLabeledRow(ws, r++, 'Simulation', config.robotics.simulation);
-  addLabeledRow(ws, r++, 'Safety', config.robotics.safety);
-  addLabeledRow(ws, r++, 'Robot Diagnostics', config.robotics.robotDiagnostics);
-  r++;
-
-  // IIoT
-  const secCell10 = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[secCell10] = { v: 'IIoT', t: 's', s: sectionTitleStyle() };
-  r++;
-  addLabeledRow(ws, r++, 'IPC Required', config.iiot.ipcRequired);
-  addLabeledRow(ws, r++, 'IPC Model', config.iiot.ipcModel);
-  addLabeledRow(ws, r++, 'IIoT Required', config.iiot.iiotRequired);
-  addLabeledRow(ws, r++, 'IIoT Connector', config.iiot.iiotConnector);
-  addLabeledRow(ws, r++, 'IIoT Services', config.iiot.iiotServices);
-  addLabeledRow(ws, r++, 'IIoT Edge Device', config.iiot.iiotEdgeDevice);
-  addLabeledRow(ws, r++, 'Cloud Connectivity', config.iiot.cloudConnectivity);
-  addLabeledRow(ws, r++, 'Machine Data Collection', config.iiot.machineDataCollection);
-  addLabeledRow(ws, r++, 'Remote Maintenance', config.iiot.remoteMaintenance);
-  addLabeledRow(ws, r++, 'OPC UA', config.iiot.opcUa);
-  addLabeledRow(ws, r++, 'Data Logging', config.iiot.dataLogging);
-  addLabeledRow(ws, r++, 'Analytics Integration', config.iiot.analyticsIntegration);
-
+  const ws = sheetFromRows(rows, [32, 50]);
   XLSX.utils.book_append_sheet(wb, ws, 'Technical Configuration');
 }
 
@@ -352,47 +251,24 @@ function buildEffortSheet(
   wb: XLSX.WorkBook,
   result: ReturnType<typeof calculateEngineeringEffort>,
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([['']]);
-  ws['!cols'] = [{ wch: 35 }, { wch: 20 }, { wch: 15 }];
-
   const e = result.effort;
   const totalH = e.totalHours;
 
-  const rows = [
-    { area: 'Hardware Engineering', hours: e.hardwareHours },
-    { area: 'PLC / Software Engineering', hours: e.plcSoftwareHours },
-    { area: 'Motion Engineering', hours: e.motionHours },
-    { area: 'Vision Engineering', hours: e.visionHours },
-    { area: 'Safety Engineering', hours: e.safetyHours },
-    { area: 'Communication / Integration', hours: e.communicationIntegrationHours },
-    { area: 'Testing', hours: e.testingHours },
-    { area: 'Commissioning', hours: e.commissioningHours },
+  const rows: (string | number)[][] = [
+    ['Engineering Area', 'Estimated Hours', 'Percentage'],
+    ['Hardware Engineering', Math.round(e.hardwareHours * 10) / 10, `${totalH > 0 ? Math.round((e.hardwareHours / totalH) * 1000) / 10 : 0}%`],
+    ['PLC / Software Engineering', Math.round(e.plcSoftwareHours * 10) / 10, `${totalH > 0 ? Math.round((e.plcSoftwareHours / totalH) * 1000) / 10 : 0}%`],
+    ['Motion Engineering', Math.round(e.motionHours * 10) / 10, `${totalH > 0 ? Math.round((e.motionHours / totalH) * 1000) / 10 : 0}%`],
+    ['Vision Engineering', Math.round(e.visionHours * 10) / 10, `${totalH > 0 ? Math.round((e.visionHours / totalH) * 1000) / 10 : 0}%`],
+    ['Safety Engineering', Math.round(e.safetyHours * 10) / 10, `${totalH > 0 ? Math.round((e.safetyHours / totalH) * 1000) / 10 : 0}%`],
+    ['Communication / Integration', Math.round(e.communicationIntegrationHours * 10) / 10, `${totalH > 0 ? Math.round((e.communicationIntegrationHours / totalH) * 1000) / 10 : 0}%`],
+    ['Testing', Math.round(e.testingHours * 10) / 10, `${totalH > 0 ? Math.round((e.testingHours / totalH) * 1000) / 10 : 0}%`],
+    ['Commissioning', Math.round(e.commissioningHours * 10) / 10, `${totalH > 0 ? Math.round((e.commissioningHours / totalH) * 1000) / 10 : 0}%`],
+    [],
+    ['TOTAL', Math.round(totalH * 10) / 10, '100%'],
   ];
 
-  let r = 0;
-  addSheetHeaders(ws, ['Engineering Area', 'Estimated Hours', 'Percentage'], undefined, r);
-  r++;
-
-  for (const row of rows) {
-    const pct = totalH > 0 ? Math.round((row.hours / totalH) * 1000) / 10 : 0;
-    const areaCell = XLSX.utils.encode_cell({ r, c: 0 });
-    ws[areaCell] = { v: row.area, t: 's' };
-    const hoursCell = XLSX.utils.encode_cell({ r, c: 1 });
-    ws[hoursCell] = { v: Math.round(row.hours * 10) / 10, t: 'n' };
-    const pctCell = XLSX.utils.encode_cell({ r, c: 2 });
-    ws[pctCell] = { v: `${pct}%`, t: 's' };
-    r++;
-  }
-
-  // Total row
-  r++;
-  const tlCell = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[tlCell] = { v: 'TOTAL', t: 's', s: boldStyle() };
-  const thCell = XLSX.utils.encode_cell({ r, c: 1 });
-  ws[thCell] = { v: Math.round(totalH * 10) / 10, t: 'n', s: boldStyle() };
-  const tpCell = XLSX.utils.encode_cell({ r, c: 2 });
-  ws[tpCell] = { v: '100%', t: 's', s: boldStyle() };
-
+  const ws = sheetFromRows(rows, [35, 20, 15]);
   XLSX.utils.book_append_sheet(wb, ws, 'Engineering Effort');
 }
 
@@ -402,35 +278,25 @@ function buildComplexitySheet(
   config: ProjectConfig,
   result: ReturnType<typeof calculateEngineeringEffort>,
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([['']]);
-  ws['!cols'] = [{ wch: 30 }, { wch: 15 }, { wch: 50 }];
-
-  const dimensions: { key: keyof ProjectConfig['complexity']; label: string; note: string }[] = [
-    { key: 'hardware', label: 'Hardware', note: 'I/O modules, controller selection, wiring' },
-    { key: 'motion', label: 'Motion', note: `Axes: ${config.motion.totalAxes}, Drives: ${config.motion.servoDrives}` },
-    { key: 'hmi', label: 'HMI', note: `${config.hmi.screens} screens (${config.hmi.screenComplexity})` },
-    { key: 'vision', label: 'Vision', note: config.vision.enabled ? `${config.vision.cameras} camera(s)` : 'Not enabled' },
-    { key: 'safety', label: 'Safety', note: config.safety.enabled ? `${config.safety.safetyIOCount} safety I/O` : 'Not enabled' },
-    { key: 'communication', label: 'Communication', note: `${config.communication.protocols.filter((p) => p.enabled).length} protocol(s) active` },
-    { key: 'software', label: 'Software', note: `${config.additionalFeatures.filter((f) => f.enabled).length} additional features` },
-    { key: 'integration', label: 'Integration', note: `Mechatronics: ${config.mechatronics.type}, Robotics: ${config.robotics.enabled ? 'Yes' : 'No'}` },
-    { key: 'requirement', label: 'Requirement', note: `Clarity: ${config.project.requirementClarity}` },
-    { key: 'testing', label: 'Testing', note: 'Validation and testing scope' },
+  const c = config;
+  const rows: (string | number)[][] = [
+    ['Dimension', 'Rating', 'Notes'],
+    ['Hardware', c.complexity.hardware, 'I/O modules, controller selection, wiring'],
+    ['Motion', c.complexity.motion, `Axes: ${c.motion.totalAxes}, Drives: ${c.motion.servoDrives}`],
+    ['HMI', c.complexity.hmi, `${c.hmi.screens} screens (${c.hmi.screenComplexity})`],
+    ['Vision', c.complexity.vision, c.vision.enabled ? `${c.vision.cameras} camera(s)` : 'Not enabled'],
+    ['Safety', c.complexity.safety, c.safety.enabled ? `${c.safety.safetyIOCount} safety I/O` : 'Not enabled'],
+    ['Communication', c.complexity.communication, `${c.communication.protocols.filter((p) => p.enabled).length} protocol(s) active`],
+    ['Software', c.complexity.software, `${c.additionalFeatures.filter((f) => f.enabled).length} additional features`],
+    ['Integration', c.complexity.integration, `Mechatronics: ${c.mechatronics.type}, Robotics: ${c.robotics.enabled ? 'Yes' : 'No'}`],
+    ['Requirement', c.complexity.requirement, `Clarity: ${c.project.requirementClarity}`],
+    ['Testing', c.complexity.testing, 'Validation and testing scope'],
+    [],
+    ['Overall Complexity', result.overallComplexity, ''],
+    ['High/Very High Count', `${result.highCount} of 10`, ''],
   ];
 
-  let r = 0;
-  addSheetHeaders(ws, ['Dimension', 'Rating', 'Notes'], undefined, r);
-  r++;
-
-  for (const dim of dimensions) {
-    addRow(ws, r, [dim.label, config.complexity[dim.key], dim.note]);
-    r++;
-  }
-
-  r++;
-  addLabeledRow(ws, r++, 'Overall Complexity', result.overallComplexity);
-  addLabeledRow(ws, r++, 'High/Very High Count', `${result.highCount} of 10`);
-
+  const ws = sheetFromRows(rows, [30, 15, 50]);
   XLSX.utils.book_append_sheet(wb, ws, 'Complexity Assessment');
 }
 
@@ -439,36 +305,18 @@ function buildTimelineSheet(
   wb: XLSX.WorkBook,
   result: ReturnType<typeof calculateEngineeringEffort>,
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([['']]);
-  ws['!cols'] = [{ wch: 40 }, { wch: 20 }];
-
   const t = result.timeline;
-
-  let r = 0;
-  addSheetHeaders(ws, ['Phase', 'Duration (weeks)'], undefined, r);
-  r++;
-
-  const phases = [
-    { phase: 'Hardware Design & Ordering', weeks: t.hardwareDesignWeeks },
-    { phase: 'Software Development', weeks: t.softwareDevelopmentWeeks },
-    { phase: 'Integration & Testing', weeks: t.integrationTestingWeeks },
-    { phase: 'Commissioning & Handover', weeks: t.commissioningWeeks },
+  const rows: (string | number)[][] = [
+    ['Phase', 'Duration (weeks)'],
+    ['Hardware Design & Ordering', t.hardwareDesignWeeks],
+    ['Software Development', t.softwareDevelopmentWeeks],
+    ['Integration & Testing', t.integrationTestingWeeks],
+    ['Commissioning & Handover', t.commissioningWeeks],
+    [],
+    ['TOTAL', t.totalWeeks],
   ];
 
-  for (const p of phases) {
-    const phaseCell = XLSX.utils.encode_cell({ r, c: 0 });
-    ws[phaseCell] = { v: p.phase, t: 's' };
-    const weeksCell = XLSX.utils.encode_cell({ r, c: 1 });
-    ws[weeksCell] = { v: p.weeks, t: 'n' };
-    r++;
-  }
-
-  r++;
-  const tlCell = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[tlCell] = { v: 'TOTAL', t: 's', s: boldStyle() };
-  const twCell = XLSX.utils.encode_cell({ r, c: 1 });
-  ws[twCell] = { v: t.totalWeeks, t: 'n', s: boldStyle() };
-
+  const ws = sheetFromRows(rows, [40, 20]);
   XLSX.utils.book_append_sheet(wb, ws, 'Timeline');
 }
 
@@ -477,32 +325,17 @@ function buildCompletenessSheet(
   wb: XLSX.WorkBook,
   config: ProjectConfig,
 ) {
-  const ws = XLSX.utils.aoa_to_sheet([['']]);
-  ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 45 }];
-
   const checks = checkCompleteness(config);
+  const configuredCount = checks.filter((ch) => ch.configured).length;
 
-  let r = 0;
-  addSheetHeaders(ws, ['Section', 'Configured', 'Details'], undefined, r);
-  r++;
+  const rows: (string | number)[][] = [
+    ['Section', 'Configured', 'Details'],
+    ...checks.map(ch => [ch.label, ch.configured ? 'Yes' : 'No', ch.note] as (string | number)[]),
+    [],
+    ['Configured Sections', `${configuredCount} of ${checks.length}`, ''],
+  ];
 
-  for (const check of checks) {
-    const secCell = XLSX.utils.encode_cell({ r, c: 0 });
-    ws[secCell] = { v: check.label, t: 's' };
-    const confCell = XLSX.utils.encode_cell({ r, c: 1 });
-    ws[confCell] = { v: check.configured ? 'Yes' : 'No', t: 's' };
-    const detCell = XLSX.utils.encode_cell({ r, c: 2 });
-    ws[detCell] = { v: check.note, t: 's' };
-    r++;
-  }
-
-  r++;
-  const configuredCount = checks.filter((c) => c.configured).length;
-  const sumCell = XLSX.utils.encode_cell({ r, c: 0 });
-  ws[sumCell] = { v: 'Configured Sections', t: 's', s: boldStyle() };
-  const sumValCell = XLSX.utils.encode_cell({ r, c: 1 });
-  ws[sumValCell] = { v: `${configuredCount} of ${checks.length}`, t: 's', s: boldStyle() };
-
+  const ws = sheetFromRows(rows, [25, 15, 45]);
   XLSX.utils.book_append_sheet(wb, ws, 'Configuration Completeness');
 }
 

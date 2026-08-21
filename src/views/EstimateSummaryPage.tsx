@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useMemo } from 'react';
-import { ArrowRight, Check, Minus, Clock, FileText, Share2, Wrench, Save, Pencil, Zap, Cpu, Bot, Eye, ShieldCheck, Radio, FlaskConical, Rocket, Settings2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Check, Minus, Clock, FileText, Share2, Wrench, Save, Pencil, Zap, Cpu, Bot, Eye, ShieldCheck, Radio, FlaskConical, Rocket, Settings2, Table2, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
@@ -200,14 +200,53 @@ export function EstimateSummaryPage() {
     { name: 'Commissioning', hours: effort.commissioningHours, color: EFFORT_BAR_COLORS['Commissioning'], icon: EFFORT_ICONS['Commissioning'] },
   ];
 
-  useEffect(() => {
-    const handleExportPdf = () => {
+  const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
+
+  const handleExportPdf = useCallback(() => {
+    try {
+      setExporting('pdf');
       exportPdf(c);
-      toast('PDF downloaded', { description: 'Report saved as PDF file.' });
-    };
-    window.addEventListener('br:export-pdf', handleExportPdf);
-    return () => window.removeEventListener('br:export-pdf', handleExportPdf);
+      toast.success('PDF downloaded', { description: 'Report saved as PDF file.' });
+    } catch (err) {
+      console.error('PDF export error:', err);
+      toast.error('PDF export failed', { description: 'Could not generate the PDF report.' });
+    } finally {
+      setExporting(null);
+    }
   }, [c]);
+
+  const handleExportExcel = useCallback(async () => {
+    try {
+      setExporting('excel');
+      const res = await fetch('/api/export/excel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(c),
+      });
+      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `br-estimate-${(c.project.name || 'untitled').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Excel downloaded', { description: 'Spreadsheet saved as XLSX file.' });
+    } catch (err) {
+      console.error('Excel export error:', err);
+      toast.error('Excel export failed', { description: 'Could not generate the Excel file.' });
+    } finally {
+      setExporting(null);
+    }
+  }, [c]);
+
+  useEffect(() => {
+    const handler = () => handleExportPdf();
+    window.addEventListener('br:export-pdf', handler);
+    return () => window.removeEventListener('br:export-pdf', handler);
+  }, [handleExportPdf]);
 
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -223,7 +262,8 @@ export function EstimateSummaryPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => { exportPdf(c); toast('PDF downloaded'); }}><FileText className="h-3.5 w-3.5" /> PDF</Button>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" disabled={exporting === 'pdf'} onClick={handleExportPdf}>{exporting === 'pdf' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />} PDF</Button>
+          <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" disabled={exporting === 'excel'} onClick={handleExportExcel}>{exporting === 'excel' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Table2 className="h-3.5 w-3.5" />} Excel</Button>
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => {
             const report = [`B&R Engineering Effort Report`, `Project: ${activeProjectId || 'N/A'}`, `Name: ${c.project.name || 'N/A'}`, `Customer: ${c.project.customer || 'N/A'}`, `Machine Type: ${c.project.machineType || 'N/A'}`, ``, `TOTAL ENGINEERING EFFORT`, `  ${effort.totalHours.toFixed(1)} hours | ${effort.totalDays} days | ${timeline.totalWeeks} weeks | ${effort.totalMonths} months`, ``, `BREAKDOWN:`, `  Hardware: ${effort.hardwareHours.toFixed(1)}h`, `  PLC/Software: ${effort.plcSoftwareHours.toFixed(1)}h`, `  Motion: ${effort.motionHours.toFixed(1)}h`, `  Vision: ${effort.visionHours.toFixed(1)}h`, `  Safety: ${effort.safetyHours.toFixed(1)}h`, `  Comm/Integration: ${effort.communicationIntegrationHours.toFixed(1)}h`, `  Testing: ${effort.testingHours.toFixed(1)}h`, `  Commissioning: ${effort.commissioningHours.toFixed(1)}h`, ``, `OVERALL COMPLEXITY: ${overallComplexity} (${highCount}/10 High or Very High)`, ``, `Generated by B&R Engineering Estimation Tool`].join('\n');
             navigator.clipboard.writeText(report); toast('Report copied to clipboard');

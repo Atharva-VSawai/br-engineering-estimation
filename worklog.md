@@ -2230,3 +2230,27 @@ Stage Summary:
 - **Build**: Passes cleanly, 0 lint errors
 
 - **Dev server**: Running on port 3000, HTTP 200, no runtime errors
+
+---
+Task ID: export-fix
+Agent: Main Orchestrator
+Task: Fix PDF download and add Excel export button with data fix
+
+Work Log:
+- Diagnosed PDF issue: `doc.save()` may fail in sandbox/iframe environments
+- Fixed PDF export in `src/lib/export-pdf.ts`: replaced `doc.save()` with `doc.output('blob')` + manual anchor download using `URL.createObjectURL()`
+- Diagnosed Excel issue: No Excel button existed in UI at all
+- Diagnosed Excel empty data issue: `XLSX.utils.aoa_to_sheet([['']])` sets `!ref=A1`, and the xlsx library silently drops cells outside `!ref` range
+- Rewrote entire `src/app/api/export/excel/route.ts` using `aoa_to_sheet()` with actual data arrays, ensuring `!ref` covers all data
+- Added Excel export button with `Table2` icon and loading spinner to `EstimateSummaryPage.tsx`
+- Added `useState<'pdf'|'excel'|null>` loading state, `useCallback` handlers for both exports
+- PDF handler wraps in try/catch with toast feedback
+- Excel handler uses `fetch()` to POST config to `/api/export/excel`, creates blob URL for download
+- Verified Excel API returns 39KB with 6 sheets, all populated (was 21KB empty before)
+- Tested both buttons via agent-browser: no console errors, network requests return 200
+
+Stage Summary:
+- PDF export now uses robust blob URL download approach
+- Excel export button added with proper loading states
+- Excel data bug fixed: sheets now properly populated with all configuration and effort data
+- Both exports verified working end-to-end via agent-browser
