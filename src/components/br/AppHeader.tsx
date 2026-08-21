@@ -36,7 +36,7 @@ export function AppHeader() {
   const { config, currentPage, wizardStep, setCurrentPage } = useAppStore();
   const { theme, setTheme } = useTheme();
   const nc = useNotificationCenter();
-  const projectName = config.project.name || 'Packaging Machine \u2013 Project 2026';
+  const projectName = config.project.name || 'Untitled Project';
 
   const handlePdfExport = () => {
     exportPdf(config);
