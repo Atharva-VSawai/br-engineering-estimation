@@ -176,29 +176,28 @@ export function DashboardPage() {
         transition={{ duration: 0.3 }}
       >
         {/* Welcome Banner */}
-        <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-r from-primary/[0.06] via-primary/[0.02] to-transparent p-4"
-          style={{ backgroundImage: 'repeating-linear-gradient(45deg, oklch(0.55 0.2 35 / 0.03) 0px, oklch(0.55 0.2 35 / 0.03) 1px, transparent 1px, transparent 12px), repeating-linear-gradient(-45deg, oklch(0.55 0.2 35 / 0.03) 0px, oklch(0.55 0.2 35 / 0.03) 1px, transparent 1px, transparent 12px)' }}
+        <div className="relative overflow-hidden border border-border bg-gradient-to-r from-muted/80 via-muted/40 to-muted/20 p-5"
         >
-          <Settings2 className="h-20 w-20 text-primary/[0.06] absolute right-4 top-1/2 -translate-y-1/2" />
+          <Settings2 className="h-24 w-24 text-muted-foreground/[0.06] absolute right-6 top-1/2 -translate-y-1/2" />
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Cpu className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-foreground">Welcome to B&R Engineering Estimation</h2>
+                <h2 className="text-lg font-bold text-foreground">B&R Engineering Estimation</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">Configure your automation project and generate effort estimates</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground">5 Projects</span>
-              <span className="rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground">3 Config Domains</span>
-              <span className="rounded-full bg-muted px-2.5 py-1 text-sm font-medium text-muted-foreground">14 Wizard Steps</span>
+              <span className="rounded-full bg-background/80 border border-border px-2.5 py-1 text-sm font-medium text-muted-foreground">5 Projects</span>
+              <span className="rounded-full bg-background/80 border border-border px-2.5 py-1 text-sm font-medium text-muted-foreground">3 Config Domains</span>
+              <span className="rounded-full bg-background/80 border border-border px-2.5 py-1 text-sm font-medium text-muted-foreground">14 Wizard Steps</span>
             </div>
           </div>
         </div>
         {/* Bottom gradient shadow below welcome banner */}
-        <div className="h-3 -mt-1.5 bg-gradient-to-b from-primary/[0.04] to-transparent rounded-b-xl pointer-events-none" />
+        <div className="h-3 -mt-1.5 bg-gradient-to-b from-muted/30 to-transparent rounded-b-lg pointer-events-none" />
 
         {/* Header */}
         <div>

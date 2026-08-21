@@ -1826,3 +1826,154 @@ Unresolved Issues / Risks / Next Phase Recommendations:
 - **Priority 3**: Connect to validated historical Jira data (~30% reliable)
 - **Priority 4**: Mobile responsive improvements
 - **Priority 4**: HMI screen preview reflecting configuration
+
+---
+Task ID: 4-a
+Agent: Excel Export API Agent
+Task: Create Excel export API route that generates a comprehensive .xlsx file with all project configuration data
+
+Work Log:
+- Read existing worklog.md to understand project context
+- Read /src/types/index.ts to understand the full ProjectConfig type hierarchy (ProjectConfig, IOConfig, MotionConfig, HMIConfig, VisionConfig, SafetyConfig, CommunicationConfig, MechatronicsConfig, RoboticsConfig, IIoTConfig, ComplexityAssessment, etc.)
+- Read /src/data/index.ts for EFFORT_AREAS and SAMPLE_CONFIG references
+- Read /src/pages/EstimateSummaryPage.tsx for effort calculation logic (hwHours, swHours, motionHours, safetyHours, integrationHours formulas and timeline calculations)
+- Created /src/app/api/export/excel/route.ts with:
+  - Helper functions: bool() for Yes/No conversion, headerStyle() with B&R orange (#C75B12) styling, labelStyle(), addSheetHeaders() with arbitrary row support, addRow(), addLabeledRow()
+  - getOverallComplexity() - derives overall complexity from 10 assessment dimensions
+  - calculateEffort() - replicates EstimateSummaryPage formulas (Hardware, Software, Motion, Safety, Integration & Testing + Total)
+  - calculateTimeline() - derives timeline phases (HW Design, SW Dev, Integration, Commissioning) from config
+  - 12 sheet builder functions matching spec exactly:
+    1. Project Info (name, customer, machine type, industry, description, clarity, involvement, variants, stations, export date, overall complexity)
+    2. I/O Configuration (9 I/O types + total count, bold total row)
+    3. Motion Control (5 axis/drive counts + 12 feature flags)
+    4. HMI (type, screens, complexity + 9 features)
+    5. Vision (enabled, cameras, lighting + 12 features)
+    6. Safety (enabled, controller, I/O count, E-stops, doors, light curtains + 5 features)
+    7. Communication (protocols table with Name/Enabled/Devices/Description + 4 system integrations)
+    8. Mechatronics (type, movers, stations + 9 features)
+    9. Robotics (enabled, type, quantity + 8 features)
+    10. IIoT (7 config fields + 5 feature flags)
+    11. Complexity Assessment (11-dimension table with Rating + Notes, overall complexity)
+    12. Effort Summary (effort breakdown table, timeline table, risk indicators section)
+  - POST handler: parses ProjectConfig JSON body, builds workbook, returns .xlsx buffer with proper Content-Type and Content-Disposition headers
+  - Filename sanitization: project name slugified for safe filenames
+  - Error handling with 500 response and console logging
+- Fixed bug where addSheetHeaders() always wrote to row 0; added optional startRow parameter
+- Ran `bun run lint` — passed with zero errors
+
+Files Created:
+- /src/app/api/export/excel/route.ts
+
+Files Modified:
+- (none)
+
+Notes:
+- The xlsx package was already installed in package.json
+- Protocol descriptions are hardcoded in a PROTOCOL_DESCRIPTIONS map for the Communication sheet
+- Effort formulas match the prototype logic in EstimateSummaryPage.tsx exactly
+- Boolean values rendered as 'Yes'/'No' per spec
+- Numbers use 'n' cell type for proper Excel formatting
+
+---
+Task ID: 4-b
+Agent: PDF Export Enhancement Agent
+Task: Create professional PDF export feature with visual SVG graphs
+
+Work Log:
+- Read worklog.md and EstimateSummaryPage.tsx to understand existing code structure
+- Identified the Export as PDF button onClick handler (lines 241-387) with plain HTML report
+- Replaced the handler with a comprehensive version that generates 4 embedded SVG charts:
+  1. **Complexity Radar Chart** (400x400): 10-dimension spider/radar chart with 4 concentric rings (25/50/75/100%), polygon fill using oklch(0.55 0.2 35 / 0.2) with oklch(0.55 0.2 35) stroke, dimension labels positioned around perimeter
+  2. **Effort Breakdown Bar Chart** (500x200): Horizontal bars for 5 areas (blue, violet, orange, red, emerald) with value labels, TOTAL row in B&R orange (#C75B12)
+  3. **Timeline Gantt Chart** (500x120): Horizontal phase bars with circle markers at start, week labels
+  4. **Complexity Profile Bar Chart** (500x280): 10 horizontal bars color-coded by level (emerald/amber/orange/red)
+- Added professional header with project name, customer, machine type, industry, date, and colored complexity badge
+- Added risk assessment cards with colored indicator dots (requirement clarity, customer involvement, scope complexity)
+- Added engineering areas table with Area, Complexity, Potential Effort Driver columns
+- Added configuration completeness grid with check/cross indicators for all 11 sections
+- Applied professional CSS styling with @page A4 margins, B&R orange (#C75B12) accent colors, proper print media query
+- Fixed HTML entity encoding (used direct &amp; in template literal strings, not double-escaped)
+- Ran bun run lint - passed with no errors
+
+Files Modified:
+- src/pages/EstimateSummaryPage.tsx: Replaced Export as PDF onClick handler (~100 lines of SVG generation + ~110 lines of HTML template)
+
+
+---
+Task ID: 4-c
+Agent: Export Dropdown & Enterprise UI Agent
+Task: Add export dropdown menu in header and improve enterprise-level visual polish
+
+Work Log:
+- Replaced standalone Download button in AppHeader with DropdownMenu containing 3 export options (PDF, Excel, JSON)
+- Added handlePdfExport that navigates to estimate-summary page then dispatches br:export-pdf custom event after 500ms delay
+- Added handleExcelExport that POSTs config JSON to /api/export/excel endpoint, downloads blob as .xlsx file
+- Renamed handleDownload to handleJsonExport preserving original JSON download behavior
+- Added br:export-pdf event listener in useEffect for external triggering
+- Added enterprise card shadow styles in globals.css using [data-slot="card"] selector with hover transition
+- Added "NAVIGATION" section title label above sidebar nav items (text-[10px] uppercase tracking-wider text-muted-foreground/50)
+- Added subtle border-t separator between nav items and current config section in AppSidebar
+- Enhanced SectionCard with border-l-2 border-l-primary/30 left accent and changed gradient from-primary/40 to from-primary/60
+- Changed StatCard value text from text-3xl to text-4xl with group-hover:text-primary/80 transition for hover emphasis
+- Redesigned Dashboard welcome banner: removed colorful gradient/diagonal pattern, switched to subtle muted gray tones with structured border, enlarged title to text-lg, made badges more structured with bg-background/80 + border
+- All changes pass ESLint with zero errors
+
+Files Modified:
+- src/components/br/AppHeader.tsx: Replaced Download button with DropdownMenu (PDF/Excel/JSON), added 3 export handlers, updated useEffect listeners
+- src/app/globals.css: Added enterprise card shadow styles with hover transition
+- src/components/br/AppSidebar.tsx: Added NAVIGATION label, added separator before current config section
+- src/components/br/SectionCard.tsx: Added border-l-2 border-l-primary/30 left accent, changed gradient opacity from 40% to 60%
+- src/components/br/StatCard.tsx: Changed value text-3xl to text-4xl, added group-hover color transition
+- src/pages/DashboardPage.tsx: Redesigned welcome banner with subtle professional gray gradient, structured border, larger title, bordered badges
+
+
+---
+Task ID: 4
+Agent: Main Orchestrator
+Task: Add PDF/Excel export with visual graphs, enterprise UI improvements
+
+Work Log:
+- Installed `xlsx` package for Excel generation
+- Created `/src/app/api/export/excel/route.ts` — comprehensive Excel export API with 12 sheets (Project Info, IO Configuration, Motion Control, HMI, Vision, Safety, Communication, Mechatronics, Robotics, IIoT, Complexity Assessment, Effort Summary)
+- Fixed sheet name invalid character: "I/O Configuration" → "IO Configuration" (slash not allowed in xlsx)
+- Enhanced EstimateSummaryPage PDF export with 4 embedded SVG charts: Complexity Radar (400x400, 10-dimension spider), Effort Breakdown Bars (500x200), Timeline Gantt (500x120), Complexity Profile Bars (500x280)
+- Added professional header, risk assessment cards, engineering areas table, configuration completeness grid to PDF report
+- Added `br:export-pdf` event listener in EstimateSummaryPage using useRef + useEffect to allow header to trigger PDF export
+- Replaced standalone Download button in AppHeader with DropdownMenu containing 3 export options: Export PDF, Export Excel, Export JSON
+- Added Excel download handler: POSTs config to `/api/export/excel`, receives blob, triggers download as .xlsx
+- Enterprise UI improvements: card depth shadows on hover, NAVIGATION section label in sidebar, left accent border on SectionCard, StatCard values upgraded to text-4xl with hover color, dashboard welcome banner redesigned to professional muted gray gradient
+- Excel API verified: HTTP 200, 28KB .xlsx file with all 12 sheets
+- ESLint: Clean (0 errors)
+
+Stage Summary:
+- Export options: PDF (with 4 SVG visual charts), Excel (12 sheets), JSON (existing)
+- Export dropdown menu in header with Download + ChevronDown trigger
+- Excel API endpoint at POST /api/export/excel returning .xlsx
+- PDF report includes radar chart, bar charts, Gantt chart, risk cards, completeness grid
+- Enterprise-level UI polish across 6 files
+- 6 files modified/created, 0 lint errors
+
+---
+Project Status: Engineering Effort Estimation Tool (v0.9)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Export: PDF (with SVG graphs), Excel (12 sheets), JSON
+- Focus: Engineering effort prediction only — no cost/financial features
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ PDF export with 4 SVG visual charts (radar, effort bars, timeline, complexity bars)
+- ✅ Excel export with 12 professionally styled sheets
+- ✅ Export dropdown menu (PDF/Excel/JSON) in header
+- ✅ Enterprise UI polish (card shadows, sidebar label, section accent, stat card emphasis, banner redesign)
+- ✅ All cost/financial features removed (previous task)
+- ✅ ESLint clean, HTTP 200
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: Dashboard project selector (user requested but not yet implemented)
+- **Priority 2**: Effort estimation formulas still simplified multipliers
+- **Priority 3**: Persist project data via Prisma
+- **Priority 3**: Connect to validated historical Jira data (~30% reliable)
+- **Priority 4**: Mobile responsive improvements

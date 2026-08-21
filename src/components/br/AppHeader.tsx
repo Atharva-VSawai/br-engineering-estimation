@@ -1,11 +1,18 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Save, FileText, FileJson, Sun, Moon, ChevronRight, Copy, Bell } from 'lucide-react';
+import { Save, FileText, FileJson, FileSpreadsheet, Download, ChevronDown, Sun, Moon, ChevronRight, Copy, Bell } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAppStore } from '@/store';
 import { toast } from 'sonner';
 import type { AppPage } from '@/types';
@@ -25,12 +32,43 @@ const PAGE_NAMES: Record<AppPage, string> = {
 };
 
 export function AppHeader() {
-  const { config, currentPage, wizardStep } = useAppStore();
+  const { config, currentPage, wizardStep, setCurrentPage } = useAppStore();
   const { theme, setTheme } = useTheme();
   const nc = useNotificationCenter();
   const projectName = config.project.name || 'Packaging Machine \u2013 Project 2026';
 
-  const handleDownload = () => {
+  const handlePdfExport = () => {
+    setCurrentPage('estimate-summary');
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('br:export-pdf'));
+    }, 500);
+  };
+
+  const handleExcelExport = async () => {
+    try {
+      const res = await fetch('/api/export/excel?XTransformPort=3000', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config),
+      });
+      if (!res.ok) throw new Error('Export failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `br-estimate-${config.project.name || 'untitled'}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Excel exported', detail: 'Spreadsheet downloaded', icon: FileSpreadsheet, color: 'text-emerald-500' } }));
+      toast('Excel exported', { description: 'Spreadsheet file downloaded.' });
+    } catch {
+      toast.error('Excel export failed');
+    }
+  };
+
+  const handleJsonExport = () => {
     const json = JSON.stringify(config, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -58,13 +96,16 @@ export function AppHeader() {
 
   // Listen for keyboard shortcut custom events
   useEffect(() => {
-    const handleDownloadEvent = () => handleDownload();
+    const handleDownloadEvent = () => handleJsonExport();
     const handleCopyEvent = () => handleCopy();
+    const handlePdfEvent = () => handlePdfExport();
     window.addEventListener('br:download', handleDownloadEvent);
     window.addEventListener('br:copy-config', handleCopyEvent);
+    window.addEventListener('br:export-pdf', handlePdfEvent);
     return () => {
       window.removeEventListener('br:download', handleDownloadEvent);
       window.removeEventListener('br:copy-config', handleCopyEvent);
+      window.removeEventListener('br:export-pdf', handlePdfEvent);
     };
   }, []);
 
@@ -145,15 +186,34 @@ export function AppHeader() {
             <span className="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />
           )}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 gap-1.5 text-sm"
-          onClick={handleDownload}
-        >
-          <FileJson className="h-3.5 w-3.5" />
-          Download
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-sm"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handlePdfExport} className="gap-2 cursor-pointer">
+              <FileText className="h-4 w-4 text-red-500" />
+              <span>Export PDF</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExcelExport} className="gap-2 cursor-pointer">
+              <FileSpreadsheet className="h-4 w-4 text-emerald-500" />
+              <span>Export Excel</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleJsonExport} className="gap-2 cursor-pointer">
+              <FileJson className="h-4 w-4 text-purple-500" />
+              <span>Export JSON</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="outline"
           size="sm"

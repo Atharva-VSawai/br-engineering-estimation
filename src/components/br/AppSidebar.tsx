@@ -60,6 +60,7 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="relative flex-1 overflow-y-auto py-2 px-2" role="navigation" aria-label="Main navigation">
+        <span className="px-3 mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Navigation</span>
         <TooltipProvider delayDuration={300}>
           <ul className="space-y-0.5">
             {NAV_ITEMS.map(({ page, label, icon: Icon }) => {
@@ -103,9 +104,9 @@ export function AppSidebar() {
       </nav>
 
       {/* Current Config */}
+      <div className="mx-3 border-t border-border/60" />
       {configName && (
         <>
-          <div className="border-t border-border" />
           <div className="px-4 py-2">
             <button
               onClick={() => setCurrentPage('new-estimate')}

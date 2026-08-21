@@ -190,6 +190,18 @@
   }
 }
 
+/* Enterprise-level visual polish */
+@layer base {
+  /* Subtle inner shadow on cards for depth */
+  [data-slot="card"] {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+    transition: box-shadow 0.2s ease;
+  }
+  [data-slot="card"]:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+  }
+}
+
 /* Focus-visible ring enhancement */
 :focus-visible {
   outline: 2px solid oklch(0.55 0.2 35 / 0.5);

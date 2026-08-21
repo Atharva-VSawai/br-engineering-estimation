@@ -81,7 +81,7 @@ export function StatCard({ label, value, sublabel, icon, accentColor, sparkline 
         <div className="flex items-start justify-between">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-muted-foreground truncate">{label}</p>
-            <p className="mt-1 text-3xl font-bold text-foreground leading-tight tabular-nums">{renderedValue}</p>
+            <p className="mt-1 text-4xl font-bold text-foreground leading-tight tabular-nums group-hover:text-primary/80 transition-colors duration-200">{renderedValue}</p>
             {sublabel && (
               <p className="mt-0.5 text-sm text-muted-foreground truncate">{sublabel}</p>
             )}
