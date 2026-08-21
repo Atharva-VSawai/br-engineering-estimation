@@ -6,6 +6,7 @@ import { ClipboardList, AlertTriangle, Zap } from 'lucide-react';
 import { SectionCard } from '@/components/br/SectionCard';
 import { ComplexityBadge } from '@/components/br/ComplexityBadge';
 import { ENGINEERING_ACTIVITIES } from '@/data';
+import { useAppStore } from '@/store';
 import {
   Table,
   TableBody,
@@ -17,18 +18,23 @@ import {
 } from '@/components/ui/table';
 
 export function EngineeringActivitiesPage() {
-  const effortData = useMemo(
-    () => [
-      { name: 'PLC Programming', hours: 120, color: '#f97316' },
-      { name: 'HMI Development', hours: 80, color: '#06b6d4' },
-      { name: 'Motion Setup', hours: 60, color: '#8b5cf6' },
-      { name: 'Safety Engineering', hours: 40, color: '#10b981' },
-      { name: 'Vision Integration', hours: 30, color: '#ec4899' },
-      { name: 'Commissioning', hours: 50, color: '#eab308' },
-      { name: 'Testing & QA', hours: 35, color: '#3b82f6' },
-    ],
-    []
-  );
+  const { config } = useAppStore();
+  const c = config;
+
+  const effortData = useMemo(() => {
+    const ioTotal = c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs;
+    const motionFeatures = [c.motion.electronicCamming, c.motion.coordinatedMotion, c.motion.synchronization].filter(Boolean).length;
+    const visionFunctions = [c.vision.inspection, c.vision.measurement, c.vision.detection, c.vision.identification, c.vision.ocr, c.vision.barcodeQR, c.vision.patternMatching, c.vision.positionDetection, c.vision.qualityControl].filter(Boolean).length;
+    return [
+      { name: 'PLC Programming', hours: Math.round(ioTotal * 0.4 + 20), color: '#f97316' },
+      { name: 'HMI Development', hours: Math.round(c.hmi.screens * 8 + (c.hmi.alarmManagement ? 8 : 0) + (c.hmi.recipeManagement ? 6 : 0) + 4), color: '#06b6d4' },
+      { name: 'Motion Setup', hours: Math.round(c.motion.totalAxes * 4 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0) + motionFeatures * 4), color: '#8b5cf6' },
+      { name: 'Safety Engineering', hours: c.safety.enabled ? Math.round(c.safety.safetyIOCount * 2 + 16) : 0, color: '#10b981' },
+      { name: 'Vision Integration', hours: c.vision.enabled ? Math.round(c.vision.cameras * 16 + visionFunctions * 4) : 0, color: '#ec4899' },
+      { name: 'Commissioning', hours: Math.round(ioTotal * 0.1 + c.motion.totalAxes * 2 + 8), color: '#eab308' },
+      { name: 'Testing & QA', hours: Math.round((ioTotal + c.motion.totalAxes * 4) * 0.15 + 10), color: '#3b82f6' },
+    ];
+  }, [c]);
 
   const totalActivities = ENGINEERING_ACTIVITIES.length;
   const highImpactCount = ENGINEERING_ACTIVITIES.filter((a) => a.estimatedHours >= 16).length;

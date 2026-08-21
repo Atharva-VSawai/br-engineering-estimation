@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { SectionCard } from '@/components/br/SectionCard';
 import { useAppStore } from '@/store';
+import { cn } from '@/lib/utils';
 
 const IO_ROWS: { key: keyof import('@/types').IOConfig; label: string; colorClass: string }[] = [
   { key: 'digitalInputs', label: 'Digital Inputs', colorClass: 'bg-primary/80' },
@@ -36,6 +37,15 @@ export function TechnicalParamsPage() {
     return { maxValue: max, ioValues: values };
   }, [c.io]);
 
+  const systemComponents: { label: string; value: string; isConfigured: boolean }[] = [
+    { label: 'Vision', value: c.vision.enabled ? `${c.vision.cameras} camera(s)` : 'Not configured', isConfigured: c.vision.enabled },
+    { label: 'Safety', value: c.safety.enabled ? `${c.safety.controller} (${c.safety.safetyIOCount} I/O)` : 'Not configured', isConfigured: c.safety.enabled },
+    { label: 'Mechatronics', value: c.mechatronics.type !== 'None' ? `${c.mechatronics.type} (${c.mechatronics.movers} movers)` : 'None', isConfigured: c.mechatronics.type !== 'None' },
+    { label: 'Robotics', value: c.robotics.enabled ? `${c.robotics.robotType} x${c.robotics.quantity}` : 'Not configured', isConfigured: c.robotics.enabled },
+    { label: 'Industrial PC', value: c.iiot.ipcRequired ? c.iiot.ipcModel : 'Not configured', isConfigured: c.iiot.ipcRequired },
+    { label: 'IIoT', value: c.iiot.iiotRequired ? 'Enabled' : 'Not configured', isConfigured: c.iiot.iiotRequired },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -58,11 +68,15 @@ export function TechnicalParamsPage() {
               <div className="w-28 shrink-0 text-xs text-muted-foreground text-right">{row.label}</div>
               <div className="flex-1 h-5 bg-muted rounded-sm overflow-hidden">
                 <motion.div
-                  className={`h-full rounded-sm ${row.value > 0 ? row.colorClass : 'bg-muted'}`}
+                  className={`relative h-full rounded-sm ${row.value > 0 ? row.colorClass : 'bg-muted'}`}
                   initial={{ width: 0 }}
                   animate={{ width: row.value > 0 ? `${(row.value / maxValue) * 100}%` : '0%' }}
                   transition={{ delay: index * 0.05 + 0.1, duration: 0.4, ease: 'easeOut' }}
-                />
+                >
+                  {row.value > 0 && (row.value / maxValue) > 0.15 && (
+                    <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-bold text-white/90">{row.value}</span>
+                  )}
+                </motion.div>
               </div>
               <div className={`w-8 text-xs font-medium text-right ${row.value > 0 ? 'text-foreground' : 'text-muted-foreground'}`}>{row.value}</div>
             </motion.div>
@@ -96,12 +110,15 @@ export function TechnicalParamsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="System Components">
           <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between"><span className="text-muted-foreground">Vision</span><span className="text-foreground font-medium">{c.vision.enabled ? `${c.vision.cameras} camera(s)` : 'Not configured'}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Safety</span><span className="text-foreground font-medium">{c.safety.enabled ? `${c.safety.controller} (${c.safety.safetyIOCount} I/O)` : 'Not configured'}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Mechatronics</span><span className="text-foreground font-medium">{c.mechatronics.type !== 'None' ? `${c.mechatronics.type} (${c.mechatronics.movers} movers)` : 'None'}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Robotics</span><span className="text-foreground font-medium">{c.robotics.enabled ? `${c.robotics.robotType} x${c.robotics.quantity}` : 'Not configured'}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Industrial PC</span><span className="text-foreground font-medium">{c.iiot.ipcRequired ? c.iiot.ipcModel : 'Not configured'}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">IIoT</span><span className="text-foreground font-medium">{c.iiot.iiotRequired ? 'Enabled' : 'Not configured'}</span></div>
+            {systemComponents.map((comp) => (
+              <div key={comp.label} className="flex justify-between">
+                <span className="text-muted-foreground">{comp.label}</span>
+                <span className="text-foreground font-medium">
+                  <span className={cn('inline-block h-1.5 w-1.5 rounded-full mr-1.5', comp.isConfigured ? 'bg-emerald-400' : 'bg-muted-foreground/30')} />
+                  {comp.value}
+                </span>
+              </div>
+            ))}
           </div>
         </SectionCard>
 
@@ -111,7 +128,7 @@ export function TechnicalParamsPage() {
               <div className="text-xs font-medium text-foreground mb-1">Protocols</div>
               <div className="flex flex-wrap gap-1.5">
                 {activeProtocols.length > 0 ? activeProtocols.map((p) => (
-                  <span key={p.name} className="inline-flex items-center rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  <span key={p.name} className="inline-flex items-center rounded-md border border-border border-l-2 border-l-primary/40 bg-card px-2 py-0.5 text-[11px] font-medium text-foreground">
                     {p.name} ({p.devices})
                   </span>
                 )) : (
@@ -123,7 +140,7 @@ export function TechnicalParamsPage() {
               <div className="text-xs font-medium text-foreground mb-1">Additional Features</div>
               <div className="flex flex-wrap gap-1.5">
                 {enabledFeatures.length > 0 ? enabledFeatures.map((f) => (
-                  <span key={f.name} className="inline-flex items-center rounded-md border border-border bg-card px-2 py-0.5 text-[11px] font-medium text-foreground">
+                  <span key={f.name} className="inline-flex items-center rounded-md border border-border border-l-2 border-l-emerald-400/40 bg-card px-2 py-0.5 text-[11px] font-medium text-foreground">
                     {f.name}
                   </span>
                 )) : (

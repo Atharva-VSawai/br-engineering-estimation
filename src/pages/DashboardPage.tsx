@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson } from 'lucide-react';
+import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson, Settings2 } from 'lucide-react';
 import { StatCard } from '@/components/br/StatCard';
 import { SectionCard } from '@/components/br/SectionCard';
 import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
@@ -105,7 +105,8 @@ export function DashboardPage() {
         transition={{ duration: 0.3 }}
       >
         {/* Welcome Banner */}
-        <div className="rounded-xl border border-primary/10 bg-gradient-to-r from-primary/[0.03] to-transparent p-4">
+        <div className="relative overflow-hidden rounded-xl border border-primary/10 bg-gradient-to-r from-primary/[0.06] via-primary/[0.02] to-transparent p-4">
+          <Settings2 className="h-20 w-20 text-primary/[0.06] absolute right-4 top-1/2 -translate-y-1/2" />
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
@@ -134,24 +135,31 @@ export function DashboardPage() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="group-hover:shadow-md transition-shadow duration-300 group">
           <StatCard
             label="Active Projects"
             value={activeProjects}
             icon={<FolderKanban className="h-4 w-4" />}
             accentColor="bg-blue-400"
           />
+          </div>
+          <div className="group-hover:shadow-md transition-shadow duration-300 group">
           <StatCard
             label="Draft Estimates"
             value={draftEstimates}
             icon={<FileEdit className="h-4 w-4" />}
             accentColor="bg-amber-400"
           />
+          </div>
+          <div className="group-hover:shadow-md transition-shadow duration-300 group">
           <StatCard
             label="Completed Estimates"
             value={completedEstimates}
             icon={<CheckCircle2 className="h-4 w-4" />}
             accentColor="bg-emerald-400"
           />
+          </div>
+          <div className="group-hover:shadow-md transition-shadow duration-300 group">
           <div>
             <StatCard
               label="Avg. Project Complexity"
@@ -174,6 +182,7 @@ export function DashboardPage() {
                 })}
               </div>
             )}
+          </div>
           </div>
         </div>
 
@@ -458,7 +467,7 @@ export function DashboardPage() {
                 {projects.map((p) => (
                   <TableRow
                     key={p.id}
-                    className={`border-border cursor-pointer transition-colors duration-150 hover:bg-primary/[0.03] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
+                    className={`border-border cursor-pointer transition-colors duration-100 hover:bg-primary/[0.03] active:bg-primary/[0.06] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
                     onClick={() => setCurrentPage('projects')}
                   >
                     <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>

@@ -1488,3 +1488,195 @@ Unresolved Issues / Risks / Next Phase Recommendations:
 - **Priority 4**: HMI screen preview reflecting actual configuration
 - **Priority 4**: Real-time collaboration via WebSocket
 - **Risk**: Cost estimation formulas are simplified placeholders
+
+---
+Task ID: 15a-15c
+Agent: Styling Improvements
+Task: v0.9 styling improvements across DashboardPage, ArchitecturePage, TechnicalParamsPage
+
+Work Log:
+- **Task 15a — DashboardPage.tsx**:
+  - Enhanced welcome banner gradient from `from-primary/[0.03] to-transparent` to `from-primary/[0.06] via-primary/[0.02] to-transparent`
+  - Added `relative overflow-hidden` to banner container
+  - Added decorative Settings2 gear icon (h-20 w-20, text-primary/[0.06], absolute positioned right side)
+  - Wrapped each StatCard in a `<div className="group">` with `group-hover:shadow-md transition-shadow duration-300` for hover shadow effect
+  - Added `active:bg-primary/[0.06] transition-colors duration-100` to table rows for pressed state
+  - Imported Settings2 from lucide-react
+- **Task 15b — ArchitecturePage.tsx**:
+  - Imported useAppStore and connected architecture blocks to actual config state
+  - Added `isActive` prop to ArchBlockItem component — when active, adds `ring-2 ring-emerald-400/50 shadow-sm shadow-emerald-400/10` and changes badge to `bg-emerald-500 text-white`
+  - Added `isActive` prop to ConnectingLine — when active, uses `border-l-primary/40` instead of `border-border`
+  - Mapped isActive per block: HMI (screens>0), Vision (enabled), Safety (enabled), I/O (total>0), Motion (totalAxes>0), Communication (any protocol enabled), Drives/Motors/Mechanics (totalAxes>0)
+  - Added status dots to 4 bottom component cards (ACOPOStrak, Robotics, IPC, IIoT) — emerald-400 when active, muted-foreground/20 when inactive
+  - Made each card `relative` for dot positioning
+- **Task 15c — TechnicalParamsPage.tsx**:
+  - Added value labels INSIDE I/O bars when value>0 and bar width >15% of max (white text, right-aligned, 9px bold)
+  - Made bar motion.div `relative` for absolute positioning of label
+  - Refactored System Components section into data-driven array with `isConfigured` boolean
+  - Added colored status dots (emerald-400 for configured, muted-foreground/30 for not) before each value
+  - Imported `cn` from `@/lib/utils` for conditional classes
+  - Added `border-l-2 border-l-primary/40` to protocol pills and `border-l-2 border-l-emerald-400/40` to feature pills
+
+Stage Summary:
+- 3 files modified: DashboardPage.tsx, ArchitecturePage.tsx, TechnicalParamsPage.tsx
+- All changes are styling-only, no functionality broken
+- ESLint: Clean (0 errors)
+- Dev server compiles successfully
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Projects page: complexity color strips, filter pills animation, count badge
+- ✅ ProgressStepper: motion button animations, animated progress bar, tooltip arrow
+- ✅ NotificationCenter: staggered animation, empty state, unread timestamp styling
+- ✅ SectionCard: hover lift, optional accentColor prop
+- ✅ ComplexityPage: heatmap bars, alternating row backgrounds
+- ✅ Dashboard: 8 quick stats, welcome banner gradient + gear icon, stat card hover shadows, table row pressed state
+- ✅ Wizard: Alt+1-9/Alt+0 step jump with toast, shortcuts dialog conditional section
+- ✅ Engineering Activities: effort allocation stacked bar chart (7 disciplines, 415h)
+- ✅ Compare: complexity radar chart (SVG, 10 dimensions, multi-project overlay)
+- ✅ Architecture: config-driven block highlighting, active connecting lines, bottom card status dots
+- ✅ Technical Params: I/O bar value labels, system component status dots, protocol/feature pill accent borders
+- ✅ Version bumped to v0.8
+- ✅ ESLint clean, zero errors
+
+---
+Task ID: 16a-16c
+Agent: Feature Enhancements
+Task: v0.9 feature additions — dynamic effort allocation, live notifications, review export
+
+Work Log:
+- **Task 16a — EngineeringActivitiesPage.tsx**:
+  - Replaced hardcoded `effortData` array (7 items, fixed hours) with `useMemo` that computes from `useAppStore` config
+  - PLC Programming: `Math.round(ioTotal * 0.4 + 20)`
+  - HMI Development: `Math.round(screens * 8 + alarmMgmt(8) + recipeMgmt(6) + 4)`
+  - Motion Setup: `Math.round(axes * 4 + eCam(20) + coordMotion(16) + motionFeatures * 4)`
+  - Safety Engineering: `safety.enabled ? Math.round(safetyIO * 2 + 16) : 0`
+  - Vision Integration: `vision.enabled ? Math.round(cameras * 16 + visionFunctions * 4) : 0`
+  - Commissioning: `Math.round(ioTotal * 0.1 + axes * 2 + 8)`
+  - Testing & QA: `Math.round((ioTotal + axes * 4) * 0.15 + 10)`
+  - Computed `visionFunctions` by counting 9 enabled boolean fields (inspection, measurement, detection, identification, ocr, barcodeQR, patternMatching, positionDetection, qualityControl)
+  - Removed unused `commActive` variable
+  - Imported `useAppStore` from '@/store'
+- **Task 16b — NotificationCenter.tsx + AppHeader.tsx + NewEstimatePage.tsx**:
+  - Added `useEffect` in `useNotificationCenter` hook listening for `br:notification` custom events on `window`
+  - New notifications prepended to list with 'Just now' timestamp, capped at 50 items
+  - Dispatched `br:notification` in AppHeader `handleSave` (Configuration saved, emerald), `handleDownload` (Configuration exported, purple), `handleCopy` (Copied to clipboard, blue)
+  - Dispatched `br:notification` in NewEstimatePage `handleLoadSample` (Sample data loaded, amber), `handleSaveDraft` (Draft saved with step number, emerald)
+  - Added `useEffect` import to NotificationCenter.tsx
+- **Task 16c — StepReview.tsx**:
+  - Added `FileText` icon import from lucide-react
+  - Added `toast` import from 'sonner'
+  - Added `handleExportReview` function that generates styled HTML report (project info, technical summary table, complexity badge table with color-coded spans)
+  - Opens HTML blob in new tab via `window.open`
+  - Added export button bar above the SectionCard with title, description, and outline button
+
+Stage Summary:
+- 4 files modified: EngineeringActivitiesPage.tsx, NotificationCenter.tsx, AppHeader.tsx, NewEstimatePage.tsx, StepReview.tsx
+- Effort allocation now reacts dynamically to configuration changes
+- Notification center receives real-time events from save/download/copy/load-sample/draft-save actions
+- Review step has export-to-HTML capability
+- ESLint: Clean (0 errors)
+- Dev server compiles successfully
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Projects page: complexity color strips, filter pills animation, count badge
+- ✅ ProgressStepper: motion button animations, animated progress bar, tooltip arrow
+- ✅ NotificationCenter: staggered animation, empty state, unread timestamp styling, live event subscription
+- ✅ SectionCard: hover lift, optional accentColor prop
+- ✅ ComplexityPage: heatmap bars, alternating row backgrounds
+- ✅ Dashboard: 8 quick stats, welcome banner gradient + gear icon, stat card hover shadows, table row pressed state
+- ✅ Wizard: Alt+1-9/Alt+0 step jump with toast, shortcuts dialog conditional section
+- ✅ Engineering Activities: dynamic effort allocation from config (7 disciplines, computed hours)
+- ✅ Compare: complexity radar chart (SVG, 10 dimensions, multi-project overlay)
+- ✅ Architecture: config-driven block highlighting, active connecting lines, bottom card status dots
+- ✅ Technical Params: I/O bar value labels, system component status dots, protocol/feature pill accent borders
+- ✅ Review step: HTML export button with styled report
+- ✅ Version v0.9 features complete
+- ✅ ESLint clean, zero errors
+
+---
+Task ID: 15a-15c
+Agent: Styling Sub-agent
+Task: Styling improvements round v0.9
+
+Work Log:
+- DashboardPage: Enhanced welcome banner gradient, added decorative Settings2 gear icon, stat cards group hover shadow, table row active press state
+- ArchitecturePage: Config-driven block highlighting (isActive prop, emerald ring/badge), active connecting lines (primary color), status dots on bottom component cards
+- TechnicalParamsPage: I/O bar value labels inside bars when wide enough, system components status dots (emerald/gray), protocol pills border-l-primary accent, feature pills border-l-emerald accent
+- Ran bun run lint: 0 errors
+
+Stage Summary:
+- 3 files styled with 10+ visual improvements
+- Architecture diagram now reflects actual config state
+- Technical params page more informative with status indicators
+- Lint passes cleanly
+
+---
+Task ID: 16a-16c
+Agent: Features Sub-agent
+Task: Dynamic effort, live notifications, review export
+
+Work Log:
+- EngineeringActivitiesPage: Replaced hardcoded effortData with useMemo computing hours from store config (I/O, HMI, motion, safety, vision features)
+- NotificationCenter: Added window custom event listener (br:notification) that prepends real-time notifications with "Just now" timestamp, capped at 50 items
+- AppHeader: Dispatched real notifications from handleSave, handleDownload, handleCopy
+- NewEstimatePage: Dispatched real notifications from handleLoadSample, handleSaveDraft
+- StepReview: Added Export Review button bar above sections, generates styled HTML report with project info, technical summary table, color-coded complexity badges, opens in new tab
+- Ran bun run lint: 0 errors
+
+Stage Summary:
+- Effort allocation now computes dynamically from config (reacts to I/O, HMI, motion, safety, vision changes)
+- Notification center receives real events from Save/Download/Copy/Load Sample/Save Draft actions
+- Review step has HTML export button generating professional report
+- Lint passes cleanly
+
+---
+Task ID: 15
+Agent: Main Orchestrator (Round 15)
+Task: QA, styling improvements, new features, version bump to v0.9
+
+Work Log:
+- **Initial QA**: Read worklog.md, assessed v0.8 status. Opened app via agent-browser — zero errors, all 10 pages load.
+- **Parallel Task 15a-15c (Styling)**: Launched sub-agent for 10 styling improvements across 3 files
+- **Parallel Task 16a-16c (Features)**: Launched sub-agent for 3 features across 5 files
+- **Version Bump**: v0.8→v0.9 in AppSidebar, AppLayout, SettingsPage
+- **Settings Update**: Added 4 new Completed items
+- **Final QA**: All 10 pages load (0 errors), v0.9 visible, architecture config highlighting works, dynamic effort allocation computed, notifications fire on save/copy/download
+
+Stage Summary:
+- Version bumped to v0.9 with 10 styling improvements and 3 new features
+- Zero bugs found, zero runtime errors
+- 8+ files modified total
+- ESLint: Clean (0 errors)
+- All pages verified via agent-browser QA
+
+---
+Project Status: Feature-rich working prototype (v0.9)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Browser QA: Verified across 12+ rounds (zero runtime errors, zero hydration issues)
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Dashboard: welcome banner gear icon, stat card hover shadow, table row press state
+- ✅ Architecture: config-driven block highlighting, active connecting lines, status dots on cards
+- ✅ Technical Params: I/O bar inline labels, system component status dots, pill border accents
+- ✅ Dynamic effort allocation computed from actual config
+- ✅ Live notification events from Save/Download/Copy/Load Sample/Save Draft
+- ✅ Review step HTML export button
+- ✅ Version bumped to v0.9
+- ✅ ESLint clean, zero errors
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: None
+- **Priority 2**: Cost estimation formulas still use simplified multipliers
+- **Priority 2**: Effort allocation could show per-phase breakdown (design/programming/testing)
+- **Priority 3**: Persist project data via Prisma
+- **Priority 3**: User authentication via NextAuth
+- **Priority 3**: Excel export for project data
+- **Priority 4**: Mobile responsive improvements
+- **Priority 4**: HMI screen preview reflecting configuration
+- **Priority 4**: WebSocket real-time collaboration

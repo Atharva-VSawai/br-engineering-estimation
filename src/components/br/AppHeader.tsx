@@ -41,15 +41,18 @@ export function AppHeader() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Configuration exported', detail: 'JSON file downloaded', icon: FileJson, color: 'text-purple-500' } }));
     toast('Configuration exported', { description: 'JSON file downloaded.' });
   };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Copied to clipboard', detail: 'Configuration JSON copied', icon: Copy, color: 'text-blue-500' } }));
     toast('Copied to clipboard', { description: 'Configuration JSON copied.' });
   };
 
   const handleSave = () => {
+    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Configuration saved', detail: `Project: ${config.project.name || 'Untitled'}`, icon: Save, color: 'text-emerald-500' } }));
     toast('Configuration saved', { description: 'All changes saved locally.' });
   };
 

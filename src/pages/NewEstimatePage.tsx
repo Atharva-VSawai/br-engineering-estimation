@@ -93,10 +93,12 @@ export function NewEstimatePage() {
 
   const handleLoadSample = () => {
     loadSampleConfig();
+    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Sample data loaded', detail: 'Packaging Machine configuration applied', icon: Download, color: 'text-amber-500' } }));
     toast('Sample loaded', { description: 'Automated Packaging Machine configuration loaded.' });
   };
 
   const handleSaveDraft = () => {
+    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Draft saved', detail: `Step ${wizardStep + 1} configuration saved`, icon: Save, color: 'text-emerald-500' } }));
     toast('Draft saved', { description: 'Configuration saved locally.' });
   };
 

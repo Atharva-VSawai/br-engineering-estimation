@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Bell, Check, Download, Moon, Copy, CheckCircle, Plus, File, Gauge, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,23 @@ export function useNotificationCenter() {
 
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setNotifications(prev => [{
+        id: 'n-' + Date.now(),
+        action: detail.action || 'Update',
+        detail: detail.detail || '',
+        time: 'Just now',
+        icon: detail.icon || Check,
+        color: detail.color || 'text-emerald-500',
+        unread: true,
+      }, ...prev].slice(0, 50));
+    };
+    window.addEventListener('br:notification', handler);
+    return () => window.removeEventListener('br:notification', handler);
   }, []);
 
   return { open, toggle, close, unreadCount, notifications, markAllRead };
