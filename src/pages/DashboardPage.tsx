@@ -98,8 +98,7 @@ function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; ch
 
 export function DashboardPage() {
   const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
-  const [hourlyRate, setHourlyRate] = useState(85);
-  const [contingency, setContingency] = useState(15);
+
 
   // Stat card drag-and-drop order
   const [statOrder, setStatOrder] = useState<number[]>(() => {
@@ -330,91 +329,6 @@ export function DashboardPage() {
           </SectionCard>
         </motion.div>
 
-        {/* Cost Estimator */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.3 }}
-        >
-          <SectionCard title="Cost Estimator">
-            {(() => {
-              const hwHours = (config.io.digitalInputs + config.io.digitalOutputs + config.io.analogInputs + config.io.analogOutputs) * 0.5 + config.motion.totalAxes * 4;
-              const swHours = config.hmi.screens * 8 + (config.vision.enabled ? config.vision.cameras * 16 : 0) + 40;
-              const msHours = config.motion.totalAxes * 6 + (config.motion.electronicCamming ? 20 : 0) + (config.motion.coordinatedMotion ? 16 : 0) + (config.safety.enabled ? config.safety.safetyIOCount * 2 + 16 : 0);
-              const intHours = (hwHours + swHours + msHours) * 0.3;
-              const totalHours = hwHours + swHours + msHours + intHours;
-              const subtotal = totalHours * hourlyRate;
-              const contingencyAmount = subtotal * (contingency / 100);
-              const grandTotal = subtotal + contingencyAmount;
-
-              const fmt = (val: number) => val.toLocaleString('de-AT', { style: 'currency', currency: 'EUR' });
-
-              const costCards = [
-                { label: 'Hardware Engineering', hours: hwHours, color: 'border-l-blue-400' },
-                { label: 'Software Development', hours: swHours, color: 'border-l-violet-400' },
-                { label: 'Motion & Safety', hours: msHours, color: 'border-l-orange-400' },
-                { label: 'Integration & Testing', hours: intHours, color: 'border-l-emerald-400' },
-              ];
-
-              return (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-muted-foreground whitespace-nowrap">Hourly Rate (€)</label>
-                      <input
-                        type="number"
-                        value={hourlyRate}
-                        onChange={(e) => setHourlyRate(Number(e.target.value) || 0)}
-                        className="h-9 text-sm rounded-md border border-border bg-transparent px-2 w-24"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm text-muted-foreground whitespace-nowrap">Contingency %</label>
-                      <input
-                        type="number"
-                        value={contingency}
-                        min={0}
-                        max={50}
-                        onChange={(e) => setContingency(Math.min(50, Math.max(0, Number(e.target.value) || 0)))}
-                        className="h-9 text-sm rounded-md border border-border bg-transparent px-2 w-20"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {costCards.map((card) => (
-                      <div
-                        key={card.label}
-                        className={`rounded-lg border border-border border-l-2 ${card.color} bg-card p-3`}
-                      >
-                        <div className="text-sm text-muted-foreground">{card.label}</div>
-                        <div className="text-sm font-semibold text-foreground tabular-nums mt-1">{card.hours.toFixed(1)} hours</div>
-                        <div className="text-base font-bold text-foreground mt-0.5 tabular-nums">{fmt(card.hours * hourlyRate)}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="rounded-lg border border-border bg-card p-3 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Total Hours</span>
-                      <span className="font-semibold text-foreground tabular-nums">{totalHours.toFixed(1)} h</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-semibold text-foreground tabular-nums">{fmt(subtotal)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Contingency ({contingency}%)</span>
-                      <span className="font-semibold text-foreground tabular-nums">{fmt(contingencyAmount)}</span>
-                    </div>
-                    <div className="flex items-center justify-between border-t border-border pt-1.5">
-                      <span className="text-sm font-semibold text-foreground">Grand Total</span>
-                      <span className="text-lg font-bold text-primary tabular-nums">{fmt(grandTotal)}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </SectionCard>
-        </motion.div>
 
         {/* Quick Actions & Complexity Distribution */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

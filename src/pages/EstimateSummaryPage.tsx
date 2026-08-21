@@ -238,7 +238,6 @@ export function EstimateSummaryPage() {
           size="sm"
           className="gap-1.5 text-sm"
           onClick={() => {
-            const RATE = 85;
             const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
             const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
             const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
@@ -252,8 +251,6 @@ export function EstimateSummaryPage() {
             const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
             const commissionWeeks = complexityMap[overallComplexity] || 2;
             const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
-
-            const fmt = (v: number) => v.toLocaleString('de-AT', { style: 'currency', currency: 'EUR' });
 
             const complexityDims = [
               { label: 'Hardware', value: c.complexity.hardware },
@@ -341,10 +338,10 @@ export function EstimateSummaryPage() {
   <div class="section">
     <h2>Effort Breakdown</h2>
     <table>
-      <thead><tr><th>Area</th><th>Estimated Hours</th><th>Estimated Cost (€)</th></tr></thead>
+      <thead><tr><th>Area</th><th>Estimated Hours</th></tr></thead>
       <tbody>
-        ${effortRows.map((r) => `<tr><td>${r.area}</td><td>${r.hours.toFixed(1)}</td><td>${fmt(r.hours * RATE)}</td></tr>`).join('\n')}
-        <tr><td>TOTAL</td><td>${totalHours.toFixed(1)}</td><td>${fmt(totalHours * RATE)}</td></tr>
+        ${effortRows.map((r) => `<tr><td>${r.area}</td><td>${r.hours.toFixed(1)}</td></tr>`).join('\n')}
+        <tr><td>TOTAL</td><td>${totalHours.toFixed(1)}</td></tr>
       </tbody>
     </table>
   </div>
@@ -429,7 +426,7 @@ export function EstimateSummaryPage() {
               `  Vision: ${c.complexity.vision} | Safety: ${c.complexity.safety} | Communication: ${c.complexity.communication}`,
               `  Software: ${c.complexity.software} | Integration: ${c.complexity.integration} | Testing: ${c.complexity.testing}`,
               ``,
-              `COST BREAKDOWN (Estimated Hours)`,
+              `EFFORT BREAKDOWN (Estimated Hours)`,
               `${'-'.repeat(50)}`,
               `  Hardware Engineering:     ${hwHours.toFixed(1)}h`,
               `  Software Development:     ${swHours.toFixed(1)}h`,
@@ -592,8 +589,8 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
-      {/* Cost Estimation Overview */}
-      <SectionCard title="Cost Estimation Overview" description="Estimated engineering hours based on configuration.">
+      {/* Engineering Effort Overview */}
+      <SectionCard title="Engineering Effort Overview" description="Estimated engineering hours based on configuration.">
         <div className="space-y-3">
           {(() => {
             const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;

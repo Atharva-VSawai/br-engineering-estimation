@@ -1780,3 +1780,49 @@ Stage Summary:
 - ESLint passes cleanly with zero errors
 - Focus ring enhancement covers all interactive elements globally via CSS
 - Animation and interaction improvements enhance perceived quality without affecting performance
+---
+Task ID: 17
+Agent: Main Orchestrator
+Task: Remove all cost/financial estimation features, focus on engineering effort only
+
+Work Log:
+- Identified all cost/financial references across the codebase using ripgrep
+- **DashboardPage.tsx**: Removed entire "Cost Estimator" SectionCard (hourly rate input, contingency % input, 4 cost cards with EUR values, subtotal/contingency/grand total row); removed `hourlyRate` and `contingency` useState variables
+- **EstimateSummaryPage.tsx**: Removed `RATE = 85` constant and `fmt()` currency formatter from HTML export; removed "Estimated Cost (€)" column from HTML export table; removed `fmt(r.hours * RATE)` and `fmt(totalHours * RATE)` from export rows; renamed "COST BREAKDOWN" to "EFFORT BREAKDOWN" in text export; renamed "Cost Estimation Overview" section to "Engineering Effort Overview"
+- **SettingsPage.tsx**: Renamed "Cost Estimation Engine" to "Engineering Effort Estimation"; renamed "Cost Estimator with Rates" to "Effort Overview Panel"
+- Verified zero remaining references to: hourly rate, €, contingency, grand total, cost estimator, estimated cost
+- ESLint: Clean (0 errors)
+- Dev server: Compiles successfully, HTTP 200
+
+Stage Summary:
+- All cost/financial/price/budget features have been removed from the application
+- The tool now focuses exclusively on **engineering effort** estimation
+- Dashboard no longer shows any monetary values
+- Estimate Summary shows only hours (no EUR/currency)
+- HTML and text exports show only effort hours, no costs
+- 3 files modified, all targeted surgical edits
+- No functionality broken — only cost-related UI sections removed and labels renamed
+
+---
+Project Status: Engineering Effort Estimation Tool (v0.9)
+- All pages compile and render (HTTP 200, no errors)
+- ESLint: Clean (0 errors)
+- Focus: Engineering effort prediction only — no cost/financial features
+- Total pages: 10 (Dashboard, New Estimate wizard 14 steps, Projects, B&R Configuration, Technical Params, Engineering Activities, Complexity, Estimate Summary, Compare, Settings)
+
+---
+Current Goals / Completed Modifications / Verification Results:
+- ✅ Removed Cost Estimator section from Dashboard
+- ✅ Removed EUR/currency from all exports and displays
+- ✅ Renamed sections to focus on engineering effort
+- ✅ Zero cost/financial references remaining in codebase
+- ✅ ESLint clean, HTTP 200
+
+---
+Unresolved Issues / Risks / Next Phase Recommendations:
+- **Priority 1**: Font sizes may still be small (previous session increased them but user asked to continue in existing workspace — verify)
+- **Priority 2**: Effort estimation formulas are simplified multipliers — will be replaced by ML model
+- **Priority 3**: Persist project data via Prisma
+- **Priority 3**: Connect to validated historical Jira data (~30% reliable)
+- **Priority 4**: Mobile responsive improvements
+- **Priority 4**: HMI screen preview reflecting configuration
