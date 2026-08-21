@@ -104,7 +104,12 @@ function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; ch
 }
 
 export function DashboardPage() {
-  const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+  const { projects, config, activeProjectId, setCurrentPage, loadSampleConfig, loadSampleProjects, resetConfig, openProject, updateConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+
+  // Load sample projects on mount if none exist
+  useEffect(() => {
+    if (projects.length === 0) loadSampleProjects();
+  }, []);
 
   // Project selector state
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
@@ -370,6 +375,11 @@ export function DashboardPage() {
           transition={{ delay: 0.15, duration: 0.3 }}
         >
           <SectionCard title={selectedProject ? `Configuration: ${selectedProject.name}` : 'Quick Configuration Overview'} description={selectedProject ? `${selectedProject.customer} · ${selectedProject.machineType}` : 'Current working configuration snapshot'}>
+            {!activeProjectId && !selectedProject ? (
+              <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+                Select a project from the table below or create a new estimate
+              </div>
+            ) : (
             <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
               {(() => {
                 const totalIO =
@@ -416,6 +426,7 @@ export function DashboardPage() {
                 );
               })()}
             </div>
+            )}
           </SectionCard>
         </motion.div>
 
@@ -561,10 +572,8 @@ export function DashboardPage() {
                     key={p.id}
                     className={`border-border cursor-pointer transition-colors duration-100 hover:bg-primary/[0.03] active:bg-primary/[0.06] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
                     onClick={() => {
-                      if (p.config) {
-                        updateConfig(JSON.parse(JSON.stringify(p.config)));
-                        setCurrentPage('estimate-summary');
-                      }
+                      openProject(p.id);
+                      setCurrentPage('estimate-summary');
                     }}
                   >
                     <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>

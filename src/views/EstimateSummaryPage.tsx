@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useEffect, useMemo } from 'react';
-import { ArrowRight, Check, Minus, Clock, CalendarDays, FileText, Share2, Wrench, Save, Pencil } from 'lucide-react';
+import { ArrowRight, Check, Minus, Clock, FileText, Share2, Wrench, Save, Pencil, Zap, Cpu, Bot, Eye, ShieldCheck, Radio, FlaskConical, Rocket, Settings2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { SectionCard } from '@/components/br/SectionCard';
+import { StatusBadge } from '@/components/br/ComplexityBadge';
 import { useAppStore } from '@/store';
 import { EFFORT_AREAS } from '@/data';
 import { toast } from 'sonner';
 import { exportPdf } from '@/lib/export-pdf';
+import { calculateEngineeringEffort } from '@/lib/effort-calculation';
 import type { ComplexityLevel, ProjectConfig, Project } from '@/types';
 
 const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
@@ -59,6 +62,28 @@ const COMPLEXITY_DIMENSIONS: { key: keyof ProjectConfig['complexity']; label: st
   { key: 'testing', label: 'Testing' },
 ];
 
+const EFFORT_BAR_COLORS: Record<string, string> = {
+  Hardware: 'bg-blue-400',
+  'PLC/Software': 'bg-violet-400',
+  Motion: 'bg-orange-400',
+  Vision: 'bg-cyan-400',
+  Safety: 'bg-red-400',
+  'Comm/Integration': 'bg-emerald-400',
+  Testing: 'bg-amber-400',
+  Commissioning: 'bg-indigo-400',
+};
+
+const EFFORT_ICONS: Record<string, React.ElementType> = {
+  Hardware: Wrench,
+  'PLC/Software': Pencil,
+  Motion: Zap,
+  Vision: Eye,
+  Safety: ShieldCheck,
+  'Comm/Integration': Radio,
+  Testing: FlaskConical,
+  Commissioning: Rocket,
+};
+
 interface SectionCheck {
   label: string;
   configured: boolean;
@@ -86,58 +111,103 @@ function checkCompleteness(config: ProjectConfig): SectionCheck[] {
   ];
 }
 
-function calculateEffort(c: ProjectConfig) {
-  const hwHours = (c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs) * 0.5 + c.motion.totalAxes * 4;
-  const swHours = c.hmi.screens * 8 + (c.vision.enabled ? c.vision.cameras * 16 : 0) + 40;
-  const motionHours = c.motion.totalAxes * 6 + (c.motion.electronicCamming ? 20 : 0) + (c.motion.coordinatedMotion ? 16 : 0);
-  const safetyHours = c.safety.enabled ? c.safety.safetyIOCount * 2 + 16 : 0;
-  const integrationHours = (hwHours + swHours + motionHours + safetyHours) * 0.3;
-  const totalHours = hwHours + swHours + motionHours + safetyHours + integrationHours;
-  return { hwHours, swHours, motionHours, safetyHours, integrationHours, totalHours };
+function getEffortDrivers(c: ProjectConfig): string[] {
+  const drivers: string[] = [];
+  if (c.motion.totalAxes > 0) drivers.push(`${c.motion.totalAxes} motion axes`);
+  if (c.motion.electronicCamming) drivers.push('Electronic camming');
+  if (c.motion.coordinatedMotion) drivers.push('Coordinated motion');
+  if (c.motion.interpolation) drivers.push('Multi-axis interpolation');
+  if (c.motion.complexMotionProfiles) drivers.push('Complex motion profiles');
+  if (c.mechatronics.type !== 'None') drivers.push(`${c.mechatronics.type} mechatronics`);
+  if (c.robotics.enabled) drivers.push(`${c.robotics.quantity} robot(s)`);
+  if (c.vision.enabled) drivers.push(`${c.vision.cameras} camera(s)`);
+  if (c.safety.enabled) drivers.push(`Safety system (${c.safety.safetyIOCount} I/O)`);
+  if (c.hmi.screens > 0) drivers.push(`${c.hmi.screens} HMI screen(s)`);
+  const enabledProtocols = c.communication.protocols.filter((p) => p.enabled);
+  if (enabledProtocols.length > 0) drivers.push(`${enabledProtocols.length} communication protocol(s)`);
+  if (c.communication.mesIntegration) drivers.push('MES integration');
+  if (c.communication.scadaIntegration) drivers.push('SCADA integration');
+  if (c.iiot.ipcRequired) drivers.push(`IPC (${c.iiot.ipcModel})`);
+  if (c.iiot.cloudConnectivity) drivers.push('Cloud/IIoT connectivity');
+  const totalIO = c.io.digitalInputs + c.io.digitalOutputs + c.io.analogInputs + c.io.analogOutputs;
+  if (totalIO > 100) drivers.push(`${totalIO} I/O points`);
+  if (c.project.machineStations > 1) drivers.push(`${c.project.machineStations} machine stations`);
+  if (c.project.projectVariants > 1) drivers.push(`${c.project.projectVariants} product variants`);
+  return drivers;
 }
 
-function calculateTimeline(c: ProjectConfig, totalHours: number, overallComplexity: ComplexityLevel) {
-  const hwDesignWeeks = 2;
-  const swDevWeeks = Math.max(2, Math.ceil(c.hmi.screens / 3));
-  const integrationWeeks = Math.max(2, Math.ceil(totalHours / 40));
-  const complexityMap: Record<string, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
-  const commissionWeeks = complexityMap[overallComplexity] || 2;
-  const totalWeeks = hwDesignWeeks + swDevWeeks + integrationWeeks + commissionWeeks;
-  return { hwDesignWeeks, swDevWeeks, integrationWeeks, commissionWeeks, totalWeeks };
-}
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const d = payload[0];
+  return (
+    <div className="rounded-lg border border-border bg-background px-3 py-2 shadow-md text-sm">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: d.payload.color }} />
+        <span className="font-medium text-foreground">{d.name}</span>
+      </div>
+      <div className="text-muted-foreground tabular-nums">{d.value.toFixed(1)} hours</div>
+    </div>
+  );
+};
 
 export function EstimateSummaryPage() {
-  const { config: c, setCurrentPage, setWizardStep, addProject } = useAppStore();
+  const { config: c, activeProjectId, projects, setCurrentPage, setWizardStep, addProject } = useAppStore();
+  const currentProject = activeProjectId ? projects.find((p) => p.id === activeProjectId) : null;
 
-  const allComplexities = [c.complexity.hardware, c.complexity.motion, c.complexity.hmi, c.complexity.vision, c.complexity.safety, c.complexity.communication, c.complexity.software, c.complexity.integration, c.complexity.requirement, c.complexity.testing];
-  const highCount = allComplexities.filter((x) => x === 'High' || x === 'Very High').length;
-  const overallComplexity: ComplexityLevel = highCount >= 5 ? 'Very High' : highCount >= 3 ? 'High' : highCount >= 1 ? 'Medium' : 'Low';
+  const { effort, timeline, overallComplexity, highCount } = useMemo(
+    () => calculateEngineeringEffort(c),
+    [c],
+  );
 
   const areaComplexities: Record<string, ComplexityLevel> = {
-    Motion: c.complexity.motion, HMI: c.complexity.hmi, 'I/O': c.io.digitalInputs + c.io.digitalOutputs > 200 ? 'High' : 'Medium', Vision: c.vision.enabled ? c.complexity.vision : 'Low', Safety: c.safety.enabled ? c.complexity.safety : 'Low', Communication: c.complexity.communication, Software: c.complexity.software, Integration: c.complexity.integration, Testing: c.complexity.testing, Commissioning: c.complexity.testing,
+    Motion: c.complexity.motion,
+    HMI: c.complexity.hmi,
+    'I/O': c.io.digitalInputs + c.io.digitalOutputs > 200 ? 'High' : 'Medium',
+    Vision: c.vision.enabled ? c.complexity.vision : 'Low',
+    Safety: c.safety.enabled ? c.complexity.safety : 'Low',
+    Communication: c.complexity.communication,
+    Software: c.complexity.software,
+    Integration: c.complexity.integration,
+    Testing: c.complexity.testing,
+    Commissioning: c.complexity.testing,
   };
 
   const completeness = checkCompleteness(c);
   const configuredCount = completeness.filter((s) => s.configured).length;
+  const drivers = useMemo(() => getEffortDrivers(c), [c]);
 
-  const effort = useMemo(() => calculateEffort(c), [c]);
-  const timeline = useMemo(() => calculateTimeline(c, effort.totalHours, overallComplexity), [c, effort.totalHours, overallComplexity]);
-  const totalDays = Math.ceil(effort.totalHours / 8);
-  const totalMonths = (effort.totalHours / (8 * 20)).toFixed(1);
+  // Donut chart data
+  const effortChartData = [
+    { name: 'Hardware', value: effort.hardwareHours, color: '#3b82f6' },
+    { name: 'PLC/Software', value: effort.plcSoftwareHours, color: '#8b5cf6' },
+    { name: 'Motion', value: effort.motionHours, color: '#f97316' },
+    { name: 'Vision', value: effort.visionHours, color: '#06b6d4' },
+    { name: 'Safety', value: effort.safetyHours, color: '#ef4444' },
+    { name: 'Comm/Integration', value: effort.communicationIntegrationHours, color: '#10b981' },
+    { name: 'Testing', value: effort.testingHours, color: '#f59e0b' },
+    { name: 'Commissioning', value: effort.commissioningHours, color: '#6366f1' },
+  ];
+  const chartData = effortChartData.filter((d) => d.value > 0);
+
+  const effortRows = [
+    { name: 'Hardware', hours: effort.hardwareHours, color: EFFORT_BAR_COLORS['Hardware'], icon: EFFORT_ICONS['Hardware'] },
+    { name: 'PLC/Software', hours: effort.plcSoftwareHours, color: EFFORT_BAR_COLORS['PLC/Software'], icon: EFFORT_ICONS['PLC/Software'] },
+    { name: 'Motion', hours: effort.motionHours, color: EFFORT_BAR_COLORS['Motion'], icon: EFFORT_ICONS['Motion'] },
+    { name: 'Vision', hours: effort.visionHours, color: EFFORT_BAR_COLORS['Vision'], icon: EFFORT_ICONS['Vision'] },
+    { name: 'Safety', hours: effort.safetyHours, color: EFFORT_BAR_COLORS['Safety'], icon: EFFORT_ICONS['Safety'] },
+    { name: 'Comm/Integration', hours: effort.communicationIntegrationHours, color: EFFORT_BAR_COLORS['Comm/Integration'], icon: EFFORT_ICONS['Comm/Integration'] },
+    { name: 'Testing', hours: effort.testingHours, color: EFFORT_BAR_COLORS['Testing'], icon: EFFORT_ICONS['Testing'] },
+    { name: 'Commissioning', hours: effort.commissioningHours, color: EFFORT_BAR_COLORS['Commissioning'], icon: EFFORT_ICONS['Commissioning'] },
+  ];
 
   useEffect(() => {
-    const handleExportPdf = () => { exportPdf(c); toast('PDF downloaded', { description: 'Report saved as PDF file.' }); };
+    const handleExportPdf = () => {
+      exportPdf(c);
+      toast('PDF downloaded', { description: 'Report saved as PDF file.' });
+    };
     window.addEventListener('br:export-pdf', handleExportPdf);
     return () => window.removeEventListener('br:export-pdf', handleExportPdf);
   }, [c]);
-
-  const effortRows = [
-    { name: 'Hardware Engineering', hours: effort.hwHours, color: 'bg-blue-400', icon: Wrench },
-    { name: 'Software Development', hours: effort.swHours, color: 'bg-violet-400', icon: Pencil },
-    { name: 'Motion Configuration', hours: effort.motionHours, color: 'bg-orange-400', icon: Wrench },
-    { name: 'Safety Engineering', hours: effort.safetyHours, color: 'bg-red-400', icon: Shield },
-    { name: 'Integration & Testing', hours: effort.integrationHours, color: 'bg-emerald-400', icon: Check },
-  ];
 
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -145,18 +215,23 @@ export function EstimateSummaryPage() {
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-lg font-bold text-foreground">Engineering Effort Summary</h1>
-          <p className="text-sm text-muted-foreground">{c.project.name || 'Untitled Project'} &middot; {c.project.customer || 'No customer'} &middot; {c.project.machineType || 'General'}</p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5 flex-wrap">
+            {activeProjectId && <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">{activeProjectId}</span>}
+            <span>{c.project.name || 'Untitled Project'}</span>
+            {c.project.customer && <span>&middot; {c.project.customer}</span>}
+            {currentProject && <StatusBadge status={currentProject.status} />}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => { exportPdf(c); toast('PDF downloaded'); }}><FileText className="h-3.5 w-3.5" /> PDF</Button>
           <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={() => {
-            const report = [`B&R Engineering Effort Report`, `Project: ${c.project.name || 'N/A'}`, `Customer: ${c.project.customer || 'N/A'}`, `Machine Type: ${c.project.machineType || 'N/A'}`, ``, `TOTAL ENGINEERING EFFORT`, `  ${effort.totalHours.toFixed(1)} hours | ${totalDays} days | ${timeline.totalWeeks} weeks | ${totalMonths} months`, ``, `BREAKDOWN:`, `  Hardware: ${effort.hwHours.toFixed(1)}h | Software: ${effort.swHours.toFixed(1)}h | Motion: ${effort.motionHours.toFixed(1)}h`, `  Safety: ${effort.safetyHours.toFixed(1)}h | Integration: ${effort.integrationHours.toFixed(1)}h`, ``, `OVERALL COMPLEXITY: ${overallComplexity} (${highCount}/10 High or Very High)`, ``, `Generated by B&R Engineering Estimation Tool`].join('\n');
+            const report = [`B&R Engineering Effort Report`, `Project: ${activeProjectId || 'N/A'}`, `Name: ${c.project.name || 'N/A'}`, `Customer: ${c.project.customer || 'N/A'}`, `Machine Type: ${c.project.machineType || 'N/A'}`, ``, `TOTAL ENGINEERING EFFORT`, `  ${effort.totalHours.toFixed(1)} hours | ${effort.totalDays} days | ${timeline.totalWeeks} weeks | ${effort.totalMonths} months`, ``, `BREAKDOWN:`, `  Hardware: ${effort.hardwareHours.toFixed(1)}h`, `  PLC/Software: ${effort.plcSoftwareHours.toFixed(1)}h`, `  Motion: ${effort.motionHours.toFixed(1)}h`, `  Vision: ${effort.visionHours.toFixed(1)}h`, `  Safety: ${effort.safetyHours.toFixed(1)}h`, `  Comm/Integration: ${effort.communicationIntegrationHours.toFixed(1)}h`, `  Testing: ${effort.testingHours.toFixed(1)}h`, `  Commissioning: ${effort.commissioningHours.toFixed(1)}h`, ``, `OVERALL COMPLEXITY: ${overallComplexity} (${highCount}/10 High or Very High)`, ``, `Generated by B&R Engineering Estimation Tool`].join('\n');
             navigator.clipboard.writeText(report); toast('Report copied to clipboard');
           }}><Share2 className="h-3.5 w-3.5" /> Copy Report</Button>
           <Button size="sm" className="h-9 gap-1.5 text-sm bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => { setWizardStep(13); setCurrentPage('new-estimate'); }}><Pencil className="h-3.5 w-3.5" /> Edit</Button>
           <Button size="sm" className="h-9 gap-1.5 text-sm" variant="outline" onClick={() => {
             const now = new Date().toISOString().split('T')[0];
-            const project: Project = { id: 'proj-' + Date.now(), name: c.project.name || 'Untitled Project', customer: c.project.customer || 'Unknown', machineType: c.project.machineType || 'General', industry: c.project.industry || '', description: c.project.description || '', requirementClarity: c.project.requirementClarity || 'Mostly Clear', customerInvolvement: c.project.customerInvolvement || 'Medium', projectVariants: c.project.projectVariants || 1, machineStations: c.project.machineStations || 1, complexity: c.complexity.hardware, status: 'Draft', createdAt: now, updatedAt: now, config: JSON.parse(JSON.stringify(c)) };
+            const project: Project = { id: 'proj-' + Date.now(), name: c.project.name || 'Untitled Project', customer: c.project.customer || 'Unknown', machineType: c.project.machineType || 'General', industry: c.project.industry || '', description: c.project.description || '', requirementClarity: c.project.requirementClarity || 'Mostly Clear', customerInvolvement: c.project.customerInvolvement || 'Medium', projectVariants: c.project.projectVariants || 1, machineStations: c.project.machineStations || 1, complexity: overallComplexity, status: 'Draft', createdAt: now, updatedAt: now, config: JSON.parse(JSON.stringify(c)) };
             addProject(project); toast('Project saved!', { description: project.name });
           }}><Save className="h-3.5 w-3.5" /> Save</Button>
         </div>
@@ -176,7 +251,7 @@ export function EstimateSummaryPage() {
               <div className="text-sm font-medium text-muted-foreground mt-1">Hours</div>
             </div>
             <div className="rounded-lg bg-background/80 border border-border p-4 text-center">
-              <div className="text-3xl font-extrabold text-foreground tabular-nums">{totalDays}</div>
+              <div className="text-3xl font-extrabold text-foreground tabular-nums">{Math.ceil(effort.totalDays)}</div>
               <div className="text-sm font-medium text-muted-foreground mt-1">Working Days</div>
             </div>
             <div className="rounded-lg bg-background/80 border border-border p-4 text-center">
@@ -184,7 +259,7 @@ export function EstimateSummaryPage() {
               <div className="text-sm font-medium text-muted-foreground mt-1">Weeks</div>
             </div>
             <div className="rounded-lg bg-background/80 border border-border p-4 text-center">
-              <div className="text-3xl font-extrabold text-foreground tabular-nums">{totalMonths}</div>
+              <div className="text-3xl font-extrabold text-foreground tabular-nums">{effort.totalMonths}</div>
               <div className="text-sm font-medium text-muted-foreground mt-1">Months (est.)</div>
             </div>
           </div>
@@ -197,40 +272,113 @@ export function EstimateSummaryPage() {
         </div>
       </motion.div>
 
-      {/* Effort Breakdown */}
-      <SectionCard title="Effort Breakdown" description="Estimated engineering hours by domain">
-        <div className="space-y-3">
-          {effortRows.map((row, index) => (
-            <motion.div key={row.name} className="flex items-center gap-3" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.06, duration: 0.3 }}>
-              <div className="w-44 shrink-0 text-sm text-muted-foreground">{row.name}</div>
-              <div className="flex-1">
-                <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div className={`h-4 rounded-full ${row.color} transition-all duration-500`} style={{ width: `${Math.max((row.hours / Math.max(effort.totalHours, 1)) * 100, 2)}%` }} />
-                </div>
-              </div>
-              <div className="w-20 shrink-0 text-sm font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
-              <div className="w-20 shrink-0 text-sm text-right text-muted-foreground">{(row.hours / 8).toFixed(1)}d</div>
-            </motion.div>
-          ))}
-          <div className="flex items-center gap-3 border-t border-border pt-2 mt-1">
-            <div className="w-44 shrink-0 text-sm font-bold text-primary">Total</div>
-            <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
-              <div className="h-4 rounded-full bg-primary transition-all duration-500" style={{ width: '100%' }} />
+      {/* Effort Breakdown with Donut Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* Donut Chart */}
+        <SectionCard title="Effort Distribution" description="Hours by engineering domain" className="lg:col-span-2">
+          {effort.totalHours === 0 ? (
+            <div className="flex items-center justify-center h-56 text-sm text-muted-foreground">
+              No engineering effort calculated yet.
             </div>
-            <div className="w-20 shrink-0 text-sm font-bold text-right text-primary">{effort.totalHours.toFixed(1)}h</div>
-            <div className="w-20 shrink-0 text-sm font-bold text-right text-primary">{totalDays}d</div>
+          ) : (
+            <div>
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-2 space-y-1.5">
+                {chartData.map((d) => {
+                  const pct = effort.totalHours > 0 ? (d.value / effort.totalHours) * 100 : 0;
+                  return (
+                    <div key={d.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+                        <span className="text-muted-foreground">{d.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 tabular-nums">
+                        <span className="text-foreground font-medium">{d.value.toFixed(1)}h</span>
+                        <span className="text-muted-foreground text-xs w-12 text-right">{pct.toFixed(0)}%</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </SectionCard>
+
+        {/* Effort Bars */}
+        <SectionCard title="Effort Breakdown" description="Estimated engineering hours by domain" className="lg:col-span-3">
+          <div className="space-y-3">
+            {effortRows.map((row, index) => (
+              <motion.div key={row.name} className="flex items-center gap-3" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.06, duration: 0.3 }}>
+                <div className="w-40 shrink-0 text-sm text-muted-foreground">{row.name}</div>
+                <div className="flex-1">
+                  <div className="h-4 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-4 rounded-full ${row.color} transition-all duration-500`} style={{ width: `${Math.max((row.hours / Math.max(effort.totalHours, 1)) * 100, 2)}%` }} />
+                  </div>
+                </div>
+                <div className="w-20 shrink-0 text-sm font-semibold text-right text-foreground">{row.hours.toFixed(1)}h</div>
+                <div className="w-16 shrink-0 text-sm text-right text-muted-foreground">{(row.hours / 8).toFixed(1)}d</div>
+              </motion.div>
+            ))}
+            <div className="flex items-center gap-3 border-t border-border pt-2 mt-1">
+              <div className="w-40 shrink-0 text-sm font-bold text-primary">Total</div>
+              <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden">
+                <div className="h-4 rounded-full bg-primary transition-all duration-500" style={{ width: '100%' }} />
+              </div>
+              <div className="w-20 shrink-0 text-sm font-bold text-right text-primary">{effort.totalHours.toFixed(1)}h</div>
+              <div className="w-16 shrink-0 text-sm font-bold text-right text-primary">{Math.ceil(effort.totalDays)}d</div>
+            </div>
           </div>
-        </div>
-      </SectionCard>
+        </SectionCard>
+      </div>
+
+      {/* Major Effort Drivers */}
+      {drivers.length > 0 && (
+        <SectionCard title="Major Effort Drivers" description="Configuration items contributing most to engineering effort">
+          <div className="flex flex-wrap gap-2">
+            {drivers.map((driver, idx) => (
+              <motion.span
+                key={idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.04, duration: 0.2 }}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium text-foreground"
+              >
+                <Cpu className="h-3 w-3 text-primary" />
+                {driver}
+              </motion.span>
+            ))}
+          </div>
+        </SectionCard>
+      )}
 
       {/* Timeline */}
       <SectionCard title="Estimated Timeline" description={`Total: ${timeline.totalWeeks} weeks`}>
         <div className="space-y-3">
           {[
-            { name: 'Hardware Design & Ordering', weeks: timeline.hwDesignWeeks, color: 'bg-blue-400' },
-            { name: 'Software Development', weeks: timeline.swDevWeeks, color: 'bg-amber-400' },
-            { name: 'Integration & Testing', weeks: timeline.integrationWeeks, color: 'bg-orange-400' },
-            { name: 'Commissioning & Handover', weeks: timeline.commissionWeeks, color: 'bg-emerald-400' },
+            { name: 'Hardware Design & Ordering', weeks: timeline.hardwareDesignWeeks, color: 'bg-blue-400' },
+            { name: 'Software Development', weeks: timeline.softwareDevelopmentWeeks, color: 'bg-amber-400' },
+            { name: 'Integration & Testing', weeks: timeline.integrationTestingWeeks, color: 'bg-orange-400' },
+            { name: 'Commissioning & Handover', weeks: timeline.commissioningWeeks, color: 'bg-emerald-400' },
           ].map((phase, index) => {
             const barWidth = `${(phase.weeks / Math.max(timeline.totalWeeks, 1)) * 100}%`;
             return (

@@ -1,0 +1,637 @@
+     1→'use client';
+     2→
+     3→import React, { useEffect, useMemo, useState } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson, Settings2, GripVertical } from 'lucide-react';
+     6→import { DndContext, closestCenter, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+     7→import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
+     8→import { CSS } from '@dnd-kit/utilities';
+     9→import { StatCard } from '@/components/br/StatCard';
+    10→import { SectionCard } from '@/components/br/SectionCard';
+    11→import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
+    12→import { useAppStore } from '@/store';
+    13→import type { ComplexityLevel } from '@/types';
+    14→import { Button } from '@/components/ui/button';
+    15→import {
+    16→  Select,
+    17→  SelectContent,
+    18→  SelectItem,
+    19→  SelectTrigger,
+    20→  SelectValue,
+    21→} from '@/components/ui/select';
+    22→import {
+    23→  Table,
+    24→  TableBody,
+    25→  TableCell,
+    26→  TableHead,
+    27→  TableHeader,
+    28→  TableRow,
+    29→} from '@/components/ui/table';
+    30→
+    31→const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
+    32→  Low: 'bg-emerald-500',
+    33→  Medium: 'bg-amber-500',
+    34→  High: 'bg-orange-500',
+    35→  'Very High': 'bg-red-500',
+    36→};
+    37→
+    38→const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
+    39→  Low: 'text-emerald-600',
+    40→  Medium: 'text-amber-600',
+    41→  High: 'text-orange-600',
+    42→  'Very High': 'text-red-600',
+    43→};
+    44→
+    45→const ALL_LEVELS: ComplexityLevel[] = ['Low', 'Medium', 'High', 'Very High'];
+    46→
+    47→const COMPLEXITY_LEFT_BORDER: Record<ComplexityLevel, string> = {
+    48→  Low: 'border-l-emerald-400',
+    49→  Medium: 'border-l-amber-400',
+    50→  High: 'border-l-orange-400',
+    51→  'Very High': 'border-l-red-400',
+    52→};
+    53→
+    54→const ACTIVITY_AVATAR_CONFIG: Record<string, { icon: React.ElementType; iconColor: string; bgLight: string; bgDark: string }> = {
+    55→  edit: { icon: Pencil, iconColor: 'text-blue-400', bgLight: 'bg-blue-50', bgDark: 'dark:bg-blue-950/40' },
+    56→  info: { icon: Info, iconColor: 'text-amber-400', bgLight: 'bg-amber-50', bgDark: 'dark:bg-amber-950/40' },
+    57→  create: { icon: Plus, iconColor: 'text-emerald-400', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+    58→  complete: { icon: CheckCircle2, iconColor: 'text-emerald-500', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+    59→  export: { icon: FileJson, iconColor: 'text-purple-400', bgLight: 'bg-purple-50', bgDark: 'dark:bg-purple-950/40' },
+    60→};
+    61→
+    62→const ACTIVITY_BORDER_COLORS: Record<string, string> = {
+    63→  edit: 'border-l-blue-400',
+    64→  info: 'border-l-amber-400',
+    65→  create: 'border-l-emerald-400',
+    66→  complete: 'border-l-emerald-500',
+    67→  export: 'border-l-purple-400',
+    68→};
+    69→
+    70→const recentActivity = [
+    71→  { time: '2 hours ago', action: 'Configuration updated', detail: 'Motion axes changed from 6 to 8', type: 'edit' },
+    72→  { time: '5 hours ago', action: 'Sample data loaded', detail: 'Automated Packaging Machine configuration', type: 'info' },
+    73→  { time: '1 day ago', action: 'New estimate created', detail: 'ACOPOStrak Transport System', type: 'create' },
+    74→  { time: '2 days ago', action: 'Estimate completed', detail: 'Bottle Inspection Machine \u2013 Medium complexity', type: 'complete' },
+    75→  { time: '3 days ago', action: 'Project exported', detail: 'Servo Press Machine configuration as JSON', type: 'export' },
+    76→];
+    77→
+    78→function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; children: React.ReactNode; onDragStart: () => void }) {
+    79→  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    80→  const style = {
+    81→    transform: CSS.Transform.toString(transform),
+    82→    transition,
+    83→    opacity: isDragging ? 0.4 : 1,
+    84→  };
+    85→  return (
+    86→    <motion.div
+    87→      ref={setNodeRef}
+    88→      style={style}
+    89→      layout
+    90→      className="group-hover:shadow-md transition-shadow duration-300 group relative"
+    91→    >
+    92→      <div
+    93→        {...attributes}
+    94→        {...listeners}
+    95→        onClick={(e) => e.stopPropagation()}
+    96→        onPointerDown={onDragStart}
+    97→        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+    98→      >
+    99→        <GripVertical className="h-4 w-4 text-muted-foreground" />
+   100→      </div>
+   101→      {children}
+   102→    </motion.div>
+   103→  );
+   104→}
+   105→
+   106→export function DashboardPage() {
+   107→  const { projects, config, activeProjectId, setCurrentPage, loadSampleConfig, loadSampleProjects, resetConfig, openProject, updateConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+   108→
+   109→  // Load sample projects on mount if none exist
+   110→  useEffect(() => {
+   111→    if (projects.length === 0) loadSampleProjects();
+   112→  }, []);
+   113→
+   114→  // Project selector state
+   115→  const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
+   116→
+   117→  // Derived: currently selected project object
+   118→  const selectedProject = useMemo(
+   119→    () => (selectedProjectId === 'all' ? null : projects.find((p) => p.id === selectedProjectId) ?? null),
+   120→    [selectedProjectId, projects]
+   121→  );
+   122→
+   123→  // When a project is selected, deep-clone its config into the store
+   124→  const handleProjectSelect = (value: string) => {
+   125→    setSelectedProjectId(value);
+   126→    if (value === 'all') {
+   127→      // Restore default config for aggregate view
+   128→      resetConfig();
+   129→      return;
+   130→    }
+   131→    const project = projects.find((p) => p.id === value);
+   132→    if (project?.config) {
+   133→      // Deep-clone to avoid reference issues with the stored project
+   134→      const clonedConfig = JSON.parse(JSON.stringify(project.config));
+   135→      updateConfig(clonedConfig);
+   136→    }
+   137→  };
+   138→
+   139→  // Stat card drag-and-drop order
+   140→  const [statOrder, setStatOrder] = useState<number[]>(() => {
+   141→    if (typeof window === 'undefined') return [0, 1, 2, 3];
+   142→    try {
+   143→      const saved = localStorage.getItem('br-dashboard-order');
+   144→      return saved ? JSON.parse(saved) : [0, 1, 2, 3];
+   145→    } catch {
+   146→      return [0, 1, 2, 3];
+   147→    }
+   148→  });
+   149→  const [activeStatId, setActiveStatId] = useState<number | null>(null);
+   150→  const statSensors = useSensors(
+   151→    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+   152→  );
+   153→
+   154→  useEffect(() => {
+   155→    try {
+   156→      localStorage.setItem('br-dashboard-order', JSON.stringify(statOrder));
+   157→    } catch { /* noop */ }
+   158→  }, [statOrder]);
+   159→
+   160→  const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
+   161→  const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
+   162→  const completedEstimates = projects.filter((p) => p.status === 'Completed').length;
+   163→
+   164→  // Complexity distribution
+   165→  const complexityDist = useMemo(() => {
+   166→    const dist: Record<ComplexityLevel, number> = { Low: 0, Medium: 0, High: 0, 'Very High': 0 };
+   167→    projects.forEach((p) => {
+   168→      dist[p.complexity]++;
+   169→    });
+   170→    return dist;
+   171→  }, [projects]);
+   172→
+   173→  const totalProjects = projects.length;
+   174→
+   175→  // Average complexity label
+   176→  const avgComplexityLabel = useMemo(() => {
+   177→    if (totalProjects === 0) return 'N/A';
+   178→    const scoreMap: Record<ComplexityLevel, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+   179→    const avg = projects.reduce((sum, p) => sum + scoreMap[p.complexity], 0) / totalProjects;
+   180→    if (avg <= 1.5) return 'Low';
+   181→    if (avg <= 2.5) return 'Medium';
+   182→    if (avg <= 3.5) return 'High';
+   183→    return 'Very High';
+   184→  }, [projects, totalProjects]) as ComplexityLevel | 'N/A';
+   185→
+   186→  const statCardsData = [
+   187→    { id: 'stat-0', label: 'Active Projects', value: activeProjects, icon: <FolderKanban className="h-4 w-4" />, accentColor: 'bg-blue-400' },
+   188→    { id: 'stat-1', label: 'Draft Estimates', value: draftEstimates, icon: <FileEdit className="h-4 w-4" />, accentColor: 'bg-amber-400' },
+   189→    { id: 'stat-2', label: 'Completed Estimates', value: completedEstimates, icon: <CheckCircle2 className="h-4 w-4" />, accentColor: 'bg-emerald-400' },
+   190→    { id: 'stat-3', label: 'Avg. Project Complexity', value: avgComplexityLabel, icon: <BarChart3 className="h-4 w-4" />, accentColor: 'bg-orange-400' },
+   191→  ];
+   192→
+   193→  const handleStatDragEnd = (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+   194→    const { active, over } = event;
+   195→    if (!over || active.id === over.id) return;
+   196→    setStatOrder((prev) => {
+   197→      const oldIndex = prev.indexOf(Number(active.id));
+   198→      const newIndex = prev.indexOf(Number(over.id));
+   199→      return arrayMove(prev, oldIndex, newIndex);
+   200→    });
+   201→    setActiveStatId(null);
+   202→  };
+   203→
+   204→  const activeStatCard = activeStatId !== null ? statCardsData[activeStatId] : null;
+   205→
+   206→  return (
+   207→    <div className="max-w-[1400px] mx-auto w-full">
+   208→      <motion.div
+   209→        className="space-y-6"
+   210→        initial={{ opacity: 0, y: 8 }}
+   211→        animate={{ opacity: 1, y: 0 }}
+   212→        transition={{ duration: 0.3 }}
+   213→      >
+   214→        {/* Welcome Banner */}
+   215→        <div className="relative overflow-hidden border border-border/80 rounded-xl bg-gradient-to-r from-primary/[0.07] via-primary/[0.03] to-transparent p-6">
+   216→          {/* Subtle dot pattern decoration */}
+   217→          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, oklch(0.55 0.2 35) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+   218→          {/* Decorative gradient blob */}
+   219→          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-primary/10 to-transparent blur-2xl" />
+   220→          <div className="absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-gradient-to-tl from-primary/5 to-transparent blur-xl" />
+   221→          <Settings2 className="h-28 w-28 text-primary/[0.05] absolute right-8 top-1/2 -translate-y-1/2" />
+   222→          <div className="relative flex items-center justify-between flex-wrap gap-4">
+   223→            <div className="flex items-center gap-4">
+   224→              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-sm ring-1 ring-primary/10">
+   225→                <Cpu className="h-6 w-6" />
+   226→              </div>
+   227→              <div>
+   228→                <h2 className="text-lg font-bold text-foreground tracking-tight">B&amp;R Engineering Estimation</h2>
+   229→                <p className="text-sm text-muted-foreground mt-0.5">Configure your automation project and generate effort estimates</p>
+   230→              </div>
+   231→            </div>
+   232→            <div className="flex items-center gap-2">
+   233→              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">{totalProjects} Projects</span>
+   234→              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">{activeProjects} Active</span>
+   235→              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">{completedEstimates} Completed</span>
+   236→            </div>
+   237→          </div>
+   238→        </div>
+   239→        {/* Bottom gradient shadow below welcome banner */}
+   240→        <div className="h-3 -mt-1.5 bg-gradient-to-b from-muted/30 to-transparent rounded-b-lg pointer-events-none" />
+   241→
+   242→        {/* Project Selector */}
+   243→        <motion.div
+   244→          initial={{ opacity: 0, y: 4 }}
+   245→          animate={{ opacity: 1, y: 0 }}
+   246→          transition={{ delay: 0.05, duration: 0.25 }}
+   247→        >
+   248→          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+   249→            <div className="flex items-center gap-2.5 shrink-0">
+   250→              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+   251→                <FolderKanban className="h-4 w-4 text-primary" />
+   252→              </div>
+   253→              <span className="text-sm font-semibold text-foreground">Project Scope</span>
+   254→            </div>
+   255→            <Select value={selectedProjectId} onValueChange={handleProjectSelect}>
+   256→              <SelectTrigger className="w-full sm:w-[320px] h-9 font-medium border-border/80">
+   257→                <SelectValue placeholder="Select a project…" />
+   258→              </SelectTrigger>
+   259→              <SelectContent>
+   260→                <SelectItem value="all">
+   261→                  <span className="flex items-center gap-2">
+   262→                    <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+   263→                    All Projects (Aggregate View)
+   264→                  </span>
+   265→                </SelectItem>
+   266→                {projects.map((p) => (
+   267→                  <SelectItem key={p.id} value={p.id}>
+   268→                    <span className="flex items-center gap-2">
+   269→                      <span className={`h-2 w-2 rounded-sm shrink-0 ${COMPLEXITY_COLORS[p.complexity]}`} />
+   270→                      <span className="truncate">{p.name}</span>
+   271→                      <span className="text-muted-foreground ml-auto text-xs shrink-0">{p.customer}</span>
+   272→                    </span>
+   273→                  </SelectItem>
+   274→                ))}
+   275→              </SelectContent>
+   276→            </Select>
+   277→            {selectedProject && (
+   278→              <div className="flex items-center gap-3 text-sm animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+   279→                <div className="flex items-center gap-1.5">
+   280→                  <span className="text-muted-foreground">Customer:</span>
+   281→                  <span className="font-medium text-foreground">{selectedProject.customer}</span>
+   282→                </div>
+   283→                <span className="h-4 w-px bg-border" />
+   284→                <div className="flex items-center gap-1.5">
+   285→                  <span className="text-muted-foreground">Machine:</span>
+   286→                  <span className="font-medium text-foreground">{selectedProject.machineType}</span>
+   287→                </div>
+   288→                <span className="h-4 w-px bg-border" />
+   289→                <div className="flex items-center gap-1.5">
+   290→                  <span className="text-muted-foreground">Status:</span>
+   291→                  <StatusBadge status={selectedProject.status} />
+   292→                </div>
+   293→              </div>
+   294→            )}
+   295→          </div>
+   296→        </motion.div>
+   297→
+   298→        {/* Header */}
+   299→        <div>
+   300→          <h1 className="text-lg font-bold text-foreground">Engineering Estimation Dashboard</h1>
+   301→          <p className="text-sm text-muted-foreground">
+   302→            Configure the B&R automation system and estimate engineering effort.
+   303→          </p>
+   304→        </div>
+   305→
+   306→        {/* Stat Cards - Draggable */}
+   307→        <DndContext sensors={statSensors} collisionDetection={closestCenter} onDragEnd={handleStatDragEnd}>
+   308→          <SortableContext items={statOrder.map((i) => String(i))} strategy={rectSortingStrategy}>
+   309→            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   310→              <AnimatePresence mode="popLayout">
+   311→                {statOrder.map((idx) => {
+   312→                  const card = statCardsData[idx];
+   313→                  return (
+   314→                    <SortableStatCardWrapper
+   315→                      key={card.id}
+   316→                      id={card.id}
+   317→                      onDragStart={() => setActiveStatId(idx)}
+   318→                    >
+   319→                      {card.label === 'Avg. Project Complexity' ? (
+   320→                        <div>
+   321→                          <StatCard
+   322→                            label={card.label}
+   323→                            value={card.value}
+   324→                            icon={card.icon}
+   325→                            accentColor={card.accentColor}
+   326→                          />
+   327→                          {totalProjects > 0 && (
+   328→                            <div className="flex h-1.5 rounded-full overflow-hidden mt-1 mx-4 mb-2">
+   329→                              {ALL_LEVELS.map((level) => {
+   330→                                const count = complexityDist[level];
+   331→                                if (count === 0) return null;
+   332→                                return (
+   333→                                  <div
+   334→                                    key={level}
+   335→                                    className={`${COMPLEXITY_COLORS[level]} transition-all duration-300`}
+   336→                                    style={{ width: `${(count / totalProjects) * 100}%` }}
+   337→                                  />
+   338→                                );
+   339→                              })}
+   340→                            </div>
+   341→                          )}
+   342→                        </div>
+   343→                      ) : (
+   344→                        <StatCard
+   345→                          label={card.label}
+   346→                          value={card.value}
+   347→                          icon={card.icon}
+   348→                          accentColor={card.accentColor}
+   349→                        />
+   350→                      )}
+   351→                    </SortableStatCardWrapper>
+   352→                  );
+   353→                })}
+   354→              </AnimatePresence>
+   355→            </div>
+   356→          </SortableContext>
+   357→          <DragOverlay>
+   358→            {activeStatCard ? (
+   359→              <div className="scale-105 shadow-xl opacity-90">
+   360→                <StatCard
+   361→                  label={activeStatCard.label}
+   362→                  value={activeStatCard.value}
+   363→                  icon={activeStatCard.icon}
+   364→                  accentColor={activeStatCard.accentColor}
+   365→                />
+   366→              </div>
+   367→            ) : null}
+   368→          </DragOverlay>
+   369→        </DndContext>
+   370→
+   371→        {/* Quick Stats Row */}
+   372→        <motion.div
+   373→          initial={{ opacity: 0, y: 8 }}
+   374→          animate={{ opacity: 1, y: 0 }}
+   375→          transition={{ delay: 0.15, duration: 0.3 }}
+   376→        >
+   377→          <SectionCard title={selectedProject ? `Configuration: ${selectedProject.name}` : 'Quick Configuration Overview'} description={selectedProject ? `${selectedProject.customer} · ${selectedProject.machineType}` : 'Current working configuration snapshot'}>
+   378→            {!activeProjectId && !selectedProject ? (
+   379→              <div className="flex items-center justify-center h-24 text-sm text-muted-foreground">
+   380→                Select a project from the table below or create a new estimate
+   381→              </div>
+   382→            ) : (
+   383→            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+   384→              {(() => {
+   385→                const totalIO =
+   386→                  config.io.digitalInputs + config.io.digitalOutputs +
+   387→                  config.io.analogInputs + config.io.analogOutputs +
+   388→                  config.io.safetyIO + config.io.encoderCounterModules +
+   389→                  config.io.temperatureModules + config.io.communicationIO +
+   390→                  config.io.specialModules;
+   391→                const estHours = totalIO * 0.5 + config.motion.totalAxes * 6 + config.hmi.screens * 8 + 40;
+   392→                const enabledProtocolCount = config.communication.protocols.filter(p => p.enabled).length;
+   393→                const robotCount = config.robotics.enabled ? String(config.robotics.quantity) : '0';
+   394→                const quickStats = [
+   395→                  { icon: Cable, label: 'Total I/O Points', value: String(totalIO), accent: 'border-l-blue-400', iconBg: 'text-blue-400' },
+   396→                  { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes), accent: 'border-l-amber-400', iconBg: 'text-amber-400' },
+   397→                  { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens), accent: 'border-l-cyan-400', iconBg: 'text-cyan-400' },
+   398→                  { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount), accent: 'border-l-emerald-400', iconBg: 'text-emerald-400' },
+   399→                  { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1), accent: 'border-l-primary', iconBg: 'text-primary' },
+   400→                  { icon: Cpu, label: 'Controller', value: config.controller.family, accent: 'border-l-violet-400', iconBg: 'text-violet-400' },
+   401→                  { icon: Radio, label: 'Protocols', value: String(enabledProtocolCount), accent: 'border-l-teal-400', iconBg: 'text-teal-400' },
+   402→                  { icon: Bot, label: 'Robots', value: robotCount, accent: 'border-l-rose-400', iconBg: 'text-rose-400' },
+   403→                ];
+   404→                return (
+   405→                  <>
+   406→                    {quickStats.map((stat) => {
+   407→                      const isZero = stat.value === '0';
+   408→                      return (
+   409→                        <div
+   410→                          key={stat.label}
+   411→                          className={`flex items-center gap-3 bg-muted/30 rounded-lg p-3 border-l-2 ${stat.accent}`}
+   412→                        >
+   413→                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
+   414→                            <stat.icon className={`h-3.5 w-3.5 ${stat.iconBg}`} />
+   415→                          </div>
+   416→                          <div className="flex flex-col">
+   417→                            <span className="text-sm text-muted-foreground leading-tight">{stat.label}</span>
+   418→                            <span className={`text-sm font-bold leading-tight tabular-nums ${isZero ? 'text-muted-foreground' : 'text-foreground'}`}>
+   419→                              {stat.value}
+   420→                            </span>
+   421→                          </div>
+   422→                        </div>
+   423→                      );
+   424→                    })}
+   425→                  </>
+   426→                );
+   427→              })()}
+   428→            </div>
+   429→            )}
+   430→          </SectionCard>
+   431→        </motion.div>
+   432→
+   433→
+   434→        {/* Quick Actions & Complexity Distribution */}
+   435→        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   436→          {/* Quick Actions */}
+   437→          <SectionCard title="Quick Actions" description="Get started with your engineering estimate">
+   438→            <div className="flex flex-col gap-3 sm:flex-row">
+   439→              <Button
+   440→                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+   441→                onClick={() => setCurrentPage('new-estimate')}
+   442→              >
+   443→                <PlusCircle className="h-4 w-4 mr-2" />
+   444→                New Estimate
+   445→              </Button>
+   446→              <Button
+   447→                variant="outline"
+   448→                className="flex-1 border-border"
+   449→                onClick={() => loadSampleConfig()}
+   450→              >
+   451→                <Download className="h-4 w-4 mr-2" />
+   452→                Load Sample Data
+   453→              </Button>
+   454→            </div>
+   455→          </SectionCard>
+   456→
+   457→          {/* Complexity Distribution */}
+   458→          <SectionCard title="Complexity Distribution" description="Projects by complexity level">
+   459→            <div className="space-y-3">
+   460→              {/* Stacked bar */}
+   461→              <div className="flex h-8 rounded-md overflow-hidden">
+   462→                {totalProjects === 0 ? (
+   463→                  <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground bg-muted">
+   464→                    No projects yet
+   465→                  </div>
+   466→                ) : (
+   467→                  ALL_LEVELS.map((level) => {
+   468→                    const count = complexityDist[level];
+   469→                    if (count === 0) return null;
+   470→                    return (
+   471→                      <div
+   472→                        key={level}
+   473→                        className={`${COMPLEXITY_COLORS[level]} flex items-center justify-center text-white text-sm font-semibold transition-all duration-300`}
+   474→                        style={{ width: `${(count / totalProjects) * 100}%`, minWidth: count > 0 ? '2rem' : 0 }}
+   475→                        title={`${level}: ${count} project${count !== 1 ? 's' : ''}`}
+   476→                      >
+   477→                        {count}
+   478→                      </div>
+   479→                    );
+   480→                  })
+   481→                )}
+   482→              </div>
+   483→              {/* Legend */}
+   484→              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+   485→                {ALL_LEVELS.map((level) => (
+   486→                  <div key={level} className="flex items-center gap-1.5">
+   487→                    <span className={`h-2.5 w-2.5 rounded-sm ${COMPLEXITY_COLORS[level]}`} />
+   488→                    <span className={`text-sm font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}> 
+   489→                      {level}{complexityDist[level] > 0 ? ` (${complexityDist[level]})` : ''}
+   490→                    </span>
+   491→                  </div>
+   492→                ))}
+   493→              </div>
+   494→            </div>
+   495→          </SectionCard>
+   496→        </div>
+   497→
+   498→        {/* Project Templates */}
+   499→        <SectionCard title="Project Templates" description="Start from a pre-configured template">
+   500→          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   501→            <div
+   502→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   503→              onClick={() => {
+   504→                resetConfig();
+   505→                loadSampleConfig();
+   506→                setCurrentPage('new-estimate');
+   507→              }}
+   508→            >
+   509→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   510→                <Package className="h-5 w-5 text-primary" />
+   511→              </div>
+   512→              <span className="text-sm font-semibold text-foreground">Packaging Line</span>
+   513→              <span className="text-sm text-muted-foreground">Automated packaging with multi-station layout</span>
+   514→              <Button variant="outline" size="sm" className="text-sm mt-auto w-fit">Quick Start</Button>
+   515→            </div>
+   516→            <div
+   517→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   518→              onClick={() => {
+   519→                resetConfig();
+   520→                updateProjectInfo({ name: 'Assembly Cell', machineType: 'Assembly' });
+   521→                updateMotion({ totalAxes: 12 });
+   522→                updateRobotics({ enabled: true });
+   523→                updateVision({ enabled: true });
+   524→                setCurrentPage('new-estimate');
+   525→              }}
+   526→            >
+   527→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   528→                <Wrench className="h-5 w-5 text-primary" />
+   529→              </div>
+   530→              <span className="text-sm font-semibold text-foreground">Assembly Cell</span>
+   531→              <span className="text-sm text-muted-foreground">Robot-assisted assembly with vision</span>
+   532→              <Button variant="outline" size="sm" className="text-sm mt-auto w-fit">Quick Start</Button>
+   533→            </div>
+   534→            <div
+   535→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   536→              onClick={() => {
+   537→                resetConfig();
+   538→                updateProjectInfo({ name: 'Inspection System', machineType: 'Inspection' });
+   539→                updateVision({ enabled: true, cameras: 4 });
+   540→                updateHMI({ screens: 3 });
+   541→                setCurrentPage('new-estimate');
+   542→              }}
+   543→            >
+   544→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   545→                <ScanSearch className="h-5 w-5 text-primary" />
+   546→              </div>
+   547→              <span className="text-sm font-semibold text-foreground">Inspection System</span>
+   548→              <span className="text-sm text-muted-foreground">Quality inspection with camera systems</span>
+   549→              <Button variant="outline" size="sm" className="text-sm mt-auto w-fit">Quick Start</Button>
+   550→            </div>
+   551→          </div>
+   552→        </SectionCard>
+   553→
+   554→        {/* Recent Projects Table */}
+   555→        <SectionCard title="Recent Projects" description="All B&R automation estimation projects">
+   556→          <div className="overflow-x-auto -mx-4 px-4">
+   557→            <Table>
+   558→              <TableHeader>
+   559→                <TableRow className="border-border hover:bg-transparent">
+   560→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Project</TableHead>
+   561→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Customer</TableHead>
+   562→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Machine Type</TableHead>
+   563→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">B&R Configuration</TableHead>
+   564→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Complexity</TableHead>
+   565→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Status</TableHead>
+   566→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Last Updated</TableHead>
+   567→                </TableRow>
+   568→              </TableHeader>
+   569→              <TableBody>
+   570→                {projects.map((p) => (
+   571→                  <TableRow
+   572→                    key={p.id}
+   573→                    className={`border-border cursor-pointer transition-colors duration-100 hover:bg-primary/[0.03] active:bg-primary/[0.06] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
+   574→                    onClick={() => {
+   575→                      openProject(p.id);
+   576→                      setCurrentPage('estimate-summary');
+   577→                    }}
+   578→                  >
+   579→                    <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
+   580→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
+   581→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
+   582→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.industry || p.machineType}</TableCell>
+   583→                    <TableCell className="py-2.5">
+   584→                      <ComplexityBadge level={p.complexity} />
+   585→                    </TableCell>
+   586→                    <TableCell className="py-2.5">
+   587→                      <StatusBadge status={p.status} />
+   588→                    </TableCell>
+   589→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
+   590→                  </TableRow>
+   591→                ))}
+   592→              </TableBody>
+   593→            </Table>
+   594→          </div>
+   595→        </SectionCard>
+   596→
+   597→        {/* Recent Activity */}
+   598→        <SectionCard title="Recent Activity" description="Latest actions and events">
+   599→          <div>
+   600→            {recentActivity.map((item, idx) => (
+   601→              <motion.div
+   602→                key={idx}
+   603→                initial={{ opacity: 0, x: -4 }}
+   604→                animate={{ opacity: 1, x: 0 }}
+   605→                transition={{ delay: idx * 0.05, duration: 0.3 }}
+   606→                className={`flex items-start gap-2.5 py-1.5 border-l-2 pl-3 ${ACTIVITY_BORDER_COLORS[item.type] || 'border-l-gray-400'} ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
+   607→              >
+   608→                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgLight} ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgDark} relative`}>
+   609→                  {(() => {
+   610→                    const avatarCfg = ACTIVITY_AVATAR_CONFIG[item.type];
+   611→                    const AvatarIcon = avatarCfg?.icon;
+   612→                    return AvatarIcon ? <AvatarIcon className={`h-3 w-3 ${avatarCfg.iconColor}`} /> : null;
+   613→                  })()}
+   614→                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-card" style={{ backgroundColor: item.type === 'edit' ? 'rgb(96,165,250)' : item.type === 'info' ? 'rgb(251,191,36)' : item.type === 'create' ? 'rgb(52,211,153)' : item.type === 'complete' ? 'rgb(16,185,129)' : 'rgb(168,85,247)' }} />
+   615→                </div>
+   616→                <div className="flex-1 min-w-0">
+   617→                  <div className="text-sm font-medium text-foreground">{item.action}</div>
+   618→                  <div className="text-sm text-muted-foreground truncate">{item.detail}</div>
+   619→                </div>
+   620→                <span className="text-sm font-medium text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
+   621→              </motion.div>
+   622→            ))}
+   623→            <div className="group pt-2">
+   624→              <button className="flex items-center gap-0.5 text-primary text-sm font-medium group-hover:underline">
+   625→                View All
+   626→                <ChevronRight className="h-3 w-3" />
+   627→              </button>
+   628→            </div>
+   629→          </div>
+   630→        </SectionCard>
+   631→
+   632→
+   633→      </motion.div>
+   634→    </div>
+   635→  );
+   636→}
+   637→

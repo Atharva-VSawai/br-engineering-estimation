@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type {
   AppPage,
   Project,
@@ -14,6 +15,16 @@ import {
   DEFAULT_ADDITIONAL_FEATURES,
   BR_PRODUCTS,
 } from '@/data';
+
+export interface Notification {
+  id: string;
+  message: string;
+  detail?: string;
+  icon?: string;
+  color?: string;
+  timestamp: number;
+  read: boolean;
+}
 
 interface AppState {
   // Navigation
@@ -32,6 +43,13 @@ interface AppState {
   updateProject: (id: string, updates: Partial<Project>) => void;
   deleteProject: (id: string) => void;
   reorderProjects: (fromIndex: number, toIndex: number) => void;
+
+  // Active project tracking
+  activeProjectId: string | null;
+  nextProjectNumber: number;
+  openProject: (projectId: string) => void;
+  createNewProject: (name?: string) => string;
+  loadSampleProjects: () => void;
 
   // Current Configuration
   config: ProjectConfig;
@@ -60,6 +78,12 @@ interface AppState {
   redo: () => void;
   pushHistory: () => void;
 
+  // Notifications
+  notifications: Notification[];
+  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+  markNotificationRead: (id: string) => void;
+  markAllNotificationsRead: () => void;
+
   // Products
   products: BRProduct[];
   toggleProductUsed: (name: string) => void;
@@ -76,6 +100,7 @@ const createDefaultConfig = (): ProjectConfig => ({
     customerInvolvement: 'Medium',
     projectVariants: 1,
     machineStations: 1,
+    complexity: 'Medium',
   },
   controller: {
     family: 'X20',
@@ -228,150 +253,280 @@ const createDefaultConfig = (): ProjectConfig => ({
   },
 });
 
-export const useAppStore = create<AppState>((set) => ({
-  currentPage: 'dashboard',
-  setCurrentPage: (page) => set({ currentPage: page, wizardStep: 0 }),
+/** Deep-clone a ProjectConfig */
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj)) as T;
+}
 
-  wizardStep: 0,
-  setWizardStep: (step) => set({ wizardStep: step }),
+/** Generate the next sequential project ID: BR-2026-NNN */
+function generateProjectId(nextNum: number): string {
+  return `BR-2026-${String(nextNum).padStart(3, '0')}`;
+}
 
-  stepOrder: null,
-  setStepOrder: (order) => set({ stepOrder: order }),
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      // ===== Navigation =====
+      currentPage: 'dashboard',
+      setCurrentPage: (page) => set({ currentPage: page, wizardStep: 0 }),
 
-  projects: SAMPLE_PROJECTS,
-  addProject: (project) =>
-    set((state) => ({ projects: [project, ...state.projects] })),
-  updateProject: (id, updates) =>
-    set((state) => ({
-      projects: state.projects.map((p) =>
-        p.id === id
-          ? { ...p, ...updates, updatedAt: new Date().toLocaleDateString() }
-          : p
-      ),
-    })),
-  deleteProject: (id) =>
-    set((state) => ({ projects: state.projects.filter((p) => p.id !== id) })),
-  reorderProjects: (fromIndex, toIndex) =>
-    set((state) => {
-      const newProjects = [...state.projects];
-      const [moved] = newProjects.splice(fromIndex, 1);
-      newProjects.splice(toIndex, 0, moved);
-      return { projects: newProjects };
-    }),
+      // ===== Wizard =====
+      wizardStep: 0,
+      setWizardStep: (step) => set({ wizardStep: step }),
 
-  config: createDefaultConfig(),
-  updateConfig: (updates) =>
-    set((state) => ({ config: { ...state.config, ...updates } })),
-  updateProjectInfo: (updates) =>
-    set((state) => ({
-      config: { ...state.config, project: { ...state.config.project, ...updates } },
-    })),
-  updateController: (updates) =>
-    set((state) => ({
-      config: { ...state.config, controller: { ...state.config.controller, ...updates } },
-    })),
-  updateIO: (updates) =>
-    set((state) => ({
-      config: { ...state.config, io: { ...state.config.io, ...updates } },
-    })),
-  updateMotion: (updates) =>
-    set((state) => ({
-      config: { ...state.config, motion: { ...state.config.motion, ...updates } },
-    })),
-  updateHMI: (updates) =>
-    set((state) => ({
-      config: { ...state.config, hmi: { ...state.config.hmi, ...updates } },
-    })),
-  updateVision: (updates) =>
-    set((state) => ({
-      config: { ...state.config, vision: { ...state.config.vision, ...updates } },
-    })),
-  updateSafety: (updates) =>
-    set((state) => ({
-      config: { ...state.config, safety: { ...state.config.safety, ...updates } },
-    })),
-  updateCommunication: (updates) =>
-    set((state) => ({
-      config: { ...state.config, communication: { ...state.config.communication, ...updates } },
-    })),
-  updateMechatronics: (updates) =>
-    set((state) => ({
-      config: { ...state.config, mechatronics: { ...state.config.mechatronics, ...updates } },
-    })),
-  updateRobotics: (updates) =>
-    set((state) => ({
-      config: { ...state.config, robotics: { ...state.config.robotics, ...updates } },
-    })),
-  updateIIoT: (updates) =>
-    set((state) => ({
-      config: { ...state.config, iiot: { ...state.config.iiot, ...updates } },
-    })),
-  updateComplexity: (updates) =>
-    set((state) => ({
-      config: { ...state.config, complexity: { ...state.config.complexity, ...updates } },
-    })),
-  updateProtocol: (name, updates) =>
-    set((state) => ({
-      config: {
-        ...state.config,
-        communication: {
-          ...state.config.communication,
-          protocols: state.config.communication.protocols.map((p) =>
-            p.name === name ? { ...p, ...updates } : p
+      stepOrder: null,
+      setStepOrder: (order) => set({ stepOrder: order }),
+
+      // ===== Projects =====
+      projects: [],
+      addProject: (project) =>
+        set((state) => ({ projects: [project, ...state.projects] })),
+      updateProject: (id, updates) =>
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === id
+              ? { ...p, ...updates, updatedAt: new Date().toLocaleDateString() }
+              : p
           ),
-        },
-      },
-    })),
-  updateAdditionalFeature: (name, updates) =>
-    set((state) => ({
-      config: {
-        ...state.config,
-        additionalFeatures: state.config.additionalFeatures.map((f) =>
-          f.name === name ? { ...f, ...updates } : f
-        ),
-      },
-    })),
-  resetConfig: () => set({ config: createDefaultConfig(), wizardStep: 0 }),
-  loadSampleConfig: () => set({ config: { ...SAMPLE_CONFIG } }),
+        })),
+      deleteProject: (id) =>
+        set((state) => ({
+          projects: state.projects.filter((p) => p.id !== id),
+          // Clear activeProjectId if the deleted project was active
+          activeProjectId:
+            state.activeProjectId === id ? null : state.activeProjectId,
+          // Reset config if the active project was deleted
+          config:
+            state.activeProjectId === id
+              ? createDefaultConfig()
+              : state.config,
+        })),
+      reorderProjects: (fromIndex, toIndex) =>
+        set((state) => {
+          const newProjects = [...state.projects];
+          const [moved] = newProjects.splice(fromIndex, 1);
+          newProjects.splice(toIndex, 0, moved);
+          return { projects: newProjects };
+        }),
 
-  // Undo/Redo
-  history: [],
-  historyIndex: -1,
-  pushHistory: () =>
-    set((state) => {
-      const snapshot = JSON.parse(JSON.stringify(state.config)) as ProjectConfig;
-      const newHistory = [...state.history.slice(0, state.historyIndex + 1), snapshot];
-      let newIndex = newHistory.length - 1;
-      if (newHistory.length > 50) {
-        newHistory.shift();
-        newIndex--;
-      }
-      return { history: newHistory, historyIndex: newIndex };
-    }),
-  undo: () =>
-    set((state) => {
-      if (state.historyIndex <= 0) return state;
-      const newIndex = state.historyIndex - 1;
-      return {
-        historyIndex: newIndex,
-        config: JSON.parse(JSON.stringify(state.history[newIndex])) as ProjectConfig,
-      };
-    }),
-  redo: () =>
-    set((state) => {
-      if (state.historyIndex >= state.history.length - 1) return state;
-      const newIndex = state.historyIndex + 1;
-      return {
-        historyIndex: newIndex,
-        config: JSON.parse(JSON.stringify(state.history[newIndex])) as ProjectConfig,
-      };
-    }),
+      // ===== Active Project Tracking =====
+      activeProjectId: null,
+      nextProjectNumber: 6, // Sample projects end at BR-2026-005
 
-  products: BR_PRODUCTS.map((p) => ({ ...p })),
-  toggleProductUsed: (name) =>
-    set((state) => ({
-      products: state.products.map((p) =>
-        p.name === name ? { ...p, usedInProject: !p.usedInProject } : p
-      ),
-    })),
-}));
+      openProject: (projectId) =>
+        set((state) => {
+          const project = state.projects.find((p) => p.id === projectId);
+          if (!project) return state;
+          const config = project.config
+            ? deepClone(project.config)
+            : createDefaultConfig();
+          return { activeProjectId: projectId, config };
+        }),
+
+      createNewProject: (name) => {
+        const state = get();
+        const id = generateProjectId(state.nextProjectNumber);
+        const now = new Date().toISOString().split('T')[0];
+        const newConfig = createDefaultConfig();
+        if (name) {
+          newConfig.project.name = name;
+        }
+        const project: Project = {
+          id,
+          name: name || 'New Project',
+          customer: '',
+          machineType: '',
+          industry: '',
+          description: '',
+          requirementClarity: 'Mostly Clear',
+          customerInvolvement: 'Medium',
+          projectVariants: 1,
+          machineStations: 1,
+          status: 'Draft',
+          complexity: 'Medium',
+          createdAt: now,
+          updatedAt: now,
+          config: deepClone(newConfig),
+        };
+        set({
+          projects: [project, ...state.projects],
+          activeProjectId: id,
+          config: newConfig,
+          nextProjectNumber: state.nextProjectNumber + 1,
+          history: [],
+          historyIndex: -1,
+        });
+        return id;
+      },
+
+      loadSampleProjects: () =>
+        set((state) => {
+          // Only add samples that are not already present
+          const existingIds = new Set(state.projects.map((p) => p.id));
+          const toAdd = SAMPLE_PROJECTS.filter(
+            (sp) => !existingIds.has(sp.id),
+          );
+          if (toAdd.length === 0) return state;
+          return { projects: [...toAdd, ...state.projects] };
+        }),
+
+      // ===== Current Configuration =====
+      config: createDefaultConfig(),
+      updateConfig: (updates) =>
+        set((state) => ({ config: { ...state.config, ...updates } })),
+      updateProjectInfo: (updates) =>
+        set((state) => ({
+          config: { ...state.config, project: { ...state.config.project, ...updates } },
+        })),
+      updateController: (updates) =>
+        set((state) => ({
+          config: { ...state.config, controller: { ...state.config.controller, ...updates } },
+        })),
+      updateIO: (updates) =>
+        set((state) => ({
+          config: { ...state.config, io: { ...state.config.io, ...updates } },
+        })),
+      updateMotion: (updates) =>
+        set((state) => ({
+          config: { ...state.config, motion: { ...state.config.motion, ...updates } },
+        })),
+      updateHMI: (updates) =>
+        set((state) => ({
+          config: { ...state.config, hmi: { ...state.config.hmi, ...updates } },
+        })),
+      updateVision: (updates) =>
+        set((state) => ({
+          config: { ...state.config, vision: { ...state.config.vision, ...updates } },
+        })),
+      updateSafety: (updates) =>
+        set((state) => ({
+          config: { ...state.config, safety: { ...state.config.safety, ...updates } },
+        })),
+      updateCommunication: (updates) =>
+        set((state) => ({
+          config: { ...state.config, communication: { ...state.config.communication, ...updates } },
+        })),
+      updateMechatronics: (updates) =>
+        set((state) => ({
+          config: { ...state.config, mechatronics: { ...state.config.mechatronics, ...updates } },
+        })),
+      updateRobotics: (updates) =>
+        set((state) => ({
+          config: { ...state.config, robotics: { ...state.config.robotics, ...updates } },
+        })),
+      updateIIoT: (updates) =>
+        set((state) => ({
+          config: { ...state.config, iiot: { ...state.config.iiot, ...updates } },
+        })),
+      updateComplexity: (updates) =>
+        set((state) => ({
+          config: { ...state.config, complexity: { ...state.config.complexity, ...updates } },
+        })),
+      updateProtocol: (name, updates) =>
+        set((state) => ({
+          config: {
+            ...state.config,
+            communication: {
+              ...state.config.communication,
+              protocols: state.config.communication.protocols.map((p) =>
+                p.name === name ? { ...p, ...updates } : p
+              ),
+            },
+          },
+        })),
+      updateAdditionalFeature: (name, updates) =>
+        set((state) => ({
+          config: {
+            ...state.config,
+            additionalFeatures: state.config.additionalFeatures.map((f) =>
+              f.name === name ? { ...f, ...updates } : f
+            ),
+          },
+        })),
+      resetConfig: () =>
+        set({
+          config: createDefaultConfig(),
+          activeProjectId: null,
+          wizardStep: 0,
+        }),
+      loadSampleConfig: () => set({ config: deepClone(SAMPLE_CONFIG) }),
+
+      // ===== Undo/Redo =====
+      history: [],
+      historyIndex: -1,
+      pushHistory: () =>
+        set((state) => {
+          const snapshot = deepClone(state.config);
+          const newHistory = [...state.history.slice(0, state.historyIndex + 1), snapshot];
+          let newIndex = newHistory.length - 1;
+          if (newHistory.length > 50) {
+            newHistory.shift();
+            newIndex--;
+          }
+          return { history: newHistory, historyIndex: newIndex };
+        }),
+      undo: () =>
+        set((state) => {
+          if (state.historyIndex <= 0) return state;
+          const newIndex = state.historyIndex - 1;
+          return {
+            historyIndex: newIndex,
+            config: deepClone(state.history[newIndex]),
+          };
+        }),
+      redo: () =>
+        set((state) => {
+          if (state.historyIndex >= state.history.length - 1) return state;
+          const newIndex = state.historyIndex + 1;
+          return {
+            historyIndex: newIndex,
+            config: deepClone(state.history[newIndex]),
+          };
+        }),
+
+      // ===== Notifications =====
+      notifications: [] as Notification[],
+      addNotification: (notification) =>
+        set((state) => ({
+          notifications: [
+            {
+              ...notification,
+              id: 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+              timestamp: Date.now(),
+              read: false,
+            },
+            ...state.notifications,
+          ].slice(0, 50),
+        })),
+      markNotificationRead: (id) =>
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n
+          ),
+        })),
+      markAllNotificationsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        })),
+
+      // ===== Products =====
+      products: BR_PRODUCTS.map((p) => ({ ...p })),
+      toggleProductUsed: (name) =>
+        set((state) => ({
+          products: state.products.map((p) =>
+            p.name === name ? { ...p, usedInProject: !p.usedInProject } : p
+          ),
+        })),
+    }),
+    {
+      name: 'br-estimation-store',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        projects: state.projects,
+        activeProjectId: state.activeProjectId,
+        nextProjectNumber: state.nextProjectNumber,
+        // Do NOT persist config — it is derived from activeProjectId
+      }),
+    },
+  ),
+);

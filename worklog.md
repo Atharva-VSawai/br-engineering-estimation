@@ -2065,3 +2065,168 @@ Stage Summary:
 - UI: Enterprise-level polish across sidebar, cards, stat cards, banner, scrollbars
 - Dev server stable with setsid
 - All 3 export formats available: PDF, Excel, JSON
+
+---
+Task ID: 3-a
+Agent: Task Agent
+Task: Create shared effort calculation module and rewrite Zustand store with persistence
+
+Work Log:
+- Created `/src/lib/effort-calculation.ts` as SINGLE SOURCE OF TRUTH for engineering effort calculation
+  - Exports `EffortResult`, `TimelineResult`, `OverallResult` interfaces
+  - Exports `getOverallComplexity(config)` — determines complexity level from 10 dimensions
+  - Exports `calculateEngineeringEffort(config)` — returns complete effort breakdown
+  - 9 effort categories: hardware, PLC software, motion, HMI (0, kept in PLC sw), vision, safety, communication/integration, testing, commissioning
+  - Base formulas preserved from existing prototype (hwHours, swHours, motionHours, safetyHours, integrationHours)
+  - Integration hours split: 60% communication/integration, 40% testing
+  - Commissioning hours derived from complexity (Low=40h, Medium=80h, High=120h, Very High=160h)
+  - Timeline: hardware design (2w), software dev (max(2, ceil(screens/3))w), integration testing (max(2, ceil(totalHours/40))w), commissioning (complexity-based weeks)
+- Rewrote `/src/store/index.ts` with Zustand `persist` middleware
+  - Added `activeProjectId: string | null` — tracks which project is currently being edited
+  - Added `nextProjectNumber: number` (starts at 6, after sample projects BR-2026-005)
+  - Added `openProject(projectId)` — deep-clones project config into working config
+  - Added `createNewProject(name?)` — generates BR-2026-NNN ID, creates Project with empty config, sets active
+  - Added `loadSampleProjects()` — adds SAMPLE_PROJECTS to projects array (only if not already present)
+  - `loadSampleConfig()` preserved but only loads when user explicitly triggers it
+  - Initial state: `projects: []` (empty, no samples auto-loaded), `config: createDefaultConfig()`, `activeProjectId: null`
+  - Persist middleware uses `createJSONStorage(() => localStorage)`, key `br-estimation-store`
+  - `partialize` excludes `config`, `history`, `products`, `currentPage`, `wizardStep` from persistence
+  - All 20+ existing actions preserved: updateConfig, updateProjectInfo, updateController, updateIO, updateMotion, updateHMI, updateVision, updateSafety, updateCommunication, updateMechatronics, updateRobotics, updateIIoT, updateComplexity, updateProtocol, updateAdditionalFeature, resetConfig, loadSampleConfig, addProject, updateProject, deleteProject, reorderProjects, pushHistory, undo, redo
+  - `resetConfig` now also clears `activeProjectId`
+  - `deleteProject` clears `activeProjectId` and resets config if the deleted project was active
+- Fixed pre-existing TS error: added missing `complexity` field to `ProjectConfig.project` in both `createDefaultConfig()` (store) and `SAMPLE_CONFIG` (data)
+- Verified: ESLint clean (`bun run lint`), no new TypeScript errors in changed files
+
+Stage Summary:
+- `src/lib/effort-calculation.ts`: New shared calculation module (single source of truth)
+- `src/store/index.ts`: Rewritten with persist middleware, active project tracking, project creation
+- `src/data/index.ts`: Fixed missing `complexity` field in SAMPLE_CONFIG
+- Backward compatible: all existing component imports to `useAppStore` continue to work (only additions, no removals)
+- Pre-existing errors in export-pdf.ts, excel/route.ts, ComparePage.tsx, StepReview.tsx, EstimateSummaryPage.tsx remain unchanged (out of scope)
+
+---
+Task ID: 3-b
+Agent: general-purpose
+Task: Fix Estimate Summary + Dashboard
+
+Work Log:
+- Rewrote `/src/views/EstimateSummaryPage.tsx`:
+  - Replaced local `calculateEffort()` and `calculateTimeline()` with shared `calculateEngineeringEffort()` from `@/lib/effort-calculation`
+  - Dynamic project header: shows project ID (from `activeProjectId`), project name, customer, status badge
+  - Effort Hero Card: Hours, Days, Weeks, Months all sourced from shared calculation result (dynamic, not hardcoded)
+  - Added recharts PieChart (donut) showing 8-category effort distribution with legend (category, hours, percentage)
+  - Added "Major Effort Drivers" section that dynamically lists config items driving effort (axes, robots, cameras, mechatronics, safety, HMI, protocols, MES/SCADA, IIoT, I/O count, stations, variants)
+  - Timeline uses shared `effort.timeline` instead of local calculation
+  - Effort breakdown bars now use 8 categories matching the shared calculation (Hardware, PLC/Software, Motion, Vision, Safety, Comm/Integration, Testing, Commissioning)
+  - Removed unused `useRef` and `Shield` imports
+  - Removed all hardcoded project names, discouraging disclaimers, and "Prototype" labels
+  - Copy Report updated to include all 8 effort categories from shared calculation
+- Fixed `/src/views/DashboardPage.tsx`:
+  - Added `loadSampleProjects()` call on mount when `projects.length === 0`
+  - Quick Configuration Overview shows "Select a project from the table below or create a new estimate" when no project is active
+  - Project table row click uses `openProject(id)` instead of manual `updateConfig(JSON.parse(JSON.stringify(p.config)))`
+  - Preserved project selector dropdown and all existing functionality
+- Fixed `/src/components/br/AppHeader.tsx`:
+  - Uses `activeProjectId` from store to determine if a project is active
+  - Gets project name from `projects.find(p => p.id === activeProjectId)?.name` (falls back to `config.project.name`)
+  - Project name breadcrumb only shown when `activeProjectId` is not null AND on a PROJECT_CONTEXT_PAGES page
+- Verified: `bun run lint` passes clean with zero errors
+
+Stage Summary:
+- `src/views/EstimateSummaryPage.tsx`: Full rewrite — shared calculation, donut chart, effort drivers, dynamic header
+- `src/views/DashboardPage.tsx`: Auto-load samples, empty state message, `openProject()` for table clicks
+- `src/components/br/AppHeader.tsx`: Breadcrumb uses `activeProjectId` from store
+- All three files are ESLint clean
+- No cost/financial references added anywhere
+---
+Task ID: 3-c
+Agent: general-purpose
+Task: Fix Excel + PDF exports
+
+Work Log:
+- Rewrote `/src/app/api/export/excel/route.ts`:
+  - Removed local `calculateEffort()`, `calculateTimeline()`, and `getOverallComplexity()` helpers
+  - Imports and calls shared `calculateEngineeringEffort()` from `@/lib/effort-calculation`
+  - Restructured from 12 sheets to 6 sheets as specified:
+    1. **Project Summary** — Project Name, Customer, Machine Type, Industry, Requirement Clarity, Customer Involvement, Overall Complexity, Total Hours, Total Working Days, Estimated Timeline (weeks), Estimated Duration (months), Export Date
+    2. **Technical Configuration** — All config params organized by section (Controller, I/O, Motion, HMI, Vision, Safety, Communication with protocols table + integrations, Mechatronics, Robotics, IIoT)
+    3. **Engineering Effort** — 8-category table (Hardware, PLC/Software, Motion, Vision, Safety, Communication/Integration, Testing, Commissioning) with hours and percentage columns, TOTAL row
+    4. **Complexity Assessment** — 10 dimensions with labels, notes, overall complexity, high/very-high count
+    5. **Timeline** — 4 phases (Hardware Design & Ordering, Software Development, Integration & Testing, Commissioning & Handover) with duration in weeks, TOTAL row
+    6. **Configuration Completeness** — 11 sections with configured status and details, summary count
+  - All values sourced from shared calculation — exactly match web Estimate Summary
+  - No financial/cost values anywhere
+- Rewrote `/src/lib/export-pdf.ts`:
+  - Removed local `calcEffort()`, `calcTimeline()`, `getOverallComplexity()` helpers and radar chart code
+  - Imports and calls shared `calculateEngineeringEffort()` from `@/lib/effort-calculation`
+  - Updated function signature: `exportPdf(config: ProjectConfig, projectId?: string | null): void`
+  - 3-page layout:
+    - **Page 1**: B&R Engineering Effort Estimation Report title → Project Information table (ID, Name, Customer, Machine Type, Industry, Date) → Effort Summary (4 prominent boxes: Total Hours, Working Days, Weeks, Months) → Donut chart with 8-category effort distribution + legend
+    - **Page 2**: Key Technical Parameters table (10 rows) → Complexity Assessment horizontal bars → Engineering Effort Breakdown horizontal bars with TOTAL
+    - **Page 3**: Detailed Engineering Effort autotable (Area, Hours, Percentage) → Timeline Gantt-like bars → Configuration Completeness checkmarks → Effort Drivers table
+  - Donut chart drawn using jsPDF arc API with 8-color palette, center total label, and right-side legend
+  - Footer on all pages shows project ID (if available) or page number, generation date
+  - No financial/cost values anywhere
+- Updated `/src/components/br/AppHeader.tsx`:
+  - `handlePdfExport` now passes `activeProjectId` as second argument: `exportPdf(config, activeProjectId)`
+  - useEffect dependency array updated from `[]` to `[config, activeProjectId]` to capture current project context
+- Verified: `bun run lint` passes clean with zero errors
+
+Stage Summary:
+- `src/app/api/export/excel/route.ts`: Full rewrite — 6 sheets, shared calculation, no financials
+- `src/lib/export-pdf.ts`: Full rewrite — 3-page layout, donut chart, projectId parameter, shared calculation
+- `src/components/br/AppHeader.tsx`: Passes `activeProjectId` to `exportPdf()`, fixed useEffect deps
+- All values now guaranteed to match web Estimate Summary (same `calculateEngineeringEffort` source)
+- ESLint clean, no financial references
+
+---
+Task ID: 3-d
+Agent: Sub-agent (notifications + verification)
+Task: Fix Notification Center to use Zustand store + verify data consistency
+
+Work Log:
+- **Store (src/store/index.ts)**: Added exported `Notification` interface and three new state members: `notifications: Notification[]`, `addNotification()`, `markNotificationRead()`, `markAllNotificationsRead()`. Notifications auto-generate ID and timestamp; capped at 50.
+- **NotificationCenter.tsx**: Complete rewrite. Removed `useNotificationCenter` custom hook (with its hardcoded INITIAL_NOTIFICATIONS, `useState`, and `useEffect` event listener for `br:notification`). Component now receives all data via props (`open`, `onClose`, `unreadCount`, `notifications: Notification[]`, `onMarkAllRead`). Added `ICON_MAP` (string → Lucide component) and `formatTime()` for relative timestamps. Empty state now correctly checks `notifications.length === 0`.
+- **AppHeader.tsx**: Removed `useNotificationCenter` import. Now reads `notifications`, `addNotification`, `markAllNotificationsRead` from Zustand store. Replaced 5 `window.dispatchEvent(new CustomEvent('br:notification', ...))` calls with `addNotification({ message, detail, icon, color })`. Manages `ncOpen` state locally.
+- **NewEstimatePage.tsx**: Replaced 2 `br:notification` dispatches (sample load, draft save) with `addNotification()` calls from store.
+- **Verification — effort-calculation.ts**:
+  1. Returns 9 effort categories (hardware, plcSoftware, motion, hmi=0, vision, safety, commIntegration, testing, commissioning) + totalHours/Days/Weeks/Months. ✓
+  2. totalHours = hwHours + plcSoftwareHours + motionHours + 0 + visionHours + safetyHours + commInteg + testing + commissioning — mathematically equivalent to old (baseHours + baseHours*0.3 + commissioningHours). ✓
+  3. Vision hours extracted from swHours into separate `visionHours`; not double-counted in total. ✓
+  4. Division by zero not possible — all divisors are constants (8, 160, 40) or guarded with Math.max(2, ...). ✓
+- **Verification — hardcoded project names**: Found outside data/index.ts:
+  - `src/views/DashboardPage.tsx:72`: Hardcoded `'Automated Packaging Machine configuration'` in static `recentActivity` array (low-severity — display-only demo data, not functional)
+  - `src/views/wizard/StepHMI.tsx:73`: Hardcoded `'Automated Packaging Machine'` in HMI mock preview (low-severity — static mockup)
+  - `src/views/wizard/StepProject.tsx:18`: Placeholder text `"e.g. Automated Packaging Machine"` — acceptable (placeholder hint)
+  - `src/views/NewEstimatePage.tsx:106`: Toast description referencing sample name — acceptable (describes what was loaded)
+- **Lint**: Clean, zero errors
+- **Build**: Successful (21.9s compile, 255.9ms static gen)
+
+---
+Task ID: 3
+Agent: Main Orchestrator (comprehensive overhaul)
+Task: Transform B&R Estimation Tool from prototype into functional application foundation
+
+Work Log:
+- Scanned entire codebase for cost/financial references — zero real financial code found (only shadcn sidebar margin reference)
+- Launched 4 parallel subagents for coordinated rewrites:
+  - 3-a: Shared effort calculation utility + Zustand store rewrite
+  - 3-b: Estimate Summary + Dashboard + AppHeader fixes
+  - 3-c: Excel + PDF export rewrites
+  - 3-d: Notification center + QA verification
+- Installed no additional packages (recharts already available for donut chart)
+
+Stage Summary:
+- **Shared Effort Calculation** (`/src/lib/effort-calculation.ts`): Single source of truth returning 9 engineering categories + timeline
+- **Zustand Store** rewritten with: persist middleware (localStorage), activeProjectId, createNewProject(), openProject(), loadSampleProjects()
+- **Default state**: Empty config, no project loaded, projects=[] — samples only on explicit load
+- **Estimate Summary**: Uses shared calculation, recharts donut chart, dynamic project ID/name from store, effort drivers section, no hardcoded project names
+- **Dashboard**: Auto-loads samples on mount, project rows → openProject() + navigate to estimate-summary, empty state message when no project selected
+- **AppHeader**: Breadcrumb from activeProjectId, passes projectId to PDF export
+- **Excel Export**: 6 sheets, shared calculation, no financial values, hours + percentages
+- **PDF Export**: 3 pages, shared calculation, jsPDF donut chart, project ID in header, no financial values
+- **Notifications**: Real store-based addNotification(), removed all fake br:notification events, NotificationCenter is now presentational
+- **Save/Copy/JSON**: All use current config from store (not hardcoded)
+- **Build**: Passes cleanly, 0 lint errors
+
+- **Dev server**: Running on port 3000, HTTP 200, no runtime errors

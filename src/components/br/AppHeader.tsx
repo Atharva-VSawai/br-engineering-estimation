@@ -17,7 +17,7 @@ import { useAppStore } from '@/store';
 import { toast } from 'sonner';
 import { exportPdf } from '@/lib/export-pdf';
 import type { AppPage } from '@/types';
-import { NotificationCenter, useNotificationCenter } from '@/components/br/NotificationCenter';
+import { NotificationCenter } from '@/components/br/NotificationCenter';
 
 const PAGE_NAMES: Record<AppPage, string> = {
   dashboard: 'Dashboard',
@@ -36,15 +36,17 @@ const PAGE_NAMES: Record<AppPage, string> = {
 const PROJECT_CONTEXT_PAGES: AppPage[] = ['new-estimate', 'estimate-summary', 'product-explorer', 'technical-params', 'engineering-activities', 'complexity', 'compare'];
 
 export function AppHeader() {
-  const { config, currentPage, wizardStep, setCurrentPage } = useAppStore();
+  const { config, currentPage, wizardStep, activeProjectId, projects, setCurrentPage, notifications, addNotification, markAllNotificationsRead } = useAppStore();
   const { theme, setTheme } = useTheme();
-  const nc = useNotificationCenter();
-  const projectName = config.project.name;
-  const showProjectName = projectName && PROJECT_CONTEXT_PAGES.includes(currentPage);
+  const [ncOpen, setNcOpen] = React.useState(false);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const activeProject = activeProjectId ? projects.find((p) => p.id === activeProjectId) : null;
+  const projectName = activeProject?.name || config.project.name;
+  const showProjectName = activeProjectId && projectName && PROJECT_CONTEXT_PAGES.includes(currentPage);
 
   const handlePdfExport = () => {
-    exportPdf(config);
-    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'PDF exported', detail: 'Report downloaded', icon: FileText, color: 'text-red-500' } }));
+    exportPdf(config, activeProjectId);
+    addNotification({ message: 'PDF exported', detail: 'Report downloaded', icon: 'FileText', color: 'text-red-500' });
     toast('PDF exported', { description: 'Report downloaded.' });
   };
 
@@ -65,7 +67,7 @@ export function AppHeader() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Excel exported', detail: 'Spreadsheet downloaded', icon: FileSpreadsheet, color: 'text-emerald-500' } }));
+      addNotification({ message: 'Excel exported', detail: 'Spreadsheet downloaded', icon: 'Download', color: 'text-emerald-500' });
       toast('Excel exported', { description: 'Spreadsheet file downloaded.' });
     } catch {
       toast.error('Excel export failed');
@@ -83,18 +85,18 @@ export function AppHeader() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Configuration exported', detail: 'JSON file downloaded', icon: FileJson, color: 'text-purple-500' } }));
+    addNotification({ message: 'Configuration exported', detail: 'JSON file downloaded', icon: 'File', color: 'text-purple-500' });
     toast('Configuration exported', { description: 'JSON file downloaded.' });
   };
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(JSON.stringify(config, null, 2));
-    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Copied to clipboard', detail: 'Configuration JSON copied', icon: Copy, color: 'text-blue-500' } }));
+    addNotification({ message: 'Copied to clipboard', detail: 'Configuration JSON copied', icon: 'Copy', color: 'text-blue-500' });
     toast('Copied to clipboard', { description: 'Configuration JSON copied.' });
   };
 
   const handleSave = () => {
-    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Configuration saved', detail: `Project: ${config.project.name || 'Untitled'}`, icon: Save, color: 'text-emerald-500' } }));
+    addNotification({ message: 'Configuration saved', detail: `Project: ${config.project.name || 'Untitled'}`, icon: 'Check', color: 'text-emerald-500' });
     toast('Configuration saved', { description: 'All changes saved locally.' });
   };
 
@@ -110,7 +112,7 @@ export function AppHeader() {
       window.removeEventListener('br:copy-config', handleCopyEvent);
       window.removeEventListener('br:export-pdf', handlePdfEvent);
     };
-  }, []);
+  }, [config, activeProjectId]);
 
   return (
     <header className="no-print flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-sm px-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
@@ -165,9 +167,9 @@ export function AppHeader() {
             </div>
           );
         })()}
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={nc.toggle}>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative" onClick={() => setNcOpen((prev) => !prev)}>
           <Bell className="h-4 w-4" />
-          {nc.unreadCount > 0 && <span className="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />}
+          {unreadCount > 0 && <span className="w-2 h-2 rounded-full bg-red-500 absolute -top-0.5 -right-0.5" />}
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -205,7 +207,7 @@ export function AppHeader() {
           Save
         </Button>
       </div>
-      <NotificationCenter open={nc.open} onClose={nc.close} unreadCount={nc.unreadCount} notifications={nc.notifications} onMarkAllRead={nc.markAllRead} />
+      <NotificationCenter open={ncOpen} onClose={() => setNcOpen(false)} unreadCount={unreadCount} notifications={notifications} onMarkAllRead={markAllNotificationsRead} />
     </header>
   );
 }

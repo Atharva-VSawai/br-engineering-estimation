@@ -352,6 +352,7 @@ export const SAMPLE_CONFIG: ProjectConfig = {
     customerInvolvement: 'Medium',
     projectVariants: 3,
     machineStations: 4,
+    complexity: 'High',
   },
   controller: {
     family: 'X20',

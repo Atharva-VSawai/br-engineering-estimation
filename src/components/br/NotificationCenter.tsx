@@ -1,69 +1,45 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import { Bell, Check, Download, Moon, Copy, CheckCircle, Plus, File, Gauge, X } from 'lucide-react';
+import React from 'react';
+import { Bell, Check, Download, Moon, Copy, CheckCircle, Plus, File, FileText, Gauge, Save, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import type { Notification } from '@/store';
 
-interface NotificationItem {
-  id: string;
-  action: string;
-  detail: string;
-  time: string;
-  icon: React.ElementType;
-  color: string;
-  unread: boolean;
-}
+/** Map string icon names to Lucide components */
+const ICON_MAP: Record<string, React.ElementType> = {
+  Check,
+  Download,
+  Moon,
+  Copy,
+  CheckCircle,
+  Plus,
+  File,
+  FileText,
+  Gauge,
+  Save,
+};
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  { id: '1', action: 'Configuration saved', detail: 'All changes persisted locally', time: '2 min ago', icon: Check, color: 'text-emerald-500', unread: true },
-  { id: '2', action: 'Sample data loaded', detail: 'Default configuration applied', time: '15 min ago', icon: Download, color: 'text-blue-500', unread: true },
-  { id: '3', action: 'Dark mode enabled', detail: 'Theme preference updated', time: '1 hour ago', icon: Moon, color: 'text-violet-500', unread: true },
-  { id: '4', action: 'Project duplicated', detail: 'Copy created successfully', time: '2 hours ago', icon: Copy, color: 'text-amber-500', unread: false },
-  { id: '5', action: 'Step 5 completed', detail: 'Motion configuration done', time: '3 hours ago', icon: CheckCircle, color: 'text-emerald-500', unread: false },
-  { id: '6', action: 'New project created', detail: 'Project added to workspace', time: '1 day ago', icon: Plus, color: 'text-blue-500', unread: false },
-  { id: '7', action: 'Estimate exported', detail: 'JSON file downloaded', time: '2 days ago', icon: File, color: 'text-purple-500', unread: false },
-  { id: '8', action: 'Complexity assessed', detail: 'Score calculated: 62/100', time: '3 days ago', icon: Gauge, color: 'text-orange-500', unread: false },
-];
+const DEFAULT_ICON = Check;
 
-export function useNotificationCenter() {
-  const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
-
-  const toggle = useCallback(() => setOpen((prev) => !prev), []);
-  const close = useCallback(() => setOpen(false), []);
-
-  const markAllRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-  }, []);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      setNotifications(prev => [{
-        id: 'n-' + Date.now(),
-        action: detail.action || 'Update',
-        detail: detail.detail || '',
-        time: 'Just now',
-        icon: detail.icon || Check,
-        color: detail.color || 'text-emerald-500',
-        unread: true,
-      }, ...prev].slice(0, 50));
-    };
-    window.addEventListener('br:notification', handler);
-    return () => window.removeEventListener('br:notification', handler);
-  }, []);
-
-  return { open, toggle, close, unreadCount, notifications, markAllRead };
+/** Format a timestamp into a human-readable relative time string */
+function formatTime(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return 'Just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days > 1 ? 's' : ''} ago`;
 }
 
 interface NotificationCenterProps {
   open: boolean;
   onClose: () => void;
   unreadCount: number;
-  notifications: NotificationItem[]
+  notifications: Notification[];
   onMarkAllRead: () => void;
 }
 
@@ -114,14 +90,15 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
 
             {/* Notification list */}
             <div className="flex-1 overflow-y-auto">
-              {unreadCount === 0 && (
+              {notifications.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Bell className="h-8 w-8 text-muted-foreground/20" />
                   <p className="text-sm text-muted-foreground mt-2">All caught up!</p>
                 </div>
               )}
               {notifications.map((item, index) => {
-                const Icon = item.icon;
+                const Icon = item.icon ? (ICON_MAP[item.icon] ?? DEFAULT_ICON) : DEFAULT_ICON;
+                const colorClass = item.color || 'text-emerald-500';
                 return (
                   <motion.div
                     key={item.id}
@@ -129,17 +106,19 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05, duration: 0.2 }}
                     className={`flex items-start gap-3 px-4 py-3 border-b border-border/50 transition-colors hover:bg-muted/30 ${
-                      item.unread ? 'bg-primary/5 border-l-2 border-l-primary/30' : ''
+                      !item.read ? 'bg-primary/5 border-l-2 border-l-primary/30' : ''
                     }`}
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted/50">
-                      <Icon className={`h-3.5 w-3.5 ${item.color}`} />
+                      <Icon className={`h-3.5 w-3.5 ${colorClass}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground leading-tight">{item.action}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.detail}</p>
+                      <p className="text-sm font-medium text-foreground leading-tight">{item.message}</p>
+                      {item.detail && (
+                        <p className="text-xs text-muted-foreground mt-0.5 leading-tight">{item.detail}</p>
+                      )}
                     </div>
-                    <span className={`text-xs shrink-0 mt-0.5 ${item.unread ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{item.time}</span>
+                    <span className={`text-xs shrink-0 mt-0.5 ${!item.read ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>{formatTime(item.timestamp)}</span>
                   </motion.div>
                 );
               })}

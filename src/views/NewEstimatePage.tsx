@@ -51,7 +51,7 @@ const STEP_COMPONENTS = [
 ];
 
 export function NewEstimatePage() {
-  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config, undo, redo, pushHistory, history, historyIndex, stepOrder } = useAppStore();
+  const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config, undo, redo, pushHistory, history, historyIndex, stepOrder, addNotification } = useAppStore();
   const [resetOpen, setResetOpen] = useState(false);
   const [direction, setDirection] = useState(1);
   // Track direction for step animation
@@ -102,12 +102,12 @@ export function NewEstimatePage() {
 
   const handleLoadSample = () => {
     loadSampleConfig();
-    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Sample data loaded', detail: 'Packaging Machine configuration applied', icon: Download, color: 'text-amber-500' } }));
+    addNotification({ message: 'Sample data loaded', detail: 'Packaging Machine configuration applied', icon: 'Download', color: 'text-amber-500' });
     toast('Sample loaded', { description: 'Automated Packaging Machine configuration loaded.' });
   };
 
   const handleSaveDraft = () => {
-    window.dispatchEvent(new CustomEvent('br:notification', { detail: { action: 'Draft saved', detail: `Step ${wizardStep + 1} configuration saved`, icon: Save, color: 'text-emerald-500' } }));
+    addNotification({ message: 'Draft saved', detail: `Step ${wizardStep + 1} configuration saved`, icon: 'Check', color: 'text-emerald-500' });
     toast('Draft saved', { description: 'Configuration saved locally.' });
   };
 

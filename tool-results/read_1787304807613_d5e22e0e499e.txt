@@ -1,0 +1,628 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import React, { useEffect, useMemo, useState } from 'react';
+     4→     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→     5→import { FolderKanban, FileEdit, CheckCircle2, BarChart3, PlusCircle, Download, Info, Cpu, Radio, Bot, ChevronRight, Cable, Zap, Monitor, Shield, Clock, Package, Wrench, ScanSearch, Pencil, Plus, FileJson, Settings2, GripVertical } from 'lucide-react';
+     6→     6→import { DndContext, closestCenter, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+     7→     7→import { SortableContext, useSortable, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable';
+     8→     8→import { CSS } from '@dnd-kit/utilities';
+     9→     9→import { StatCard } from '@/components/br/StatCard';
+    10→    10→import { SectionCard } from '@/components/br/SectionCard';
+    11→    11→import { StatusBadge, ComplexityBadge } from '@/components/br/ComplexityBadge';
+    12→    12→import { useAppStore } from '@/store';
+    13→    13→import type { ComplexityLevel } from '@/types';
+    14→    14→import { Button } from '@/components/ui/button';
+    15→    15→import {
+    16→    16→  Select,
+    17→    17→  SelectContent,
+    18→    18→  SelectItem,
+    19→    19→  SelectTrigger,
+    20→    20→  SelectValue,
+    21→    21→} from '@/components/ui/select';
+    22→    22→import {
+    23→    23→  Table,
+    24→    24→  TableBody,
+    25→    25→  TableCell,
+    26→    26→  TableHead,
+    27→    27→  TableHeader,
+    28→    28→  TableRow,
+    29→    29→} from '@/components/ui/table';
+    30→    30→
+    31→    31→const COMPLEXITY_COLORS: Record<ComplexityLevel, string> = {
+    32→    32→  Low: 'bg-emerald-500',
+    33→    33→  Medium: 'bg-amber-500',
+    34→    34→  High: 'bg-orange-500',
+    35→    35→  'Very High': 'bg-red-500',
+    36→    36→};
+    37→    37→
+    38→    38→const COMPLEXITY_TEXT_COLORS: Record<ComplexityLevel, string> = {
+    39→    39→  Low: 'text-emerald-600',
+    40→    40→  Medium: 'text-amber-600',
+    41→    41→  High: 'text-orange-600',
+    42→    42→  'Very High': 'text-red-600',
+    43→    43→};
+    44→    44→
+    45→    45→const ALL_LEVELS: ComplexityLevel[] = ['Low', 'Medium', 'High', 'Very High'];
+    46→    46→
+    47→    47→const COMPLEXITY_LEFT_BORDER: Record<ComplexityLevel, string> = {
+    48→    48→  Low: 'border-l-emerald-400',
+    49→    49→  Medium: 'border-l-amber-400',
+    50→    50→  High: 'border-l-orange-400',
+    51→    51→  'Very High': 'border-l-red-400',
+    52→    52→};
+    53→    53→
+    54→    54→const ACTIVITY_AVATAR_CONFIG: Record<string, { icon: React.ElementType; iconColor: string; bgLight: string; bgDark: string }> = {
+    55→    55→  edit: { icon: Pencil, iconColor: 'text-blue-400', bgLight: 'bg-blue-50', bgDark: 'dark:bg-blue-950/40' },
+    56→    56→  info: { icon: Info, iconColor: 'text-amber-400', bgLight: 'bg-amber-50', bgDark: 'dark:bg-amber-950/40' },
+    57→    57→  create: { icon: Plus, iconColor: 'text-emerald-400', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+    58→    58→  complete: { icon: CheckCircle2, iconColor: 'text-emerald-500', bgLight: 'bg-emerald-50', bgDark: 'dark:bg-emerald-950/40' },
+    59→    59→  export: { icon: FileJson, iconColor: 'text-purple-400', bgLight: 'bg-purple-50', bgDark: 'dark:bg-purple-950/40' },
+    60→    60→};
+    61→    61→
+    62→    62→const ACTIVITY_BORDER_COLORS: Record<string, string> = {
+    63→    63→  edit: 'border-l-blue-400',
+    64→    64→  info: 'border-l-amber-400',
+    65→    65→  create: 'border-l-emerald-400',
+    66→    66→  complete: 'border-l-emerald-500',
+    67→    67→  export: 'border-l-purple-400',
+    68→    68→};
+    69→    69→
+    70→    70→const recentActivity = [
+    71→    71→  { time: '2 hours ago', action: 'Configuration updated', detail: 'Motion axes changed from 6 to 8', type: 'edit' },
+    72→    72→  { time: '5 hours ago', action: 'Sample data loaded', detail: 'Automated Packaging Machine configuration', type: 'info' },
+    73→    73→  { time: '1 day ago', action: 'New estimate created', detail: 'ACOPOStrak Transport System', type: 'create' },
+    74→    74→  { time: '2 days ago', action: 'Estimate completed', detail: 'Bottle Inspection Machine \u2013 Medium complexity', type: 'complete' },
+    75→    75→  { time: '3 days ago', action: 'Project exported', detail: 'Servo Press Machine configuration as JSON', type: 'export' },
+    76→    76→];
+    77→    77→
+    78→    78→function SortableStatCardWrapper({ id, children, onDragStart }: { id: string; children: React.ReactNode; onDragStart: () => void }) {
+    79→    79→  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+    80→    80→  const style = {
+    81→    81→    transform: CSS.Transform.toString(transform),
+    82→    82→    transition,
+    83→    83→    opacity: isDragging ? 0.4 : 1,
+    84→    84→  };
+    85→    85→  return (
+    86→    86→    <motion.div
+    87→    87→      ref={setNodeRef}
+    88→    88→      style={style}
+    89→    89→      layout
+    90→    90→      className="group-hover:shadow-md transition-shadow duration-300 group relative"
+    91→    91→    >
+    92→    92→      <div
+    93→    93→        {...attributes}
+    94→    94→        {...listeners}
+    95→    95→        onClick={(e) => e.stopPropagation()}
+    96→    96→        onPointerDown={onDragStart}
+    97→    97→        className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+    98→    98→      >
+    99→    99→        <GripVertical className="h-4 w-4 text-muted-foreground" />
+   100→   100→      </div>
+   101→   101→      {children}
+   102→   102→    </motion.div>
+   103→   103→  );
+   104→   104→}
+   105→   105→
+   106→   106→export function DashboardPage() {
+   107→   107→  const { projects, config, setCurrentPage, loadSampleConfig, resetConfig, updateConfig, updateProjectInfo, updateMotion, updateRobotics, updateVision, updateHMI } = useAppStore();
+   108→   108→
+   109→   109→  // Project selector state
+   110→   110→  const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
+   111→   111→
+   112→   112→  // Derived: currently selected project object
+   113→   113→  const selectedProject = useMemo(
+   114→   114→    () => (selectedProjectId === 'all' ? null : projects.find((p) => p.id === selectedProjectId) ?? null),
+   115→   115→    [selectedProjectId, projects]
+   116→   116→  );
+   117→   117→
+   118→   118→  // When a project is selected, deep-clone its config into the store
+   119→   119→  const handleProjectSelect = (value: string) => {
+   120→   120→    setSelectedProjectId(value);
+   121→   121→    if (value === 'all') {
+   122→   122→      // Restore default config for aggregate view
+   123→   123→      resetConfig();
+   124→   124→      return;
+   125→   125→    }
+   126→   126→    const project = projects.find((p) => p.id === value);
+   127→   127→    if (project?.config) {
+   128→   128→      // Deep-clone to avoid reference issues with the stored project
+   129→   129→      const clonedConfig = JSON.parse(JSON.stringify(project.config));
+   130→   130→      updateConfig(clonedConfig);
+   131→   131→    }
+   132→   132→  };
+   133→   133→
+   134→   134→  // Stat card drag-and-drop order
+   135→   135→  const [statOrder, setStatOrder] = useState<number[]>(() => {
+   136→   136→    if (typeof window === 'undefined') return [0, 1, 2, 3];
+   137→   137→    try {
+   138→   138→      const saved = localStorage.getItem('br-dashboard-order');
+   139→   139→      return saved ? JSON.parse(saved) : [0, 1, 2, 3];
+   140→   140→    } catch {
+   141→   141→      return [0, 1, 2, 3];
+   142→   142→    }
+   143→   143→  });
+   144→   144→  const [activeStatId, setActiveStatId] = useState<number | null>(null);
+   145→   145→  const statSensors = useSensors(
+   146→   146→    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+   147→   147→  );
+   148→   148→
+   149→   149→  useEffect(() => {
+   150→   150→    try {
+   151→   151→      localStorage.setItem('br-dashboard-order', JSON.stringify(statOrder));
+   152→   152→    } catch { /* noop */ }
+   153→   153→  }, [statOrder]);
+   154→   154→
+   155→   155→  const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
+   156→   156→  const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
+   157→   157→  const completedEstimates = projects.filter((p) => p.status === 'Completed').length;
+   158→   158→
+   159→   159→  // Complexity distribution
+   160→   160→  const complexityDist = useMemo(() => {
+   161→   161→    const dist: Record<ComplexityLevel, number> = { Low: 0, Medium: 0, High: 0, 'Very High': 0 };
+   162→   162→    projects.forEach((p) => {
+   163→   163→      dist[p.complexity]++;
+   164→   164→    });
+   165→   165→    return dist;
+   166→   166→  }, [projects]);
+   167→   167→
+   168→   168→  const totalProjects = projects.length;
+   169→   169→
+   170→   170→  // Average complexity label
+   171→   171→  const avgComplexityLabel = useMemo(() => {
+   172→   172→    if (totalProjects === 0) return 'N/A';
+   173→   173→    const scoreMap: Record<ComplexityLevel, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
+   174→   174→    const avg = projects.reduce((sum, p) => sum + scoreMap[p.complexity], 0) / totalProjects;
+   175→   175→    if (avg <= 1.5) return 'Low';
+   176→   176→    if (avg <= 2.5) return 'Medium';
+   177→   177→    if (avg <= 3.5) return 'High';
+   178→   178→    return 'Very High';
+   179→   179→  }, [projects, totalProjects]) as ComplexityLevel | 'N/A';
+   180→   180→
+   181→   181→  const statCardsData = [
+   182→   182→    { id: 'stat-0', label: 'Active Projects', value: activeProjects, icon: <FolderKanban className="h-4 w-4" />, accentColor: 'bg-blue-400' },
+   183→   183→    { id: 'stat-1', label: 'Draft Estimates', value: draftEstimates, icon: <FileEdit className="h-4 w-4" />, accentColor: 'bg-amber-400' },
+   184→   184→    { id: 'stat-2', label: 'Completed Estimates', value: completedEstimates, icon: <CheckCircle2 className="h-4 w-4" />, accentColor: 'bg-emerald-400' },
+   185→   185→    { id: 'stat-3', label: 'Avg. Project Complexity', value: avgComplexityLabel, icon: <BarChart3 className="h-4 w-4" />, accentColor: 'bg-orange-400' },
+   186→   186→  ];
+   187→   187→
+   188→   188→  const handleStatDragEnd = (event: { active: { id: string | number }; over: { id: string | number } | null }) => {
+   189→   189→    const { active, over } = event;
+   190→   190→    if (!over || active.id === over.id) return;
+   191→   191→    setStatOrder((prev) => {
+   192→   192→      const oldIndex = prev.indexOf(Number(active.id));
+   193→   193→      const newIndex = prev.indexOf(Number(over.id));
+   194→   194→      return arrayMove(prev, oldIndex, newIndex);
+   195→   195→    });
+   196→   196→    setActiveStatId(null);
+   197→   197→  };
+   198→   198→
+   199→   199→  const activeStatCard = activeStatId !== null ? statCardsData[activeStatId] : null;
+   200→   200→
+   201→   201→  return (
+   202→   202→    <div className="max-w-[1400px] mx-auto w-full">
+   203→   203→      <motion.div
+   204→   204→        className="space-y-6"
+   205→   205→        initial={{ opacity: 0, y: 8 }}
+   206→   206→        animate={{ opacity: 1, y: 0 }}
+   207→   207→        transition={{ duration: 0.3 }}
+   208→   208→      >
+   209→   209→        {/* Welcome Banner */}
+   210→   210→        <div className="relative overflow-hidden border border-border/80 rounded-xl bg-gradient-to-r from-primary/[0.07] via-primary/[0.03] to-transparent p-6">
+   211→   211→          {/* Subtle dot pattern decoration */}
+   212→   212→          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, oklch(0.55 0.2 35) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+   213→   213→          {/* Decorative gradient blob */}
+   214→   214→          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-primary/10 to-transparent blur-2xl" />
+   215→   215→          <div className="absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-gradient-to-tl from-primary/5 to-transparent blur-xl" />
+   216→   216→          <Settings2 className="h-28 w-28 text-primary/[0.05] absolute right-8 top-1/2 -translate-y-1/2" />
+   217→   217→          <div className="relative flex items-center justify-between flex-wrap gap-4">
+   218→   218→            <div className="flex items-center gap-4">
+   219→   219→              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 text-primary shadow-sm ring-1 ring-primary/10">
+   220→   220→                <Cpu className="h-6 w-6" />
+   221→   221→              </div>
+   222→   222→              <div>
+   223→   223→                <h2 className="text-lg font-bold text-foreground tracking-tight">B&amp;R Engineering Estimation</h2>
+   224→   224→                <p className="text-sm text-muted-foreground mt-0.5">Configure your automation project and generate effort estimates</p>
+   225→   225→              </div>
+   226→   226→            </div>
+   227→   227→            <div className="flex items-center gap-2">
+   228→   228→              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">{totalProjects} Projects</span>
+   229→   229→              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">{activeProjects} Active</span>
+   230→   230→              <span className="rounded-full bg-background/90 border border-border/60 px-3 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm shadow-sm">{completedEstimates} Completed</span>
+   231→   231→            </div>
+   232→   232→          </div>
+   233→   233→        </div>
+   234→   234→        {/* Bottom gradient shadow below welcome banner */}
+   235→   235→        <div className="h-3 -mt-1.5 bg-gradient-to-b from-muted/30 to-transparent rounded-b-lg pointer-events-none" />
+   236→   236→
+   237→   237→        {/* Project Selector */}
+   238→   238→        <motion.div
+   239→   239→          initial={{ opacity: 0, y: 4 }}
+   240→   240→          animate={{ opacity: 1, y: 0 }}
+   241→   241→          transition={{ delay: 0.05, duration: 0.25 }}
+   242→   242→        >
+   243→   243→          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+   244→   244→            <div className="flex items-center gap-2.5 shrink-0">
+   245→   245→              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+   246→   246→                <FolderKanban className="h-4 w-4 text-primary" />
+   247→   247→              </div>
+   248→   248→              <span className="text-sm font-semibold text-foreground">Project Scope</span>
+   249→   249→            </div>
+   250→   250→            <Select value={selectedProjectId} onValueChange={handleProjectSelect}>
+   251→   251→              <SelectTrigger className="w-full sm:w-[320px] h-9 font-medium border-border/80">
+   252→   252→                <SelectValue placeholder="Select a project…" />
+   253→   253→              </SelectTrigger>
+   254→   254→              <SelectContent>
+   255→   255→                <SelectItem value="all">
+   256→   256→                  <span className="flex items-center gap-2">
+   257→   257→                    <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" />
+   258→   258→                    All Projects (Aggregate View)
+   259→   259→                  </span>
+   260→   260→                </SelectItem>
+   261→   261→                {projects.map((p) => (
+   262→   262→                  <SelectItem key={p.id} value={p.id}>
+   263→   263→                    <span className="flex items-center gap-2">
+   264→   264→                      <span className={`h-2 w-2 rounded-sm shrink-0 ${COMPLEXITY_COLORS[p.complexity]}`} />
+   265→   265→                      <span className="truncate">{p.name}</span>
+   266→   266→                      <span className="text-muted-foreground ml-auto text-xs shrink-0">{p.customer}</span>
+   267→   267→                    </span>
+   268→   268→                  </SelectItem>
+   269→   269→                ))}
+   270→   270→              </SelectContent>
+   271→   271→            </Select>
+   272→   272→            {selectedProject && (
+   273→   273→              <div className="flex items-center gap-3 text-sm animate-in fade-in-0 slide-in-from-bottom-1 duration-200">
+   274→   274→                <div className="flex items-center gap-1.5">
+   275→   275→                  <span className="text-muted-foreground">Customer:</span>
+   276→   276→                  <span className="font-medium text-foreground">{selectedProject.customer}</span>
+   277→   277→                </div>
+   278→   278→                <span className="h-4 w-px bg-border" />
+   279→   279→                <div className="flex items-center gap-1.5">
+   280→   280→                  <span className="text-muted-foreground">Machine:</span>
+   281→   281→                  <span className="font-medium text-foreground">{selectedProject.machineType}</span>
+   282→   282→                </div>
+   283→   283→                <span className="h-4 w-px bg-border" />
+   284→   284→                <div className="flex items-center gap-1.5">
+   285→   285→                  <span className="text-muted-foreground">Status:</span>
+   286→   286→                  <StatusBadge status={selectedProject.status} />
+   287→   287→                </div>
+   288→   288→              </div>
+   289→   289→            )}
+   290→   290→          </div>
+   291→   291→        </motion.div>
+   292→   292→
+   293→   293→        {/* Header */}
+   294→   294→        <div>
+   295→   295→          <h1 className="text-lg font-bold text-foreground">Engineering Estimation Dashboard</h1>
+   296→   296→          <p className="text-sm text-muted-foreground">
+   297→   297→            Configure the B&R automation system and estimate engineering effort.
+   298→   298→          </p>
+   299→   299→        </div>
+   300→   300→
+   301→   301→        {/* Stat Cards - Draggable */}
+   302→   302→        <DndContext sensors={statSensors} collisionDetection={closestCenter} onDragEnd={handleStatDragEnd}>
+   303→   303→          <SortableContext items={statOrder.map((i) => String(i))} strategy={rectSortingStrategy}>
+   304→   304→            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+   305→   305→              <AnimatePresence mode="popLayout">
+   306→   306→                {statOrder.map((idx) => {
+   307→   307→                  const card = statCardsData[idx];
+   308→   308→                  return (
+   309→   309→                    <SortableStatCardWrapper
+   310→   310→                      key={card.id}
+   311→   311→                      id={card.id}
+   312→   312→                      onDragStart={() => setActiveStatId(idx)}
+   313→   313→                    >
+   314→   314→                      {card.label === 'Avg. Project Complexity' ? (
+   315→   315→                        <div>
+   316→   316→                          <StatCard
+   317→   317→                            label={card.label}
+   318→   318→                            value={card.value}
+   319→   319→                            icon={card.icon}
+   320→   320→                            accentColor={card.accentColor}
+   321→   321→                          />
+   322→   322→                          {totalProjects > 0 && (
+   323→   323→                            <div className="flex h-1.5 rounded-full overflow-hidden mt-1 mx-4 mb-2">
+   324→   324→                              {ALL_LEVELS.map((level) => {
+   325→   325→                                const count = complexityDist[level];
+   326→   326→                                if (count === 0) return null;
+   327→   327→                                return (
+   328→   328→                                  <div
+   329→   329→                                    key={level}
+   330→   330→                                    className={`${COMPLEXITY_COLORS[level]} transition-all duration-300`}
+   331→   331→                                    style={{ width: `${(count / totalProjects) * 100}%` }}
+   332→   332→                                  />
+   333→   333→                                );
+   334→   334→                              })}
+   335→   335→                            </div>
+   336→   336→                          )}
+   337→   337→                        </div>
+   338→   338→                      ) : (
+   339→   339→                        <StatCard
+   340→   340→                          label={card.label}
+   341→   341→                          value={card.value}
+   342→   342→                          icon={card.icon}
+   343→   343→                          accentColor={card.accentColor}
+   344→   344→                        />
+   345→   345→                      )}
+   346→   346→                    </SortableStatCardWrapper>
+   347→   347→                  );
+   348→   348→                })}
+   349→   349→              </AnimatePresence>
+   350→   350→            </div>
+   351→   351→          </SortableContext>
+   352→   352→          <DragOverlay>
+   353→   353→            {activeStatCard ? (
+   354→   354→              <div className="scale-105 shadow-xl opacity-90">
+   355→   355→                <StatCard
+   356→   356→                  label={activeStatCard.label}
+   357→   357→                  value={activeStatCard.value}
+   358→   358→                  icon={activeStatCard.icon}
+   359→   359→                  accentColor={activeStatCard.accentColor}
+   360→   360→                />
+   361→   361→              </div>
+   362→   362→            ) : null}
+   363→   363→          </DragOverlay>
+   364→   364→        </DndContext>
+   365→   365→
+   366→   366→        {/* Quick Stats Row */}
+   367→   367→        <motion.div
+   368→   368→          initial={{ opacity: 0, y: 8 }}
+   369→   369→          animate={{ opacity: 1, y: 0 }}
+   370→   370→          transition={{ delay: 0.15, duration: 0.3 }}
+   371→   371→        >
+   372→   372→          <SectionCard title={selectedProject ? `Configuration: ${selectedProject.name}` : 'Quick Configuration Overview'} description={selectedProject ? `${selectedProject.customer} · ${selectedProject.machineType}` : 'Current working configuration snapshot'}>
+   373→   373→            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+   374→   374→              {(() => {
+   375→   375→                const totalIO =
+   376→   376→                  config.io.digitalInputs + config.io.digitalOutputs +
+   377→   377→                  config.io.analogInputs + config.io.analogOutputs +
+   378→   378→                  config.io.safetyIO + config.io.encoderCounterModules +
+   379→   379→                  config.io.temperatureModules + config.io.communicationIO +
+   380→   380→                  config.io.specialModules;
+   381→   381→                const estHours = totalIO * 0.5 + config.motion.totalAxes * 6 + config.hmi.screens * 8 + 40;
+   382→   382→                const enabledProtocolCount = config.communication.protocols.filter(p => p.enabled).length;
+   383→   383→                const robotCount = config.robotics.enabled ? String(config.robotics.quantity) : '0';
+   384→   384→                const quickStats = [
+   385→   385→                  { icon: Cable, label: 'Total I/O Points', value: String(totalIO), accent: 'border-l-blue-400', iconBg: 'text-blue-400' },
+   386→   386→                  { icon: Zap, label: 'Motion Axes', value: String(config.motion.totalAxes), accent: 'border-l-amber-400', iconBg: 'text-amber-400' },
+   387→   387→                  { icon: Monitor, label: 'HMI Screens', value: String(config.hmi.screens), accent: 'border-l-cyan-400', iconBg: 'text-cyan-400' },
+   388→   388→                  { icon: Shield, label: 'Safety I/O', value: String(config.safety.safetyIOCount), accent: 'border-l-emerald-400', iconBg: 'text-emerald-400' },
+   389→   389→                  { icon: Clock, label: 'Est. Hours', value: estHours.toFixed(1), accent: 'border-l-primary', iconBg: 'text-primary' },
+   390→   390→                  { icon: Cpu, label: 'Controller', value: config.controller.family, accent: 'border-l-violet-400', iconBg: 'text-violet-400' },
+   391→   391→                  { icon: Radio, label: 'Protocols', value: String(enabledProtocolCount), accent: 'border-l-teal-400', iconBg: 'text-teal-400' },
+   392→   392→                  { icon: Bot, label: 'Robots', value: robotCount, accent: 'border-l-rose-400', iconBg: 'text-rose-400' },
+   393→   393→                ];
+   394→   394→                return (
+   395→   395→                  <>
+   396→   396→                    {quickStats.map((stat) => {
+   397→   397→                      const isZero = stat.value === '0';
+   398→   398→                      return (
+   399→   399→                        <div
+   400→   400→                          key={stat.label}
+   401→   401→                          className={`flex items-center gap-3 bg-muted/30 rounded-lg p-3 border-l-2 ${stat.accent}`}
+   402→   402→                        >
+   403→   403→                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted">
+   404→   404→                            <stat.icon className={`h-3.5 w-3.5 ${stat.iconBg}`} />
+   405→   405→                          </div>
+   406→   406→                          <div className="flex flex-col">
+   407→   407→                            <span className="text-sm text-muted-foreground leading-tight">{stat.label}</span>
+   408→   408→                            <span className={`text-sm font-bold leading-tight tabular-nums ${isZero ? 'text-muted-foreground' : 'text-foreground'}`}>
+   409→   409→                              {stat.value}
+   410→   410→                            </span>
+   411→   411→                          </div>
+   412→   412→                        </div>
+   413→   413→                      );
+   414→   414→                    })}
+   415→   415→                  </>
+   416→   416→                );
+   417→   417→              })()}
+   418→   418→            </div>
+   419→   419→          </SectionCard>
+   420→   420→        </motion.div>
+   421→   421→
+   422→   422→
+   423→   423→        {/* Quick Actions & Complexity Distribution */}
+   424→   424→        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+   425→   425→          {/* Quick Actions */}
+   426→   426→          <SectionCard title="Quick Actions" description="Get started with your engineering estimate">
+   427→   427→            <div className="flex flex-col gap-3 sm:flex-row">
+   428→   428→              <Button
+   429→   429→                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+   430→   430→                onClick={() => setCurrentPage('new-estimate')}
+   431→   431→              >
+   432→   432→                <PlusCircle className="h-4 w-4 mr-2" />
+   433→   433→                New Estimate
+   434→   434→              </Button>
+   435→   435→              <Button
+   436→   436→                variant="outline"
+   437→   437→                className="flex-1 border-border"
+   438→   438→                onClick={() => loadSampleConfig()}
+   439→   439→              >
+   440→   440→                <Download className="h-4 w-4 mr-2" />
+   441→   441→                Load Sample Data
+   442→   442→              </Button>
+   443→   443→            </div>
+   444→   444→          </SectionCard>
+   445→   445→
+   446→   446→          {/* Complexity Distribution */}
+   447→   447→          <SectionCard title="Complexity Distribution" description="Projects by complexity level">
+   448→   448→            <div className="space-y-3">
+   449→   449→              {/* Stacked bar */}
+   450→   450→              <div className="flex h-8 rounded-md overflow-hidden">
+   451→   451→                {totalProjects === 0 ? (
+   452→   452→                  <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground bg-muted">
+   453→   453→                    No projects yet
+   454→   454→                  </div>
+   455→   455→                ) : (
+   456→   456→                  ALL_LEVELS.map((level) => {
+   457→   457→                    const count = complexityDist[level];
+   458→   458→                    if (count === 0) return null;
+   459→   459→                    return (
+   460→   460→                      <div
+   461→   461→                        key={level}
+   462→   462→                        className={`${COMPLEXITY_COLORS[level]} flex items-center justify-center text-white text-sm font-semibold transition-all duration-300`}
+   463→   463→                        style={{ width: `${(count / totalProjects) * 100}%`, minWidth: count > 0 ? '2rem' : 0 }}
+   464→   464→                        title={`${level}: ${count} project${count !== 1 ? 's' : ''}`}
+   465→   465→                      >
+   466→   466→                        {count}
+   467→   467→                      </div>
+   468→   468→                    );
+   469→   469→                  })
+   470→   470→                )}
+   471→   471→              </div>
+   472→   472→              {/* Legend */}
+   473→   473→              <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+   474→   474→                {ALL_LEVELS.map((level) => (
+   475→   475→                  <div key={level} className="flex items-center gap-1.5">
+   476→   476→                    <span className={`h-2.5 w-2.5 rounded-sm ${COMPLEXITY_COLORS[level]}`} />
+   477→   477→                    <span className={`text-sm font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}> 
+   478→   478→                      {level}{complexityDist[level] > 0 ? ` (${complexityDist[level]})` : ''}
+   479→   479→                    </span>
+   480→   480→                  </div>
+   481→   481→                ))}
+   482→   482→              </div>
+   483→   483→            </div>
+   484→   484→          </SectionCard>
+   485→   485→        </div>
+   486→   486→
+   487→   487→        {/* Project Templates */}
+   488→   488→        <SectionCard title="Project Templates" description="Start from a pre-configured template">
+   489→   489→          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+   490→   490→            <div
+   491→   491→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   492→   492→              onClick={() => {
+   493→   493→                resetConfig();
+   494→   494→                loadSampleConfig();
+   495→   495→                setCurrentPage('new-estimate');
+   496→   496→              }}
+   497→   497→            >
+   498→   498→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   499→   499→                <Package className="h-5 w-5 text-primary" />
+   500→   500→              </div>
+   501→   501→              <span className="text-sm font-semibold text-foreground">Packaging Line</span>
+   502→   502→              <span className="text-sm text-muted-foreground">Automated packaging with multi-station layout</span>
+   503→   503→              <Button variant="outline" size="sm" className="text-sm mt-auto w-fit">Quick Start</Button>
+   504→   504→            </div>
+   505→   505→            <div
+   506→   506→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   507→   507→              onClick={() => {
+   508→   508→                resetConfig();
+   509→   509→                updateProjectInfo({ name: 'Assembly Cell', machineType: 'Assembly' });
+   510→   510→                updateMotion({ totalAxes: 12 });
+   511→   511→                updateRobotics({ enabled: true });
+   512→   512→                updateVision({ enabled: true });
+   513→   513→                setCurrentPage('new-estimate');
+   514→   514→              }}
+   515→   515→            >
+   516→   516→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   517→   517→                <Wrench className="h-5 w-5 text-primary" />
+   518→   518→              </div>
+   519→   519→              <span className="text-sm font-semibold text-foreground">Assembly Cell</span>
+   520→   520→              <span className="text-sm text-muted-foreground">Robot-assisted assembly with vision</span>
+   521→   521→              <Button variant="outline" size="sm" className="text-sm mt-auto w-fit">Quick Start</Button>
+   522→   522→            </div>
+   523→   523→            <div
+   524→   524→              className="flex flex-col gap-2.5 rounded-lg p-3 text-left hover:bg-muted/50 hover:ring-1 hover:ring-primary/20 transition-all duration-200 cursor-pointer"
+   525→   525→              onClick={() => {
+   526→   526→                resetConfig();
+   527→   527→                updateProjectInfo({ name: 'Inspection System', machineType: 'Inspection' });
+   528→   528→                updateVision({ enabled: true, cameras: 4 });
+   529→   529→                updateHMI({ screens: 3 });
+   530→   530→                setCurrentPage('new-estimate');
+   531→   531→              }}
+   532→   532→            >
+   533→   533→              <div className="bg-muted/50 rounded-lg p-2.5 w-fit">
+   534→   534→                <ScanSearch className="h-5 w-5 text-primary" />
+   535→   535→              </div>
+   536→   536→              <span className="text-sm font-semibold text-foreground">Inspection System</span>
+   537→   537→              <span className="text-sm text-muted-foreground">Quality inspection with camera systems</span>
+   538→   538→              <Button variant="outline" size="sm" className="text-sm mt-auto w-fit">Quick Start</Button>
+   539→   539→            </div>
+   540→   540→          </div>
+   541→   541→        </SectionCard>
+   542→   542→
+   543→   543→        {/* Recent Projects Table */}
+   544→   544→        <SectionCard title="Recent Projects" description="All B&R automation estimation projects">
+   545→   545→          <div className="overflow-x-auto -mx-4 px-4">
+   546→   546→            <Table>
+   547→   547→              <TableHeader>
+   548→   548→                <TableRow className="border-border hover:bg-transparent">
+   549→   549→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Project</TableHead>
+   550→   550→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Customer</TableHead>
+   551→   551→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Machine Type</TableHead>
+   552→   552→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">B&R Configuration</TableHead>
+   553→   553→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Complexity</TableHead>
+   554→   554→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Status</TableHead>
+   555→   555→                  <TableHead className="text-sm font-semibold text-muted-foreground h-9">Last Updated</TableHead>
+   556→   556→                </TableRow>
+   557→   557→              </TableHeader>
+   558→   558→              <TableBody>
+   559→   559→                {projects.map((p) => (
+   560→   560→                  <TableRow
+   561→   561→                    key={p.id}
+   562→   562→                    className={`border-border cursor-pointer transition-colors duration-100 hover:bg-primary/[0.03] active:bg-primary/[0.06] border-l-2 ${COMPLEXITY_LEFT_BORDER[p.complexity] || ''}`}
+   563→   563→                    onClick={() => {
+   564→   564→                      if (p.config) {
+   565→   565→                        updateConfig(JSON.parse(JSON.stringify(p.config)));
+   566→   566→                        setCurrentPage('estimate-summary');
+   567→   567→                      }
+   568→   568→                    }}
+   569→   569→                  >
+   570→   570→                    <TableCell className="text-sm font-medium text-foreground py-2.5">{p.name}</TableCell>
+   571→   571→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.customer}</TableCell>
+   572→   572→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.machineType}</TableCell>
+   573→   573→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.industry || p.machineType}</TableCell>
+   574→   574→                    <TableCell className="py-2.5">
+   575→   575→                      <ComplexityBadge level={p.complexity} />
+   576→   576→                    </TableCell>
+   577→   577→                    <TableCell className="py-2.5">
+   578→   578→                      <StatusBadge status={p.status} />
+   579→   579→                    </TableCell>
+   580→   580→                    <TableCell className="text-sm text-muted-foreground py-2.5">{p.updatedAt}</TableCell>
+   581→   581→                  </TableRow>
+   582→   582→                ))}
+   583→   583→              </TableBody>
+   584→   584→            </Table>
+   585→   585→          </div>
+   586→   586→        </SectionCard>
+   587→   587→
+   588→   588→        {/* Recent Activity */}
+   589→   589→        <SectionCard title="Recent Activity" description="Latest actions and events">
+   590→   590→          <div>
+   591→   591→            {recentActivity.map((item, idx) => (
+   592→   592→              <motion.div
+   593→   593→                key={idx}
+   594→   594→                initial={{ opacity: 0, x: -4 }}
+   595→   595→                animate={{ opacity: 1, x: 0 }}
+   596→   596→                transition={{ delay: idx * 0.05, duration: 0.3 }}
+   597→   597→                className={`flex items-start gap-2.5 py-1.5 border-l-2 pl-3 ${ACTIVITY_BORDER_COLORS[item.type] || 'border-l-gray-400'} ${idx < recentActivity.length - 1 ? 'border-b border-border/50' : ''}`}
+   598→   598→              >
+   599→   599→                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgLight} ${ACTIVITY_AVATAR_CONFIG[item.type]?.bgDark} relative`}>
+   600→   600→                  {(() => {
+   601→   601→                    const avatarCfg = ACTIVITY_AVATAR_CONFIG[item.type];
+   602→   602→                    const AvatarIcon = avatarCfg?.icon;
+   603→   603→                    return AvatarIcon ? <AvatarIcon className={`h-3 w-3 ${avatarCfg.iconColor}`} /> : null;
+   604→   604→                  })()}
+   605→   605→                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ring-2 ring-card" style={{ backgroundColor: item.type === 'edit' ? 'rgb(96,165,250)' : item.type === 'info' ? 'rgb(251,191,36)' : item.type === 'create' ? 'rgb(52,211,153)' : item.type === 'complete' ? 'rgb(16,185,129)' : 'rgb(168,85,247)' }} />
+   606→   606→                </div>
+   607→   607→                <div className="flex-1 min-w-0">
+   608→   608→                  <div className="text-sm font-medium text-foreground">{item.action}</div>
+   609→   609→                  <div className="text-sm text-muted-foreground truncate">{item.detail}</div>
+   610→   610→                </div>
+   611→   611→                <span className="text-sm font-medium text-muted-foreground ml-auto shrink-0 whitespace-nowrap">{item.time}</span>
+   612→   612→              </motion.div>
+   613→   613→            ))}
+   614→   614→            <div className="group pt-2">
+   615→   615→              <button className="flex items-center gap-0.5 text-primary text-sm font-medium group-hover:underline">
+   616→   616→                View All
+   617→   617→                <ChevronRight className="h-3 w-3" />
+   618→   618→              </button>
+   619→   619→            </div>
+   620→   620→          </div>
+   621→   621→        </SectionCard>
+   622→   622→
+   623→   623→
+   624→   624→      </motion.div>
+   625→   625→    </div>
+   626→   626→  );
+   627→   627→}
+   628→   628→
