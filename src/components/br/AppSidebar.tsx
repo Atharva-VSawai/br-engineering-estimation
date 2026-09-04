@@ -13,6 +13,7 @@ import {
   GitCompareArrows,
   Settings,
   Pencil,
+  X,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -36,16 +37,15 @@ const NAV_ITEMS: { page: AppPage; label: string; icon: React.ElementType }[] = [
   { page: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { currentPage, setCurrentPage, config, wizardStep } = useAppStore();
   const configName = config.project.name || '';
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 shadow-[inset_-1px_0_0_0_oklch(0.0_0_0/0.05)]">
-      {}
+    <>
+      {open && <button aria-label="Close navigation" className="fixed inset-0 z-30 bg-black/30 md:hidden" onClick={onClose} />}
+      <aside className={`fixed inset-y-0 left-0 z-40 flex w-72 shrink-0 flex-col border-r border-border bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 shadow-[inset_-1px_0_0_0_oklch(0.0_0_0/0.05)] transition-transform duration-200 md:static md:z-auto md:w-60 md:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="h-[3px] bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
-
-      {}
       <div className="flex h-14 items-center gap-2.5 border-b border-border/80 px-4 bg-gradient-to-r from-primary/[0.03] to-transparent">
         <div className="relative h-4 w-4 shrink-0 flex items-center justify-center">
           <div className="absolute inset-0 rotate-45 rounded-[2px] bg-gradient-to-br from-primary/40 to-primary/15 border border-primary/30" />
@@ -59,9 +59,10 @@ export function AppSidebar() {
             Estimation Tool
           </span>
         </div>
+        <button aria-label="Close navigation" className="ml-auto rounded-md p-1 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground md:hidden" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </button>
       </div>
-
-      {}
       <nav className="relative flex-1 overflow-y-auto py-2 px-2" role="navigation" aria-label="Main navigation">
         <span className="px-3 mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Navigation</span>
         <TooltipProvider delayDuration={300}>
@@ -73,7 +74,7 @@ export function AppSidebar() {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        onClick={() => setCurrentPage(page)}
+                        onClick={() => { setCurrentPage(page); onClose(); }}
                         className={`relative flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-sm font-medium transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1
                           ${isActive
                             ? 'bg-gradient-to-r from-primary/10 to-primary/[0.03] text-sidebar-accent-foreground shadow-[inset_3px_0_0_0_oklch(0.55_0.2_35/0.8),0_0_16px_oklch(0.55_0.2_35/0.08)]'
@@ -99,11 +100,8 @@ export function AppSidebar() {
             })}
           </ul>
         </TooltipProvider>
-        {}
         <div className="sticky bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-sidebar to-transparent pointer-events-none z-10" />
       </nav>
-
-      {}
       <div className="mx-3 border-t border-border/60" />
       {configName && (
         <>
@@ -120,8 +118,6 @@ export function AppSidebar() {
           </div>
         </>
       )}
-
-      {}
       <div className="border-t border-border/60 px-4 py-3 bg-gradient-to-t from-sidebar/80 to-transparent">
         <div className="text-xs text-muted-foreground/60 leading-tight">Engineering Tool</div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 leading-tight">
@@ -129,6 +125,7 @@ export function AppSidebar() {
           <span className="bg-gradient-to-r from-primary/15 to-primary/5 rounded-full px-1.5 py-0.5 font-semibold">v1.0</span>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Save, FileText, FileJson, FileSpreadsheet, Download, ChevronDown, Sun, Moon, ChevronRight, Copy, Bell } from 'lucide-react';
+import { Save, FileText, FileJson, FileSpreadsheet, Download, ChevronDown, Sun, Moon, ChevronRight, Copy, Bell, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ const PAGE_NAMES: Record<AppPage, string> = {
 
 const PROJECT_CONTEXT_PAGES: AppPage[] = ['new-estimate', 'estimate-summary', 'product-explorer', 'technical-params', 'engineering-activities', 'complexity', 'compare'];
 
-export function AppHeader() {
+export function AppHeader({ onMenuClick }: { onMenuClick: () => void }) {
   const { config, currentPage, wizardStep, activeProjectId, projects, setCurrentPage, notifications, addNotification, markAllNotificationsRead, updateProject, createNewProject } = useAppStore();
   const { theme, setTheme } = useTheme();
   const [ncOpen, setNcOpen] = React.useState(false);
@@ -158,8 +158,11 @@ export function AppHeader() {
   }, [config, activeProjectId]);
 
   return (
-    <header className="no-print flex h-14 shrink-0 items-center justify-between border-b border-border/50 bg-background/80 backdrop-blur-sm px-6 shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)]">
-      <div className="flex items-center gap-3">
+    <header className="no-print flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border/50 bg-background/80 backdrop-blur-sm px-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.2)] sm:px-6">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <Button variant="ghost" size="sm" className="h-8 w-8 shrink-0 p-0 md:hidden" onClick={onMenuClick} aria-label="Open navigation">
+          <Menu className="h-4 w-4" />
+        </Button>
         {currentPage === 'new-estimate' ? (
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
@@ -169,15 +172,15 @@ export function AppHeader() {
           </div>
         ) : showProjectName ? (
           <div className="flex items-center gap-1.5">
-            <span className="text-sm text-muted-foreground">{PAGE_NAMES[currentPage]}</span>
-            <ChevronRight className="h-3 w-3 text-muted-foreground/40" />
-            <span className="text-sm font-medium text-foreground truncate max-w-[280px]">{projectName}</span>
+            <span className="hidden text-sm text-muted-foreground sm:inline">{PAGE_NAMES[currentPage]}</span>
+            <ChevronRight className="hidden h-3 w-3 text-muted-foreground/40 sm:block" />
+            <span className="max-w-[140px] truncate text-sm font-medium text-foreground sm:max-w-[280px]">{projectName}</span>
           </div>
         ) : (
           <span className="text-sm font-semibold text-foreground">{PAGE_NAMES[currentPage]}</span>
         )}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-3">
         <Button
           variant="ghost"
           size="sm"
@@ -218,7 +221,7 @@ export function AppHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm">
               <Download className="h-3.5 w-3.5" />
-              Export
+              <span className="hidden sm:inline">Export</span>
               <ChevronDown className="h-3 w-3 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
@@ -238,16 +241,16 @@ export function AppHeader() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleCopy}>
+        <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm" onClick={handleCopy} aria-label="Copy configuration">
           <Copy className="h-3.5 w-3.5" />
-          Copy
+          <span className="hidden sm:inline">Copy</span>
         </Button>
         <kbd className="hidden lg:inline-flex h-6 items-center gap-1 rounded border border-border bg-muted px-1.5 text-xs font-mono text-muted-foreground">
           &#8984;K
         </kbd>
         <Button variant="default" size="sm" className="h-9 gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleSave}>
           <Save className="h-3.5 w-3.5" />
-          Save
+          <span className="hidden sm:inline">Save</span>
         </Button>
       </div>
       <NotificationCenter open={ncOpen} onClose={() => setNcOpen(false)} unreadCount={unreadCount} notifications={notifications} onMarkAllRead={markAllNotificationsRead} />
