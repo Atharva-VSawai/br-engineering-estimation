@@ -99,11 +99,11 @@ export function ArchitecturePage() {
       <SectionCard title="System Architecture Diagram" noPadding>
         <div className="py-8 px-4">
           <div className="flex flex-col items-center gap-1.5 text-sm">
-            {/* Row 1: HMI (index 0) */}
+            {}
             <ArchBlockItem item={ARCH_ITEMS[0]} index={0} isActive={activeMap['HMI']} />
             <ConnectingLine index={0} isActive={activeMap['HMI']} />
 
-            {/* Row 2: Vision - Controller - Safety (index 1, 2, 3) */}
+            {}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -118,7 +118,7 @@ export function ArchitecturePage() {
             </motion.div>
             <ConnectingLine index={3} isActive={activeMap['Safety']} />
 
-            {/* Row 3: I/O, Motion, Communication (index 4, 5, 6) */}
+            {}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -131,21 +131,21 @@ export function ArchitecturePage() {
             </motion.div>
             <ConnectingLine index={6} isActive={activeMap['Communication']} />
 
-            {/* Row 4: Drives (index 7) */}
+            {}
             <ArchBlockItem item={ARCH_ITEMS[7]} index={7} isActive={activeMap['Drives']} />
             <ConnectingLine index={7} isActive={activeMap['Drives']} />
 
-            {/* Row 5: Motors (index 8) */}
+            {}
             <ArchBlockItem item={ARCH_ITEMS[8]} index={8} isActive={activeMap['Motors']} />
             <ConnectingLine index={8} isActive={activeMap['Motors']} />
 
-            {/* Row 6: Machine Mechanics (index 9) */}
+            {}
             <ArchBlockItem item={ARCH_ITEMS[9]} index={9} isActive={activeMap['Machine Mechanics']} />
           </div>
         </div>
       </SectionCard>
 
-      {/* Connected Components */}
+      {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'ACOPOStrak', desc: 'Linear transport system with independent movers', color: 'border-orange-200 dark:border-orange-700/40 bg-orange-50/50 dark:bg-orange-950/30', active: mechatronicsActive },

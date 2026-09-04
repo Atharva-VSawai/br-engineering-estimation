@@ -131,7 +131,7 @@
   }
 }
 
-/* Custom scrollbar - WebKit */
+
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
@@ -161,7 +161,7 @@
   background-clip: padding-box;
 }
 
-/* Custom scrollbar - Firefox */
+
 * {
   scrollbar-width: thin;
   scrollbar-color: oklch(0.82 0.005 250) transparent;
@@ -170,14 +170,14 @@
   scrollbar-color: oklch(0.35 0.01 250) transparent;
 }
 
-/* Focus visible ring for better accessibility */
+
 @layer base {
   [data-radix-popper-content-wrapper] {
     z-index: 50 !important;
   }
 }
 
-/* Subtle gradient background for the main app */
+
 .app-bg-gradient {
   background: linear-gradient(160deg, oklch(0.978 0.002 260) 0%, oklch(0.975 0.004 250) 35%, oklch(0.972 0.003 35/0.02) 100%);
 }
@@ -185,7 +185,7 @@
   background: linear-gradient(160deg, oklch(0.145 0.005 260) 0%, oklch(0.14 0.01 250) 35%, oklch(0.13 0.01 35/0.03) 100%);
 }
 
-/* Selection color */
+
 ::selection {
   background-color: oklch(0.55 0.2 35 / 0.2);
   color: inherit;
@@ -195,7 +195,7 @@
   color: inherit;
 }
 
-/* Print styles */
+
 @media print {
   .no-print { display: none !important; }
   body {
@@ -207,9 +207,9 @@
   }
 }
 
-/* Enterprise-level visual polish */
+
 @layer base {
-  /* Subtle inner shadow on cards for depth */
+
   [data-slot="card"] {
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04);
     transition: box-shadow 0.2s ease, transform 0.2s ease;
@@ -219,7 +219,7 @@
   }
 }
 
-/* Focus-visible ring enhancement */
+
 :focus-visible {
   outline: 2px solid oklch(0.55 0.2 35 / 0.5);
   outline-offset: 2px;

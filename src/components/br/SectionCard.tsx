@@ -34,7 +34,7 @@ export function SectionCard({ title, description, children, action, className = 
           )}
         </div>
       </CardHeader>
-      {/* Gradient line below header */}
+      {}
       <div
         className="h-[2px] bg-gradient-to-r from-primary/50 via-primary/15 to-transparent group-hover:w-full transition-all duration-500 ease-out w-2/5"
         style={accentColor ? { background: `linear-gradient(to right, ${accentColor}66, ${accentColor}1a, transparent)` } : undefined}

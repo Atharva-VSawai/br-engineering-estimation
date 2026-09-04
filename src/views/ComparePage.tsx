@@ -41,6 +41,12 @@ function getConfigSummary(cfg: ProjectConfig) {
   };
 }
 
+type ComparisonRow = {
+  label: string;
+  type: 'text' | 'complexity' | 'status' | 'number-best-lowest' | 'number-highest' | 'yes';
+  getVal: (project: Project, config: ReturnType<typeof getConfigSummary> | null) => string | number | boolean | null;
+};
+
 function getBestIndex(values: (string | number | boolean | null)[], type: 'highest' | 'lowest' | 'yes') {
   if (values.every((v) => v === null || v === undefined || v === '')) return -1;
   if (type === 'yes') {
@@ -97,7 +103,7 @@ export function ComparePage() {
     return projects.filter((p) => !usedIds.includes(p.id));
   };
 
-  const comparisonSections = useMemo(() => {
+  const comparisonSections = useMemo((): { title: string; rows: ComparisonRow[] }[] => {
     if (selectedProjects.length < 2) return [];
     return [
       {
@@ -136,14 +142,13 @@ export function ComparePage() {
 
   const allRows = useMemo(() => comparisonSections.flatMap((s) => s.rows), [comparisonSections]);
 
-  // Compute best counts per project (for Winner row)
+
   const winnerCounts = useMemo(() => {
     if (selectedProjects.length < 2) return [];
     const counts = new Array(selectedProjects.length).fill(0);
     allRows.forEach((row) => {
       const values = selectedProjects.map((p, i) => {
         const cfg = configs[i];
-        if (row.getVal.length === 1) return row.getVal(p);
         return row.getVal(p, cfg);
       });
 
@@ -172,7 +177,7 @@ export function ComparePage() {
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {/* Header */}
+      {}
       <div>
         <div className="flex items-center gap-2 mb-1">
           <GitCompareArrows className="h-5 w-5 text-primary" />
@@ -181,7 +186,7 @@ export function ComparePage() {
         <p className="text-sm text-muted-foreground">Compare up to 3 projects side by side to evaluate scope, complexity, and technical parameters.</p>
       </div>
 
-      {/* Selector Row */}
+      {}
       <div className="flex flex-wrap gap-3">
         {selectedIds.map((id, slotIdx) => {
           const opts = availableOptions(slotIdx);
@@ -218,11 +223,11 @@ export function ComparePage() {
         })}
       </div>
 
-      {/* Empty state */}
+      {}
       {selectedProjects.length < 2 && (
-        <SectionCard>
+        <SectionCard title="Comparison">
           <div className="relative flex flex-col items-center justify-center py-16 overflow-hidden">
-            {/* Animated background dots */}
+            {}
             {[...Array(6)].map((_, i) => (
               <motion.div
                 key={i}
@@ -261,7 +266,7 @@ export function ComparePage() {
         </SectionCard>
       )}
 
-      {/* Comparison table */}
+      {}
       <AnimatePresence>
         {selectedProjects.length >= 2 && (
           <motion.div
@@ -270,7 +275,7 @@ export function ComparePage() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Project header cards */}
+            {}
             <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: `repeat(${selectedProjects.length}, minmax(0, 1fr))` }}>
               {selectedProjects.map((p) => (
                 <div
@@ -313,8 +318,7 @@ export function ComparePage() {
                         {section.rows.map((row, rowIdx) => {
                           const values = selectedProjects.map((p, i) => {
                             const cfg = configs[i];
-                            if (row.getVal.length === 1) return row.getVal(p);
-                            return row.getVal(p, cfg);
+                              return row.getVal(p, cfg);
                           });
 
                           let bestIdx = -1;
@@ -356,7 +360,7 @@ export function ComparePage() {
                       </React.Fragment>
                     ))}
 
-                    {/* Winner row */}
+                    {}
                     <tr className="border-t-2 border-border bg-muted/30">
                       <td className="py-2.5 px-3 font-bold text-foreground whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5">
@@ -369,7 +373,7 @@ export function ComparePage() {
                         const isWinner = count === maxWinnerCount && count > 0;
                         return (
                           <td key={p.id} className="py-2.5 px-3">
-                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-bold 
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-sm font-bold
 ${isWinner ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}`}>
                               {count} best
                             </span>
@@ -382,7 +386,7 @@ ${isWinner ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-e
               </div>
             </SectionCard>
 
-            {/* Complexity Radar */}
+            {}
             {selectedProjects.length >= 2 && <ComplexityRadar projects={selectedProjects} />}
           </motion.div>
         )}
@@ -461,7 +465,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
     <SectionCard title="Complexity Radar" description="Multi-dimensional complexity comparison across engineering disciplines">
       <div className="flex flex-col items-center gap-4">
         <svg viewBox="0 0 300 300" className="w-full max-w-[300px]">
-          {/* Concentric rings */}
+          {}
           {ringPoints.map((pts, idx) => (
             <polygon
               key={`ring-${idx}`}
@@ -472,7 +476,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={0.5}
             />
           ))}
-          {/* Axis lines */}
+          {}
           {axisLines.map((line, idx) => (
             <line
               key={`axis-${idx}`}
@@ -485,7 +489,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={0.5}
             />
           ))}
-          {/* Project polygons */}
+          {}
           {projectPolygons.map((pts, idx) => (
             <polygon
               key={`project-${idx}`}
@@ -495,7 +499,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={2}
             />
           ))}
-          {/* Hover points on polygon vertices */}
+          {}
           {projectPolygons.map((pts, idx) => {
             const points = pts.split(' ');
             return points.map((pt, ptIdx) => {
@@ -526,7 +530,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               </text>
             </g>
           )}
-          {/* Labels */}
+          {}
           {labelPositions.map(({ dim, x, y }) => (
             <text
               key={dim}
@@ -541,7 +545,7 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
             </text>
           ))}
         </svg>
-        {/* Legend */}
+        {}
         <div className="flex flex-wrap justify-center gap-4">
           {projects.map((p, idx) => {
             const c = PROJECT_COLORS[idx % PROJECT_COLORS.length];

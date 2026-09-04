@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import type { Notification } from '@/store';
 
-/** Map string icon names to Lucide components */
+
 const ICON_MAP: Record<string, React.ElementType> = {
   Check,
   Download,
@@ -22,7 +22,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 const DEFAULT_ICON = Check;
 
-/** Format a timestamp into a human-readable relative time string */
+
 function formatTime(timestamp: number): string {
   const diff = Date.now() - timestamp;
   const seconds = Math.floor(diff / 1000);
@@ -46,7 +46,7 @@ interface NotificationCenterProps {
 export function NotificationCenter({ open, onClose, unreadCount, notifications, onMarkAllRead }: NotificationCenterProps) {
   return (
     <>
-      {/* Backdrop overlay */}
+      {}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -60,7 +60,7 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
         )}
       </AnimatePresence>
 
-      {/* Slide-out panel */}
+      {}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -70,7 +70,7 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="fixed top-0 right-0 z-50 h-full w-80 border-l border-border bg-card shadow-xl flex flex-col"
           >
-            {/* Header */}
+            {}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <h2 className="text-base font-semibold text-foreground">Notifications</h2>
               <div className="flex items-center gap-2">
@@ -88,7 +88,7 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
               </div>
             </div>
 
-            {/* Notification list */}
+            {}
             <div className="flex-1 overflow-y-auto">
               {notifications.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">

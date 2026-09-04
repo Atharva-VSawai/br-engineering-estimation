@@ -106,37 +106,37 @@ export function DashboardPage() {
     type: (p.status === 'Completed' ? 'complete' : 'edit') as 'complete' | 'edit' | 'info' | 'create' | 'export',
   }));
 
-  // Load sample projects on mount if none exist
+
   useEffect(() => {
     if (projects.length === 0) loadSampleProjects();
   }, []);
 
-  // Project selector state
+
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
 
-  // Derived: currently selected project object
+
   const selectedProject = useMemo(
     () => (selectedProjectId === 'all' ? null : projects.find((p) => p.id === selectedProjectId) ?? null),
     [selectedProjectId, projects]
   );
 
-  // When a project is selected, deep-clone its config into the store
+
   const handleProjectSelect = (value: string) => {
     setSelectedProjectId(value);
     if (value === 'all') {
-      // Restore default config for aggregate view
+
       resetConfig();
       return;
     }
     const project = projects.find((p) => p.id === value);
     if (project?.config) {
-      // Deep-clone to avoid reference issues with the stored project
+
       const clonedConfig = JSON.parse(JSON.stringify(project.config));
       updateConfig(clonedConfig);
     }
   };
 
-  // Stat card drag-and-drop order
+
   const [statOrder, setStatOrder] = useState<number[]>(() => {
     if (typeof window === 'undefined') return [0, 1, 2, 3];
     try {
@@ -154,14 +154,14 @@ export function DashboardPage() {
   useEffect(() => {
     try {
       localStorage.setItem('br-dashboard-order', JSON.stringify(statOrder));
-    } catch { /* noop */ }
+    } catch {  }
   }, [statOrder]);
 
   const activeProjects = projects.filter((p) => p.status !== 'Completed').length;
   const draftEstimates = projects.filter((p) => p.status === 'Draft').length;
   const completedEstimates = projects.filter((p) => p.status === 'Completed').length;
 
-  // Complexity distribution
+
   const complexityDist = useMemo(() => {
     const dist: Record<ComplexityLevel, number> = { Low: 0, Medium: 0, High: 0, 'Very High': 0 };
     projects.forEach((p) => {
@@ -172,7 +172,7 @@ export function DashboardPage() {
 
   const totalProjects = projects.length;
 
-  // Average complexity label
+
   const avgComplexityLabel = useMemo(() => {
     if (totalProjects === 0) return 'N/A';
     const scoreMap: Record<ComplexityLevel, number> = { Low: 1, Medium: 2, High: 3, 'Very High': 4 };
@@ -211,11 +211,11 @@ export function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {/* Welcome Banner */}
+        {}
         <div className="relative overflow-hidden border border-border/80 rounded-xl bg-gradient-to-r from-primary/[0.07] via-primary/[0.03] to-transparent p-6">
-          {/* Subtle dot pattern decoration */}
+          {}
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, oklch(0.55 0.2 35) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          {/* Decorative gradient blob */}
+          {}
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-primary/10 to-transparent blur-2xl" />
           <div className="absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-gradient-to-tl from-primary/5 to-transparent blur-xl" />
           <Settings2 className="h-28 w-28 text-primary/[0.05] absolute right-8 top-1/2 -translate-y-1/2" />
@@ -236,10 +236,10 @@ export function DashboardPage() {
             </div>
           </div>
         </div>
-        {/* Bottom gradient shadow below welcome banner */}
+        {}
         <div className="h-3 -mt-1.5 bg-gradient-to-b from-muted/30 to-transparent rounded-b-lg pointer-events-none" />
 
-        {/* Project Selector */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
@@ -295,7 +295,7 @@ export function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Header */}
+        {}
         <div>
           <h1 className="text-lg font-bold text-foreground">Engineering Estimation Dashboard</h1>
           <p className="text-sm text-muted-foreground">
@@ -303,7 +303,7 @@ export function DashboardPage() {
           </p>
         </div>
 
-        {/* Stat Cards - Draggable */}
+        {}
         <DndContext sensors={statSensors} collisionDetection={closestCenter} onDragEnd={handleStatDragEnd}>
           <SortableContext items={statOrder.map((i) => String(i))} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -368,7 +368,7 @@ export function DashboardPage() {
           </DragOverlay>
         </DndContext>
 
-        {/* Quick Stats Row */}
+        {}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -431,9 +431,9 @@ export function DashboardPage() {
         </motion.div>
 
 
-        {/* Quick Actions & Complexity Distribution */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Quick Actions */}
+          {}
           <SectionCard title="Quick Actions" description="Get started with your engineering estimate">
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
@@ -454,10 +454,10 @@ export function DashboardPage() {
             </div>
           </SectionCard>
 
-          {/* Complexity Distribution */}
+          {}
           <SectionCard title="Complexity Distribution" description="Projects by complexity level">
             <div className="space-y-3">
-              {/* Stacked bar */}
+              {}
               <div className="flex h-8 rounded-md overflow-hidden">
                 {totalProjects === 0 ? (
                   <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground bg-muted">
@@ -480,12 +480,12 @@ export function DashboardPage() {
                   })
                 )}
               </div>
-              {/* Legend */}
+              {}
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {ALL_LEVELS.map((level) => (
                   <div key={level} className="flex items-center gap-1.5">
                     <span className={`h-2.5 w-2.5 rounded-sm ${COMPLEXITY_COLORS[level]}`} />
-                    <span className={`text-sm font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}> 
+                    <span className={`text-sm font-medium ${COMPLEXITY_TEXT_COLORS[level]}`}>
                       {level}{complexityDist[level] > 0 ? ` (${complexityDist[level]})` : ''}
                     </span>
                   </div>
@@ -495,7 +495,7 @@ export function DashboardPage() {
           </SectionCard>
         </div>
 
-        {/* Project Templates */}
+        {}
         <SectionCard title="Project Templates" description="Start from a pre-configured template">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div
@@ -551,7 +551,7 @@ export function DashboardPage() {
           </div>
         </SectionCard>
 
-        {/* Recent Projects Table */}
+        {}
         <SectionCard title="Recent Projects" description="All B&R automation estimation projects">
           <div className="overflow-x-auto -mx-4 px-4">
             <Table>
@@ -631,7 +631,7 @@ export function DashboardPage() {
           </div>
         </SectionCard>
 
-        {/* Recent Activity */}
+        {}
         <SectionCard title="Recent Activity" description="Latest actions and events">
           <div>
             {recentActivity.map((item, idx) => (

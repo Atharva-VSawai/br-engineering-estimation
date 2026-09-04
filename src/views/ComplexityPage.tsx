@@ -44,10 +44,10 @@ const LEVEL_MAP: Record<ComplexityLevel, number> = {
 };
 
 function getScoreColor(score: number): string {
-  if (score <= 25) return '#10b981'; // emerald
-  if (score <= 50) return '#f59e0b'; // amber
-  if (score <= 75) return '#f97316'; // orange
-  return '#ef4444'; // red
+  if (score <= 25) return '#10b981';
+  if (score <= 50) return '#f59e0b';
+  if (score <= 75) return '#f97316';
+  return '#ef4444';
 }
 
 function getScoreLabel(score: number): string {
@@ -98,13 +98,13 @@ export function ComplexityPage() {
   const scoreColor = getScoreColor(overallScore);
   const scoreLabel = getScoreLabel(overallScore);
 
-  // SVG gauge math: 120 degree sweep from 150deg to 390deg (i.e. -210 to -30 in standard SVG angles)
-  const startAngle = 150; // degrees, clockwise from top
+
+  const startAngle = 150;
   const endAngle = 390;
-  const sweepAngle = endAngle - startAngle; // 240 degrees
+  const sweepAngle = endAngle - startAngle;
   const scoreAngle = startAngle + (overallScore / 100) * sweepAngle;
 
-  // Convert degrees to radians for SVG arc
+
   const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) => {
     const rad = ((angleDeg - 90) * Math.PI) / 180;
     return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
@@ -190,11 +190,11 @@ export function ComplexityPage() {
 
       <SectionCard title="Overall Complexity Assessment">
         <div className="flex flex-col sm:flex-row items-center gap-8">
-          {/* Gauge */}
+          {}
           <div className="flex flex-col items-center shrink-0">
             <div className="relative">
               <svg width={140} height={140} viewBox="0 0 140 140">
-                {/* Background arc */}
+                {}
                 <path
                   d={bgPath}
                   fill="none"
@@ -202,7 +202,7 @@ export function ComplexityPage() {
                   strokeWidth={strokeW}
                   strokeLinecap="round"
                 />
-                {/* Foreground arc */}
+                {}
                 {fgPath && (
                   <motion.path
                     d={fgPath}
@@ -236,7 +236,7 @@ export function ComplexityPage() {
             </div>
           </div>
 
-          {/* Summary table */}
+          {}
           <div className="flex-1 w-full">
             <div className="rounded-md border border-border overflow-hidden">
               <table className="w-full">

@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { WIZARD_STEPS } from '@/data';
 import type { AppPage } from '@/types';
 
-// ===== Hook =====
+
 
 export function useKeyboardShortcuts() {
   const [open, setOpen] = useState(false);
@@ -27,41 +27,41 @@ export function useKeyboardShortcuts() {
 
       const isMeta = e.metaKey || e.ctrlKey;
 
-      // ⌘K / Ctrl+K → toggle dialog
+
       if (isMeta && e.key === 'k') {
         e.preventDefault();
         toggle();
         return;
       }
 
-      // ⌘S / Ctrl+S → save toast
+
       if (isMeta && e.key === 's') {
         e.preventDefault();
         toast('Configuration saved', { description: 'All changes saved locally.' });
         return;
       }
 
-      // ⌘D / Ctrl+D → download config
+
       if (isMeta && e.key === 'd') {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent('br:download'));
         return;
       }
 
-      // ⌘Shift+C / Ctrl+Shift+C → copy config
+
       if (isMeta && e.shiftKey && e.key === 'C') {
         e.preventDefault();
         window.dispatchEvent(new CustomEvent('br:copy-config'));
         return;
       }
 
-      // Alt+1-9, Alt+0 → navigate pages OR jump wizard steps
+
       if (e.altKey) {
         const currentPage = useAppStore.getState().currentPage;
         e.preventDefault();
 
         if (currentPage === 'new-estimate') {
-          // Wizard step jump takes priority on the wizard page
+
           const digit = parseInt(e.key, 10);
           if (!isNaN(digit)) {
             const stepIndex = digit === 0 ? 9 : digit - 1;
@@ -97,8 +97,6 @@ export function useKeyboardShortcuts() {
 
   return { open, setOpen, toggle };
 }
-
-// ===== Component =====
 
 interface KeyboardShortcutsDialogProps {
   open: boolean;

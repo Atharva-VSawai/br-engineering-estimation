@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import type { ProjectConfig } from '@/types';
 import { calculateEngineeringEffort } from '@/lib/effort-calculation';
 
-// ===== Helpers =====
+
 
 function bool(val: boolean | undefined | null): string {
   return val ? 'Yes' : 'No';
@@ -22,12 +22,12 @@ const PROTOCOL_DESCRIPTIONS: Record<string, string> = {
   Other: 'Other communication protocol',
 };
 
-/** Build a worksheet from an array of rows. Each row is (string|number|boolean)[] */
+
 function sheetFromRows(
   rows: (string | number | boolean)[][],
   colWidths?: number[],
 ): XLSX.WorkSheet {
-  // Convert booleans to strings for display
+
   const cleaned = rows.map(row =>
     row.map(v => (typeof v === 'boolean' ? bool(v) : v))
   );
@@ -38,7 +38,7 @@ function sheetFromRows(
   return ws;
 }
 
-// ===== Configuration Completeness Check =====
+
 
 function checkCompleteness(config: ProjectConfig): { label: string; configured: boolean; note: string }[] {
   const c = config;
@@ -57,15 +57,11 @@ function checkCompleteness(config: ProjectConfig): { label: string; configured: 
     { label: 'Vision', configured: c.vision.enabled, note: c.vision.enabled ? `${c.vision.cameras} camera(s)` : 'Not enabled' },
     { label: 'Safety', configured: c.safety.enabled, note: c.safety.enabled ? `${c.safety.safetyIOCount} safety I/O` : 'Not enabled' },
     { label: 'Communication', configured: commActive || commIntegrations > 0, note: commActive ? 'Protocol(s) active' : 'No protocols' },
-    { label: 'Mechatronics', configured: c.mechatronics.type !== 'None' && c.mechatronics.type !== '', note: `Type: ${c.mechatronics.type}` },
+    { label: 'Mechatronics', configured: c.mechatronics.type !== 'None', note: `Type: ${c.mechatronics.type}` },
     { label: 'Robotics', configured: c.robotics.enabled, note: c.robotics.enabled ? `${c.robotics.quantity} robot(s)` : 'Not enabled' },
     { label: 'IIoT', configured: iiotFeatures > 0, note: iiotFeatures > 0 ? `${iiotFeatures} feature(s)` : 'No features' },
   ];
 }
-
-// ===== Sheet Builders =====
-
-// Sheet 1: Project Summary
 function buildProjectSummarySheet(
   wb: XLSX.WorkBook,
   config: ProjectConfig,
@@ -95,8 +91,6 @@ function buildProjectSummarySheet(
   );
   XLSX.utils.book_append_sheet(wb, ws, 'Project Summary');
 }
-
-// Sheet 2: B&R Technical Configuration
 function buildTechnicalConfigSheet(
   wb: XLSX.WorkBook,
   config: ProjectConfig,
@@ -245,8 +239,6 @@ function buildTechnicalConfigSheet(
   const ws = sheetFromRows(rows, [32, 50]);
   XLSX.utils.book_append_sheet(wb, ws, 'Technical Configuration');
 }
-
-// Sheet 3: Engineering Effort
 function buildEffortSheet(
   wb: XLSX.WorkBook,
   result: ReturnType<typeof calculateEngineeringEffort>,
@@ -271,8 +263,6 @@ function buildEffortSheet(
   const ws = sheetFromRows(rows, [35, 20, 15]);
   XLSX.utils.book_append_sheet(wb, ws, 'Engineering Effort');
 }
-
-// Sheet 4: Complexity Assessment
 function buildComplexitySheet(
   wb: XLSX.WorkBook,
   config: ProjectConfig,
@@ -299,8 +289,6 @@ function buildComplexitySheet(
   const ws = sheetFromRows(rows, [30, 15, 50]);
   XLSX.utils.book_append_sheet(wb, ws, 'Complexity Assessment');
 }
-
-// Sheet 5: Timeline
 function buildTimelineSheet(
   wb: XLSX.WorkBook,
   result: ReturnType<typeof calculateEngineeringEffort>,
@@ -319,8 +307,6 @@ function buildTimelineSheet(
   const ws = sheetFromRows(rows, [40, 20]);
   XLSX.utils.book_append_sheet(wb, ws, 'Timeline');
 }
-
-// Sheet 6: Configuration Completeness
 function buildCompletenessSheet(
   wb: XLSX.WorkBook,
   config: ProjectConfig,
@@ -338,8 +324,6 @@ function buildCompletenessSheet(
   const ws = sheetFromRows(rows, [25, 15, 45]);
   XLSX.utils.book_append_sheet(wb, ws, 'Configuration Completeness');
 }
-
-// ===== POST Handler =====
 export async function POST(request: NextRequest) {
   try {
     const body: ProjectConfig = await request.json();

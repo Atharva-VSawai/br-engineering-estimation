@@ -142,7 +142,7 @@ function checkCompleteness(config: ProjectConfig): SectionCheck[] {
     { label: 'Vision', configured: config.vision.enabled },
     { label: 'Safety', configured: config.safety.enabled },
     { label: 'Communication', configured: commActive || commIntegrations > 0 },
-    { label: 'Mechatronics', configured: config.mechatronics.type !== 'None' && config.mechatronics.type !== '' },
+    { label: 'Mechatronics', configured: config.mechatronics.type !== 'None' },
     { label: 'Robotics', configured: config.robotics.enabled },
     { label: 'IIoT', configured: iiotFeatures > 0 },
   ];
@@ -190,11 +190,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 export function EstimateSummaryPage() {
   const { config: c, activeProjectId, projects, setCurrentPage, setWizardStep, addProject, openProject } = useAppStore();
   const currentProject = activeProjectId ? projects.find((p) => p.id === activeProjectId) : null;
-
-  // View mode: 'all' for combined all-projects, or a project ID for single project
   const [viewMode, setViewMode] = useState<'all' | string>('all');
-
-  // Calculate results for ALL projects with configs
   const projectResults = useMemo(() => {
     return projects
       .filter((p) => p.config)
@@ -203,11 +199,8 @@ export function EstimateSummaryPage() {
         return { project: p, ...result };
       });
   }, [projects]);
-
-  // Combined (aggregated) effort from ALL projects - dynamically calculated
   const combinedEffort = useMemo(() => {
     if (projectResults.length === 0) {
-      // Fallback: use current working config
       const result = calculateEngineeringEffort(c);
       return result.effort;
     }
@@ -234,8 +227,6 @@ export function EstimateSummaryPage() {
     base.totalMonths = Math.round((base.totalDays / 20) * 10) / 10;
     return base;
   }, [projectResults, c]);
-
-  // Combined timeline from ALL projects
   const combinedTimeline = useMemo(() => {
     if (projectResults.length === 0) {
       const result = calculateEngineeringEffort(c);
@@ -251,8 +242,6 @@ export function EstimateSummaryPage() {
     base.totalWeeks = base.hardwareDesignWeeks + base.softwareDevelopmentWeeks + base.integrationTestingWeeks + base.commissioningWeeks;
     return base;
   }, [projectResults, c]);
-
-  // Determine which data to display based on viewMode
   const displayConfig = useMemo((): ProjectConfig => {
     if (viewMode === 'all') return c;
     const p = projects.find((pr) => pr.id === viewMode);
@@ -262,13 +251,10 @@ export function EstimateSummaryPage() {
 
   const displayResult = useMemo(() => {
     if (viewMode === 'all') {
-      // For combined view, we still need overallComplexity and highCount from displayConfig
       return calculateEngineeringEffort(displayConfig);
     }
     return calculateEngineeringEffort(displayConfig);
   }, [viewMode, displayConfig]);
-
-  // The actual effort data to render (combined or per-project)
   const effort = viewMode === 'all' ? combinedEffort : displayResult.effort;
   const timeline = viewMode === 'all' ? combinedTimeline : displayResult.timeline;
   const overallComplexity = displayResult.overallComplexity;
@@ -290,8 +276,6 @@ export function EstimateSummaryPage() {
   const completeness = checkCompleteness(displayConfig);
   const configuredCount = completeness.filter((s) => s.configured).length;
   const drivers = useMemo(() => getEffortDrivers(displayConfig), [displayConfig]);
-
-  // Donut chart data
   const effortChartData = EFFORT_KEYS.map(({ key, label }) => ({
     name: label,
     value: effort[key],
@@ -365,8 +349,6 @@ export function EstimateSummaryPage() {
       setExporting(null);
     }
   }, [displayConfig, viewMode]);
-
-  // When viewing a specific project, open it in the store
   const handleProjectView = (projectId: string) => {
     setViewMode(projectId);
     const p = projects.find((pr) => pr.id === projectId);
@@ -381,7 +363,7 @@ export function EstimateSummaryPage() {
 
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      {/* Header */}
+      {}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-lg font-bold text-foreground">Engineering Effort Summary</h1>
@@ -409,7 +391,7 @@ export function EstimateSummaryPage() {
         </div>
       </div>
 
-      {/* View Mode Selector */}
+      {}
       <SectionCard title="Project Scope" description="Select which project estimates to view">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="flex items-center gap-2.5 shrink-0">
@@ -457,7 +439,7 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
-      {/* === TOTAL ENGINEERING EFFORT HERO CARD === */}
+      {}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.4 }} className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent">
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/[0.06] blur-2xl" />
         <div className="p-6 relative">
@@ -493,7 +475,7 @@ export function EstimateSummaryPage() {
         </div>
       </motion.div>
 
-      {/* Per-project breakdown table (shown in combined mode) */}
+      {}
       <AnimatePresence>
         {viewMode === 'all' && projectResults.length > 1 && (
           <motion.div
@@ -546,7 +528,7 @@ export function EstimateSummaryPage() {
                         </TableRow>
                       );
                     })}
-                    {/* Total row */}
+                    {}
                     <TableRow className="border-border bg-muted/30 font-bold">
                       <TableCell className="text-sm text-primary py-2.5">Combined Total</TableCell>
                       <TableCell className="text-sm text-muted-foreground py-2.5 hidden sm:table-cell">{projectResults.length} projects</TableCell>
@@ -564,9 +546,9 @@ export function EstimateSummaryPage() {
         )}
       </AnimatePresence>
 
-      {/* Effort Breakdown with Donut Chart */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Donut Chart */}
+        {}
         <SectionCard title="Effort Distribution" description="Hours by engineering domain" className="lg:col-span-2">
           {effort.totalHours === 0 ? (
             <div className="flex items-center justify-center h-56 text-sm text-muted-foreground">
@@ -616,7 +598,7 @@ export function EstimateSummaryPage() {
           )}
         </SectionCard>
 
-        {/* Effort Bars */}
+        {}
         <SectionCard title="Effort Breakdown" description="Estimated engineering hours by domain" className="lg:col-span-3">
           <div className="space-y-3">
             {effortRows.map((row, index) => (
@@ -643,7 +625,7 @@ export function EstimateSummaryPage() {
         </SectionCard>
       </div>
 
-      {/* Major Effort Drivers */}
+      {}
       {drivers.length > 0 && (
         <SectionCard title="Major Effort Drivers" description="Configuration items contributing most to engineering effort">
           <div className="flex flex-wrap gap-2">
@@ -663,7 +645,7 @@ export function EstimateSummaryPage() {
         </SectionCard>
       )}
 
-      {/* Timeline */}
+      {}
       <SectionCard title="Estimated Timeline" description={`Total: ${timeline.totalWeeks} weeks`}>
         <div className="space-y-3">
           {[
@@ -689,7 +671,7 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
-      {/* Risk Assessment */}
+      {}
       <SectionCard title="Risk Assessment" description="Key risk indicators">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {(() => {
@@ -712,7 +694,7 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
-      {/* Complexity Profile */}
+      {}
       <SectionCard title="Complexity Profile" description="All 10 engineering dimensions">
         <div className="space-y-2">
           {COMPLEXITY_DIMENSIONS.map((dim, index) => {
@@ -728,7 +710,7 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
-      {/* Engineering Areas */}
+      {}
       <SectionCard title="Engineering Areas" description="Potential effort drivers by domain">
         <div className="overflow-x-auto -mx-4 px-4">
           <table className="w-full">
@@ -741,7 +723,7 @@ export function EstimateSummaryPage() {
         </div>
       </SectionCard>
 
-      {/* Configuration Completeness */}
+      {}
       <SectionCard title="Configuration Completeness" description={`${configuredCount} of ${completeness.length} sections configured`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {completeness.map((section) => (
@@ -752,7 +734,7 @@ export function EstimateSummaryPage() {
         ))}</div>
       </SectionCard>
 
-      {/* Product Flow */}
+      {}
       <SectionCard title="Product Architecture Flow">
         <div className="flex flex-wrap items-center gap-2">{['B&R Product', 'Technology', 'Engineering Function', 'Configuration', 'Programming', 'Integration', 'Testing', 'Commissioning', 'Complexity', 'Engineering Effort'].map((item, idx, arr) => (
           <React.Fragment key={item}><div className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground">{item}</div>{idx < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}</React.Fragment>

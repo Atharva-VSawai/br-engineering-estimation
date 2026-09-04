@@ -5,10 +5,10 @@ import type { ProjectConfig, ComplexityLevel } from '@/types';
 import { calculateEngineeringEffort } from '@/lib/effort-calculation';
 import { EFFORT_AREAS } from '@/data';
 
-// B&R orange: #C75B12 => RGB(199, 91, 18)
+
 const BR_ORANGE = [199, 91, 18] as const;
 
-// Complexity value mapping
+
 const COMPLEXITY_VALUE: Record<ComplexityLevel, number> = {
   Low: 0.25,
   Medium: 0.5,
@@ -16,7 +16,7 @@ const COMPLEXITY_VALUE: Record<ComplexityLevel, number> = {
   'Very High': 1.0,
 };
 
-// Complexity bar colors (RGB)
+
 const COMPLEXITY_BAR_COLOR: Record<ComplexityLevel, [number, number, number]> = {
   Low: [16, 185, 129],
   Medium: [245, 158, 11],
@@ -24,16 +24,16 @@ const COMPLEXITY_BAR_COLOR: Record<ComplexityLevel, [number, number, number]> = 
   'Very High': [239, 68, 68],
 };
 
-// Donut chart palette
+
 const DONUT_COLORS: [number, number, number][] = [
-  [59, 130, 246],   // blue
-  [139, 92, 246],   // purple
-  [249, 115, 22],   // orange
-  [6, 182, 212],    // cyan
-  [239, 68, 68],    // red
-  [16, 185, 129],   // emerald
-  [245, 158, 11],   // amber
-  [99, 102, 241],   // indigo
+  [59, 130, 246],
+  [139, 92, 246],
+  [249, 115, 22],
+  [6, 182, 212],
+  [239, 68, 68],
+  [16, 185, 129],
+  [245, 158, 11],
+  [99, 102, 241],
 ];
 
 const DIMENSIONS: { key: keyof ProjectConfig['complexity']; label: string }[] = [
@@ -49,7 +49,7 @@ const DIMENSIONS: { key: keyof ProjectConfig['complexity']; label: string }[] = 
   { key: 'testing', label: 'Testing' },
 ];
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+
 
 function checkCompleteness(config: ProjectConfig): { label: string; configured: boolean }[] {
   const c = config;
@@ -68,13 +68,13 @@ function checkCompleteness(config: ProjectConfig): { label: string; configured: 
     { label: 'Vision', configured: c.vision.enabled },
     { label: 'Safety', configured: c.safety.enabled },
     { label: 'Communication', configured: commActive || commIntegrations > 0 },
-    { label: 'Mechatronics', configured: c.mechatronics.type !== 'None' && c.mechatronics.type !== '' },
+    { label: 'Mechatronics', configured: c.mechatronics.type !== 'None' },
     { label: 'Robotics', configured: c.robotics.enabled },
     { label: 'IIoT', configured: iiotFeatures > 0 },
   ];
 }
 
-// ── Section title helper ────────────────────────────────────────────────────
+
 
 function drawSectionTitle(doc: jsPDF, y: number, title: string): number {
   doc.setFont('helvetica', 'bold');
@@ -88,7 +88,7 @@ function drawSectionTitle(doc: jsPDF, y: number, title: string): number {
   return y + 7;
 }
 
-// ── Donut Chart ───────────────────────────────────────────────────────────────
+
 
 function drawDonutChart(
   doc: jsPDF,
@@ -111,9 +111,9 @@ function drawDonutChart(
     doc.setFillColor(color[0], color[1], color[2]);
     doc.setGState(new (doc as any).GState({ opacity: 0.9 }));
 
-    // Draw filled arc segments using small triangles for approximation
+
     const steps = Math.max(Math.ceil(sliceAngle / 0.05), 8);
-    // Outer arc
+
     for (let s = 0; s <= steps; s++) {
       const angle = startAngle + (sliceAngle * s) / steps;
       const px = cx + outerR * Math.cos(angle);
@@ -121,7 +121,7 @@ function drawDonutChart(
       if (s === 0) doc.moveTo(px, py);
       else doc.lineTo(px, py);
     }
-    // Inner arc (reverse)
+
     for (let s = steps; s >= 0; s--) {
       const angle = startAngle + (sliceAngle * s) / steps;
       const px = cx + innerR * Math.cos(angle);
@@ -135,7 +135,7 @@ function drawDonutChart(
     startAngle = endAngle;
   }
 
-  // Center text
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(50, 50, 50);
@@ -144,8 +144,6 @@ function drawDonutChart(
   doc.setFontSize(7);
   doc.setTextColor(120, 120, 120);
   doc.text('Total Effort', cx, cy + 7, { align: 'center', baseline: 'middle' });
-
-  // Legend (to the right of the donut)
   const legendX = cx + outerR + 10;
   let legendY = cy - (data.length * 5) / 2;
 
@@ -163,8 +161,6 @@ function drawDonutChart(
     legendY += 5;
   }
 }
-
-// ── Horizontal Bar Chart ─────────────────────────────────────────────────────
 
 function drawHorizontalBarChart(
   doc: jsPDF,
@@ -226,8 +222,6 @@ function drawHorizontalBarChart(
   return curY;
 }
 
-// ── Complexity Bar Chart ─────────────────────────────────────────────────────
-
 function drawComplexityProfile(
   doc: jsPDF,
   x: number,
@@ -263,15 +257,13 @@ function drawComplexityProfile(
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7);
     doc.setTextColor(50, 50, 50);
-    doc.text(level, barStartX + barW + 3, curY + barHeight / 2 + 1, { align: 'left', baseline: 'middle' });
+    doc.text(String(level), barStartX + barW + 3, curY + barHeight / 2 + 1, { align: 'left', baseline: 'middle' });
 
     curY += barHeight + gap;
   }
 
   return curY;
 }
-
-// ── Timeline / Gantt Chart ────────────────────────────────────────────────────
 
 function drawTimelineChart(
   doc: jsPDF,
@@ -326,21 +318,15 @@ function drawTimelineChart(
   return curY;
 }
 
-// ── PDF Generation (identical to client-side, returns ArrayBuffer instead of downloading) ──
-
 function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): ArrayBuffer {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = 210;
   const margin = 15;
   const contentW = pageW - margin * 2;
-
-  // Use shared calculation
   const result = calculateEngineeringEffort(config);
   const { effort, timeline, overallComplexity, highCount } = result;
   const completeness = checkCompleteness(config);
   const configuredCount = completeness.filter((s) => s.configured).length;
-
-  // Effort items for charts (8 categories, skip hmiHours which is 0)
   const effortData = [
     { label: 'Hardware', value: effort.hardwareHours },
     { label: 'PLC/Software', value: effort.plcSoftwareHours },
@@ -359,20 +345,12 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
     { phase: 'Commissioning & Handover', weeks: timeline.commissioningWeeks },
   ];
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // PAGE 1: Report Header, Project Info, Effort Summary, Donut Chart
-  // ══════════════════════════════════════════════════════════════════════════
-
   let y = 12;
-
-  // Report title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(...BR_ORANGE);
   doc.text('B&R Engineering Effort Estimation Report', margin, y);
   y += 10;
-
-  // Project Information
   y = drawSectionTitle(doc, y, 'Project Information');
 
   const infoRows = [
@@ -403,11 +381,7 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
 
   y = (doc as any).lastAutoTable?.finalY ?? 60;
   y += 8;
-
-  // Engineering Effort Summary (prominent)
   y = drawSectionTitle(doc, y, 'Engineering Effort Summary');
-
-  // Summary boxes
   const boxW = (contentW - 15) / 4;
   const boxH = 18;
   const summaryItems = [
@@ -438,20 +412,12 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
   }
 
   y += boxH + 10;
-
-  // Donut Chart
   y = drawSectionTitle(doc, y, 'Effort Distribution');
   const donutCx = margin + 45;
   const donutCy = y + 30;
   drawDonutChart(doc, donutCx, donutCy, 28, 14, effortData, effort.totalHours);
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // PAGE 2: Technical Configuration (brief), Complexity Assessment, Effort Bars
-  // ══════════════════════════════════════════════════════════════════════════
   doc.addPage();
   y = 15;
-
-  // Key Technical Parameters (brief table)
   y = drawSectionTitle(doc, y, 'Key Technical Parameters');
 
   const techRows = [
@@ -486,8 +452,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
 
   y = (doc as any).lastAutoTable?.finalY ?? 60;
   y += 8;
-
-  // Complexity Assessment (bar chart)
   y = drawSectionTitle(doc, y, 'Complexity Assessment');
   y = drawComplexityProfile(doc, margin, y, contentW, 4.5, 2, config);
   y += 3;
@@ -496,8 +460,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
   doc.setTextColor(100, 100, 100);
   doc.text(`Overall: ${overallComplexity}  |  ${highCount} of 10 dimensions rated High or Very High`, margin, y);
   y += 10;
-
-  // Engineering Effort Breakdown (horizontal bars)
   y = drawSectionTitle(doc, y, 'Engineering Effort Breakdown');
 
   const effortBarItems = effortData.map((item, i) => ({
@@ -512,14 +474,8 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
     value: effort.totalHours,
     color: BR_ORANGE as unknown as [number, number, number],
   });
-
-  // ══════════════════════════════════════════════════════════════════════════
-  // PAGE 3: Detailed Effort Table, Timeline, Completeness, Drivers
-  // ══════════════════════════════════════════════════════════════════════════
   doc.addPage();
   y = 15;
-
-  // Effort Distribution Table (autotable)
   y = drawSectionTitle(doc, y, 'Detailed Engineering Effort');
 
   const effortTableRows = effortData.map((item) => [
@@ -556,7 +512,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
       2: { cellWidth: 25, halign: 'right' },
     },
     margin: { left: margin, right: margin },
-    // Style the last row (TOTAL) as bold
     didParseCell: (data) => {
       if (data.section === 'body' && data.row.index === effortData.length) {
         data.cell.styles.fontStyle = 'bold';
@@ -567,8 +522,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
 
   y = (doc as any).lastAutoTable?.finalY ?? 60;
   y += 8;
-
-  // Timeline (Gantt-like bars)
   y = drawSectionTitle(doc, y, 'Project Timeline');
   y = drawTimelineChart(doc, margin, y, contentW, 6, 3, timelinePhases, timeline.totalWeeks);
   y += 3;
@@ -577,8 +530,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
   doc.setTextColor(...BR_ORANGE);
   doc.text(`Estimated Total: ${timeline.totalWeeks} weeks`, margin, y);
   y += 10;
-
-  // Configuration Completeness
   y = drawSectionTitle(doc, y, 'Configuration Completeness');
 
   const cols = 3;
@@ -619,8 +570,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
   doc.setTextColor(140, 140, 140);
   doc.text(`${configuredCount} of ${completeness.length} sections configured`, margin, y);
   y += 10;
-
-  // Effort Drivers
   y = drawSectionTitle(doc, y, 'Effort Drivers');
 
   const driversTableBody = EFFORT_AREAS.map((area) => [
@@ -651,8 +600,6 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
     },
     margin: { left: margin, right: margin },
   });
-
-  // ── Footer on all pages ───────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
@@ -670,12 +617,8 @@ function generatePdfBuffer(config: ProjectConfig, projectId?: string | null): Ar
     }
     doc.text(`${new Date().toLocaleDateString('en-US')}`, pageW - margin, 289, { align: 'right' });
   }
-
-  // ── Return ArrayBuffer (server-side: no blob URL / anchor click) ──────────
   return doc.output('arraybuffer');
 }
-
-// ===== POST Handler =====
 
 export async function POST(request: NextRequest) {
   try {

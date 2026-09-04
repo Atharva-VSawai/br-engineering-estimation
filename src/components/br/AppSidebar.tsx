@@ -42,10 +42,10 @@ export function AppSidebar() {
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-border bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 shadow-[inset_-1px_0_0_0_oklch(0.0_0_0/0.05)]">
-      {/* B&R brand accent stripe */}
+      {}
       <div className="h-[3px] bg-gradient-to-r from-primary via-primary/80 to-primary/60" />
 
-      {/* Logo area */}
+      {}
       <div className="flex h-14 items-center gap-2.5 border-b border-border/80 px-4 bg-gradient-to-r from-primary/[0.03] to-transparent">
         <div className="relative h-4 w-4 shrink-0 flex items-center justify-center">
           <div className="absolute inset-0 rotate-45 rounded-[2px] bg-gradient-to-br from-primary/40 to-primary/15 border border-primary/30" />
@@ -61,7 +61,7 @@ export function AppSidebar() {
         </div>
       </div>
 
-      {/* Navigation */}
+      {}
       <nav className="relative flex-1 overflow-y-auto py-2 px-2" role="navigation" aria-label="Main navigation">
         <span className="px-3 mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">Navigation</span>
         <TooltipProvider delayDuration={300}>
@@ -99,11 +99,11 @@ export function AppSidebar() {
             })}
           </ul>
         </TooltipProvider>
-        {/* Bottom fade gradient for nav scroll */}
+        {}
         <div className="sticky bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-sidebar to-transparent pointer-events-none z-10" />
       </nav>
 
-      {/* Current Config */}
+      {}
       <div className="mx-3 border-t border-border/60" />
       {configName && (
         <>
@@ -121,7 +121,7 @@ export function AppSidebar() {
         </>
       )}
 
-      {/* Footer */}
+      {}
       <div className="border-t border-border/60 px-4 py-3 bg-gradient-to-t from-sidebar/80 to-transparent">
         <div className="text-xs text-muted-foreground/60 leading-tight">Engineering Tool</div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground/60 leading-tight">

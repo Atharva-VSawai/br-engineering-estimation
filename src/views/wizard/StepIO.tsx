@@ -6,17 +6,17 @@ import { ParamRow, NumberField } from '@/components/br/ParamRow';
 import { useAppStore } from '@/store';
 import { Info } from 'lucide-react';
 
-// Tailwind bar styles for I/O breakdown chart
+
 const IO_BAR_STYLES = [
-  'bg-[#8b9cb5]',   // Digital Inputs - blue-gray (muted)
-  'bg-slate-400',   // Digital Outputs - slate
-  'bg-teal-400',    // Analog Inputs - teal
-  'bg-cyan-400',    // Analog Outputs - cyan
-  'bg-red-400/30',  // Safety I/O - red-400/30
-  'bg-purple-400',  // Encoder/Counter - purple
-  'bg-amber-400',   // Temperature - amber
-  'bg-indigo-400',  // Communication - indigo
-  'bg-rose-400',    // Special - rose
+  'bg-[#8b9cb5]',
+  'bg-slate-400',
+  'bg-teal-400',
+  'bg-cyan-400',
+  'bg-red-400/30',
+  'bg-purple-400',
+  'bg-amber-400',
+  'bg-indigo-400',
+  'bg-rose-400',
 ] as const;
 
 export function StepIO() {
@@ -52,7 +52,7 @@ export function StepIO() {
     return max;
   }, [ioItems]);
 
-  // Inline I/O summary bars (DI, DO, AI, AO, Safety)
+
   const summaryBars = [
     { label: 'DI', value: io.digitalInputs, fillClass: 'bg-primary/70' },
     { label: 'DO', value: io.digitalOutputs, fillClass: 'bg-primary/70' },
@@ -64,7 +64,7 @@ export function StepIO() {
 
   return (
     <div className="space-y-4">
-      {/* Inline I/O Bar Summary */}
+      {}
       <div className="rounded-md border border-border bg-muted/30 p-3">
         <div className="flex gap-4 items-end">
           {summaryBars.map((bar) => (
@@ -93,7 +93,7 @@ export function StepIO() {
           ))}
         </div>
 
-        {/* I/O Breakdown Bar Chart */}
+        {}
         <div className="mt-6 rounded-lg bg-muted/30 p-4 space-y-2.5">
           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">I/O Breakdown</h4>
           {ioItems.map((item, index) => (
@@ -115,7 +115,7 @@ export function StepIO() {
         </div>
       </SectionCard>
 
-      {/* I/O Summary */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="I/O Complexity Preview">
           <div className="space-y-3">

@@ -27,31 +27,31 @@ export interface Notification {
 }
 
 interface AppState {
-  // Navigation
+
   currentPage: AppPage;
   setCurrentPage: (page: AppPage) => void;
 
-  // Wizard
+
   wizardStep: number;
   setWizardStep: (step: number) => void;
   stepOrder: number[] | null;
   setStepOrder: (order: number[] | null) => void;
 
-  // Projects
+
   projects: Project[];
   addProject: (project: Project) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   deleteProject: (id: string) => void;
   reorderProjects: (fromIndex: number, toIndex: number) => void;
 
-  // Active project tracking
+
   activeProjectId: string | null;
   nextProjectNumber: number;
   openProject: (projectId: string) => void;
   createNewProject: (name?: string) => string;
   loadSampleProjects: () => void;
 
-  // Current Configuration
+
   config: ProjectConfig;
   updateConfig: (updates: Partial<ProjectConfig>) => void;
   updateProjectInfo: (updates: Partial<ProjectConfig['project']>) => void;
@@ -71,20 +71,20 @@ interface AppState {
   resetConfig: () => void;
   loadSampleConfig: () => void;
 
-  // Undo/Redo
+
   history: ProjectConfig[];
   historyIndex: number;
   undo: () => void;
   redo: () => void;
   pushHistory: () => void;
 
-  // Notifications
+
   notifications: Notification[];
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
 
-  // Products
+
   products: BRProduct[];
   toggleProductUsed: (name: string) => void;
 }
@@ -253,12 +253,12 @@ const createDefaultConfig = (): ProjectConfig => ({
   },
 });
 
-/** Deep-clone a ProjectConfig */
+
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj)) as T;
 }
 
-/** Generate the next sequential project ID: BR-2026-NNN */
+
 function generateProjectId(nextNum: number): string {
   return `BR-2026-${String(nextNum).padStart(3, '0')}`;
 }
@@ -266,18 +266,13 @@ function generateProjectId(nextNum: number): string {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      // ===== Navigation =====
       currentPage: 'dashboard',
       setCurrentPage: (page) => set({ currentPage: page, wizardStep: 0 }),
-
-      // ===== Wizard =====
       wizardStep: 0,
       setWizardStep: (step) => set({ wizardStep: step }),
 
       stepOrder: null,
       setStepOrder: (order) => set({ stepOrder: order }),
-
-      // ===== Projects =====
       projects: [],
       addProject: (project) =>
         set((state) => ({ projects: [project, ...state.projects] })),
@@ -292,10 +287,8 @@ export const useAppStore = create<AppState>()(
       deleteProject: (id) =>
         set((state) => ({
           projects: state.projects.filter((p) => p.id !== id),
-          // Clear activeProjectId if the deleted project was active
           activeProjectId:
             state.activeProjectId === id ? null : state.activeProjectId,
-          // Reset config if the active project was deleted
           config:
             state.activeProjectId === id
               ? createDefaultConfig()
@@ -308,8 +301,6 @@ export const useAppStore = create<AppState>()(
           newProjects.splice(toIndex, 0, moved);
           return { projects: newProjects };
         }),
-
-      // ===== Active Project Tracking =====
       activeProjectId: null,
       nextProjectNumber: 6, // Sample projects end at BR-2026-005
 
@@ -361,7 +352,6 @@ export const useAppStore = create<AppState>()(
 
       loadSampleProjects: () =>
         set((state) => {
-          // Only add samples that are not already present
           const existingIds = new Set(state.projects.map((p) => p.id));
           const toAdd = SAMPLE_PROJECTS.filter(
             (sp) => !existingIds.has(sp.id),
@@ -369,8 +359,6 @@ export const useAppStore = create<AppState>()(
           if (toAdd.length === 0) return state;
           return { projects: [...toAdd, ...state.projects] };
         }),
-
-      // ===== Current Configuration =====
       config: createDefaultConfig(),
       updateConfig: (updates) =>
         set((state) => ({ config: { ...state.config, ...updates } })),
@@ -450,8 +438,6 @@ export const useAppStore = create<AppState>()(
           wizardStep: 0,
         }),
       loadSampleConfig: () => set({ config: deepClone(SAMPLE_CONFIG) }),
-
-      // ===== Undo/Redo =====
       history: [],
       historyIndex: -1,
       pushHistory: () =>
@@ -483,8 +469,6 @@ export const useAppStore = create<AppState>()(
             config: deepClone(state.history[newIndex]),
           };
         }),
-
-      // ===== Notifications =====
       notifications: [] as Notification[],
       addNotification: (notification) =>
         set((state) => ({
@@ -508,8 +492,6 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           notifications: state.notifications.map((n) => ({ ...n, read: true })),
         })),
-
-      // ===== Products =====
       products: BR_PRODUCTS.map((p) => ({ ...p })),
       toggleProductUsed: (name) =>
         set((state) => ({
@@ -525,7 +507,6 @@ export const useAppStore = create<AppState>()(
         projects: state.projects,
         activeProjectId: state.activeProjectId,
         nextProjectNumber: state.nextProjectNumber,
-        // Do NOT persist config — it is derived from activeProjectId
       }),
     },
   ),

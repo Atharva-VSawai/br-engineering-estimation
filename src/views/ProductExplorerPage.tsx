@@ -109,7 +109,7 @@ export function ProductExplorerPage() {
         </span>
       </div>
 
-      {/* Search */}
+      {}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -121,7 +121,7 @@ export function ProductExplorerPage() {
         />
       </div>
 
-      {/* Selected count badge */}
+      {}
       {usedCount > 0 && (
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary">
@@ -138,7 +138,7 @@ export function ProductExplorerPage() {
       )}
 
       <div className="flex gap-6">
-        {/* Categories sidebar */}
+        {}
         <div className="w-48 shrink-0">
           <div className="sticky top-0 space-y-0.5">
             <button
@@ -173,7 +173,7 @@ export function ProductExplorerPage() {
           </div>
         </div>
 
-        {/* Products grid */}
+        {}
         <div className="flex-1">
           <div className="text-sm text-muted-foreground mb-3">
             {filteredProducts.length} product(s)

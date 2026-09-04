@@ -1,6 +1,6 @@
 import type { ProjectConfig, ComplexityLevel } from '@/types';
 
-// ===== Result Interfaces =====
+
 
 export interface EffortResult {
   hardwareHours: number;
@@ -33,7 +33,7 @@ export interface OverallResult {
   highCount: number;
 }
 
-// ===== Constants =====
+
 
 const COMPLEXITY_WEEKS_MAP: Record<ComplexityLevel, number> = {
   Low: 1,
@@ -42,12 +42,9 @@ const COMPLEXITY_WEEKS_MAP: Record<ComplexityLevel, number> = {
   'Very High': 4,
 };
 
-// ===== Public API =====
 
-/**
- * Determine overall complexity from the 10 complexity dimensions.
- * Returns the complexity level and the count of High/Very High dimensions.
- */
+
+
 export function getOverallComplexity(
   config: ProjectConfig,
 ): { complexity: ComplexityLevel; highCount: number } {
@@ -76,33 +73,11 @@ export function getOverallComplexity(
   return { complexity, highCount };
 }
 
-/**
- * SINGLE SOURCE OF TRUTH for engineering effort calculation.
- *
- * Base formulas (matching the existing prototype):
- *   hwHours   = (DI + DO + AI + AO) * 0.5 + totalAxes * 4
- *   swHours   = hmi.screens * 8 + (vision.enabled ? vision.cameras * 16 : 0) + 40
- *   motionHrs = totalAxes * 6 + (electronicCamming ? 20 : 0) + (coordinatedMotion ? 16 : 0)
- *   safetyHrs = safety.enabled ? safety.safetyIOCount * 2 + 16 : 0
- *   oldInteg  = (hw + sw + motion + safety) * 0.3
- *
- * Repackaged into 9 categories:
- *   - hardwareHours                  = hwHours (same)
- *   - plcSoftwareHours               = hmi.screens * 8 + 40  (swHours without vision)
- *   - motionHours                    = motionHours (same)
- *   - hmiHours                       = 0  (HMI effort kept inside plcSoftwareHours)
- *   - visionHours                    = vision.enabled ? cameras * 16 : 0  (extracted from sw)
- *   - safetyHours                    = safetyHours (same)
- *   - communicationIntegrationHours  = oldIntegration * 0.6
- *   - testingHours                   = oldIntegration * 0.4
- *   - commissioningHours             = complexityWeeks * 40
- *
- * totalHours = base engineering hours + commissioning
- */
+
 export function calculateEngineeringEffort(config: ProjectConfig): OverallResult {
   const { complexity: overallComplexity, highCount } = getOverallComplexity(config);
 
-  // --- Base hour calculations (same as prototype) ---
+
   const hwHours =
     (config.io.digitalInputs +
       config.io.digitalOutputs +
@@ -115,10 +90,10 @@ export function calculateEngineeringEffort(config: ProjectConfig): OverallResult
     ? config.vision.cameras * 16
     : 0;
 
-  // PLC software = HMI screens + base software overhead (vision extracted separately)
+
   const plcSoftwareHours = config.hmi.screens * 8 + 40;
 
-  // Combined swHours (for backwards-compatible base calculation)
+
   const swHours = plcSoftwareHours + visionHours;
 
   const motionHours =
@@ -130,22 +105,22 @@ export function calculateEngineeringEffort(config: ProjectConfig): OverallResult
     ? config.safety.safetyIOCount * 2 + 16
     : 0;
 
-  // --- Integration split ---
+
   const baseHours = hwHours + swHours + motionHours + safetyHours;
   const oldIntegrationHours = baseHours * 0.3;
   const communicationIntegrationHours = oldIntegrationHours * 0.6;
   const testingHours = oldIntegrationHours * 0.4;
 
-  // --- Commissioning ---
+
   const complexityWeeks = COMPLEXITY_WEEKS_MAP[overallComplexity] ?? 2;
   const commissioningHours = complexityWeeks * 40;
 
-  // --- Totals ---
+
   const totalHours =
     hwHours +
     plcSoftwareHours +
     motionHours +
-    0 + // hmiHours (kept inside plcSoftwareHours)
+    0 +
     visionHours +
     safetyHours +
     communicationIntegrationHours +
@@ -155,7 +130,7 @@ export function calculateEngineeringEffort(config: ProjectConfig): OverallResult
   const totalDays = totalHours / 8;
   const totalMonths = totalHours / (8 * 20);
 
-  // --- Timeline ---
+
   const hardwareDesignWeeks = 2;
   const softwareDevelopmentWeeks = Math.max(
     2,

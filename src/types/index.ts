@@ -1,4 +1,4 @@
-// ===== Core Domain Types =====
+
 
 export type ComplexityLevel = 'Low' | 'Medium' | 'High' | 'Very High';
 export type ProjectStatus = 'Draft' | 'In Review' | 'Completed';
@@ -10,7 +10,7 @@ export type PerformanceLevel = 'Basic' | 'Standard' | 'High Performance';
 export type ReuseLevel = 'High' | 'Medium' | 'Low';
 export type ChangeFrequency = 'Low' | 'Medium' | 'High';
 
-// ===== Page Navigation =====
+
 export type AppPage =
   | 'dashboard'
   | 'new-estimate'
@@ -23,7 +23,7 @@ export type AppPage =
   | 'compare'
   | 'settings';
 
-// ===== Project =====
+
 export interface Project {
   id: string;
   name: string;
@@ -42,7 +42,7 @@ export interface Project {
   config?: ProjectConfig;
 }
 
-// ===== Controller =====
+
 export interface ControllerConfig {
   family: string;
   quantity: number;
@@ -53,7 +53,7 @@ export interface ControllerConfig {
   diagnosticsRequired: boolean;
 }
 
-// ===== I/O =====
+
 export interface IOConfig {
   digitalInputs: number;
   digitalOutputs: number;
@@ -66,7 +66,7 @@ export interface IOConfig {
   specialModules: number;
 }
 
-// ===== Motion =====
+
 export interface MotionConfig {
   totalAxes: number;
   linearAxes: number;
@@ -87,7 +87,7 @@ export interface MotionConfig {
   axisDiagnostics: boolean;
 }
 
-// ===== HMI =====
+
 export interface HMIConfig {
   type: string;
   screens: number;
@@ -103,7 +103,7 @@ export interface HMIConfig {
   parameterManagement: boolean;
 }
 
-// ===== Vision =====
+
 export interface VisionConfig {
   enabled: boolean;
   cameras: number;
@@ -122,7 +122,7 @@ export interface VisionConfig {
   motionVisionSync: boolean;
 }
 
-// ===== Safety =====
+
 export interface SafetyConfig {
   enabled: boolean;
   controller: string;
@@ -137,7 +137,7 @@ export interface SafetyConfig {
   documentationRequired: boolean;
 }
 
-// ===== Communication =====
+
 export interface CommunicationConfig {
   protocols: CommunicationProtocol[];
  plcToPlc: boolean;
@@ -152,7 +152,7 @@ export interface CommunicationProtocol {
   devices: number;
 }
 
-// ===== Mechatronics =====
+
 export interface MechatronicsConfig {
   type: 'None' | 'ACOPOStrak' | 'ACOPOS 6D' | 'SuperTrak';
   movers: number;
@@ -168,7 +168,7 @@ export interface MechatronicsConfig {
   diagnostics: boolean;
 }
 
-// ===== Robotics =====
+
 export interface RoboticsConfig {
   enabled: boolean;
   robotType: string;
@@ -183,7 +183,7 @@ export interface RoboticsConfig {
   robotDiagnostics: boolean;
 }
 
-// ===== IIoT =====
+
 export interface IIoTConfig {
   ipcRequired: boolean;
   ipcModel: string;
@@ -199,14 +199,14 @@ export interface IIoTConfig {
   analyticsIntegration: boolean;
 }
 
-// ===== Additional Features =====
+
 export interface AdditionalFeature {
   name: string;
   enabled: boolean;
   complexity: FeatureComplexity;
 }
 
-// ===== Complexity Assessment =====
+
 export interface ComplexityAssessment {
   hardware: ComplexityLevel;
   motion: ComplexityLevel;
@@ -225,7 +225,7 @@ export interface ComplexityAssessment {
   reuseLevel: ReuseLevel;
 }
 
-// ===== Full Project Configuration =====
+
 export interface ProjectConfig {
   project: Omit<Project, 'id' | 'status' | 'createdAt' | 'updatedAt'>;
   controller: ControllerConfig;
@@ -242,7 +242,7 @@ export interface ProjectConfig {
   complexity: ComplexityAssessment;
 }
 
-// ===== Product Explorer =====
+
 export interface BRProduct {
   name: string;
   category: string;
@@ -251,7 +251,7 @@ export interface BRProduct {
   usedInProject: boolean;
 }
 
-// ===== Engineering Activity =====
+
 export interface EngineeringActivity {
   technology: string;
   configuration: boolean;

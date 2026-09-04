@@ -66,7 +66,7 @@ export function StepHMI() {
 
       <SectionCard title="Screen Preview" description="Configuration-based HMI screen layout preview">
         <div className="rounded-lg border-2 border-gray-300 bg-gray-50 overflow-hidden aspect-[16/10]">
-          {/* Top bar */}
+          {}
           <div className="h-8 bg-primary/90 flex items-center px-3">
             <span className="text-white text-sm font-bold truncate">{config.project.name || 'Untitled Project'}</span>
             <div className="ml-auto flex items-center gap-1.5">
@@ -74,9 +74,9 @@ export function StepHMI() {
               <span className="text-white text-sm">{h.screens > 0 ? 'Configured' : 'No Screens'}</span>
             </div>
           </div>
-          {/* Body */}
+          {}
           <div className="flex" style={{ height: 'calc(100% - 2rem)' }}>
-            {/* Left sidebar - show actual navigation items based on active features */}
+            {}
             <div className="w-32 bg-card border-r border-gray-200 p-1.5 shrink-0">
               <div className={`h-5 rounded text-sm flex items-center px-1.5 mb-0.5 bg-primary/10 text-primary`}>Overview</div>
               {activeFeatures.length > 0 ? activeFeatures.map((f) => (
@@ -87,7 +87,7 @@ export function StepHMI() {
                 <div className="text-xs text-gray-400 px-1.5 mt-1">No features enabled</div>
               )}
             </div>
-            {/* Main content - data-driven widgets */}
+            {}
             <div className="flex-1 p-3">
               <div className="grid grid-cols-2 gap-2 h-full">
                 <div className="rounded border border-gray-200 bg-card p-2">

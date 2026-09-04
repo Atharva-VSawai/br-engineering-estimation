@@ -22,6 +22,8 @@ export function SettingsPage() {
   const [mounted, setMounted] = useState(false);
 
   React.useEffect(() => {
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -114,7 +116,7 @@ export function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Card 1: Appearance */}
+        {}
         <SectionCard
           title="Appearance"
           action={<Palette className="h-4 w-4 text-muted-foreground" />}
@@ -150,7 +152,7 @@ export function SettingsPage() {
           </p>
         </SectionCard>
 
-        {/* Card 2: Keyboard Shortcuts */}
+        {}
         <SectionCard
           title="Keyboard Shortcuts"
           description="Use keyboard shortcuts for faster navigation"
@@ -173,7 +175,7 @@ export function SettingsPage() {
           </p>
         </SectionCard>
 
-        {/* Card 3: Application Info */}
+        {}
         <SectionCard
           title="Application Info"
           action={<Info className="h-4 w-4 text-muted-foreground" />}
@@ -193,7 +195,7 @@ export function SettingsPage() {
           </div>
         </SectionCard>
 
-        {/* Card 4: Planned Integrations */}
+        {}
         <SectionCard
           title="Planned Integrations"
           action={<Code2 className="h-4 w-4 text-muted-foreground" />}
@@ -220,7 +222,7 @@ export function SettingsPage() {
           </div>
         </SectionCard>
 
-        {/* Card 5: About - full width */}
+        {}
         <SectionCard
           title="About B&R Engineering Estimation Tool"
           className="md:col-span-2"

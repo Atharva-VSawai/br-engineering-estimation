@@ -51,7 +51,7 @@ export function EngineeringActivitiesPage() {
   const { config } = useAppStore();
   const c = config;
 
-  // Effort allocation drag order
+
   const [effortOrder, setEffortOrder] = useState<number[]>(() => {
     if (typeof window === 'undefined') return [0, 1, 2, 3, 4, 5, 6];
     try {
@@ -69,7 +69,7 @@ export function EngineeringActivitiesPage() {
   useEffect(() => {
     try {
       localStorage.setItem('br-activities-order', JSON.stringify(effortOrder));
-    } catch { /* noop */ }
+    } catch {  }
   }, [effortOrder]);
 
   const effortData = useMemo(() => {
@@ -204,7 +204,7 @@ export function EngineeringActivitiesPage() {
             return (
               <DndContext sensors={effortSensors} collisionDetection={closestCenter} onDragStart={({ active }) => setActiveEffortId(Number(active.id))} onDragEnd={handleEffortDragEnd}>
                 <div className="space-y-4">
-                  {/* Stacked bar */}
+                  {}
                   <div className="h-8 rounded-md overflow-hidden flex">
                     {orderedEffort.map((cat) => {
                       const pct = totalHours > 0 ? (cat.hours / totalHours) * 100 : 0;
@@ -221,7 +221,7 @@ export function EngineeringActivitiesPage() {
                       );
                     })}
                   </div>
-                  {/* Legend grid - draggable */}
+                  {}
                   <SortableContext items={effortOrder.map(String)} strategy={rectSortingStrategy}>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <AnimatePresence mode="popLayout">
@@ -259,7 +259,7 @@ export function EngineeringActivitiesPage() {
                       </div>
                     ) : null}
                   </DragOverlay>
-                  {/* Total */}
+                  {}
                   <p className="text-sm font-semibold text-foreground">
                     Total Estimated Effort: {totalHours} hours
                   </p>

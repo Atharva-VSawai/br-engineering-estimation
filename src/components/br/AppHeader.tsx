@@ -31,7 +31,7 @@ const PAGE_NAMES: Record<AppPage, string> = {
   settings: 'Settings',
 };
 
-// Pages where showing the project name in breadcrumb makes sense
+
 const PROJECT_CONTEXT_PAGES: AppPage[] = ['new-estimate', 'estimate-summary', 'product-explorer', 'technical-params', 'engineering-activities', 'complexity', 'compare'];
 
 export function AppHeader() {
@@ -115,7 +115,6 @@ export function AppHeader() {
 
   const handleSave = () => {
     if (activeProjectId) {
-      // Persist the current working config into the active project
       const clonedConfig = JSON.parse(JSON.stringify(config)) as typeof config;
       updateProject(activeProjectId, {
         config: clonedConfig,
@@ -128,7 +127,6 @@ export function AppHeader() {
       addNotification({ message: 'Project saved', detail: `${config.project.name || activeProject?.name || 'Untitled'} configuration saved`, icon: 'Check', color: 'text-emerald-500' });
       toast('Project saved', { description: `${config.project.name || activeProject?.name || 'Untitled'} \u2014 all changes persisted.` });
     } else if (config.project.name?.trim()) {
-      // No active project but config has a name — create a new project and save
       const id = createNewProject(config.project.name);
       const clonedConfig = JSON.parse(JSON.stringify(config)) as typeof config;
       updateProject(id, {

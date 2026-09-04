@@ -7,7 +7,7 @@ import type {
   AdditionalFeature,
 } from '@/types';
 
-// ===== Machine Types =====
+
 export const MACHINE_TYPES = [
   'Packaging',
   'Assembly',
@@ -21,7 +21,7 @@ export const MACHINE_TYPES = [
   'Other',
 ] as const;
 
-// ===== Industries =====
+
 export const INDUSTRIES = [
   'Food & Beverage',
   'Pharmaceutical',
@@ -35,7 +35,7 @@ export const INDUSTRIES = [
   'Other',
 ] as const;
 
-// ===== Controller Families =====
+
 export const CONTROLLER_FAMILIES = [
   'X20',
   'X90',
@@ -44,7 +44,7 @@ export const CONTROLLER_FAMILIES = [
   'Other',
 ] as const;
 
-// ===== HMI Types =====
+
 export const HMI_TYPES = [
   'Automation Panel',
   'Power Panel',
@@ -55,7 +55,7 @@ export const HMI_TYPES = [
   'Other',
 ] as const;
 
-// ===== Safety Controllers =====
+
 export const SAFETY_CONTROLLERS = [
   'X20 Safety',
   'X67 Safety',
@@ -64,7 +64,7 @@ export const SAFETY_CONTROLLERS = [
   'Other',
 ] as const;
 
-// ===== Robot Types =====
+
 export const ROBOT_TYPES = [
   'Delta',
   'SCARA',
@@ -73,7 +73,7 @@ export const ROBOT_TYPES = [
   'Other',
 ] as const;
 
-// ===== IPC Models =====
+
 export const IPC_MODELS = [
   'Automation PC 910',
   'Automation PC 2100',
@@ -87,7 +87,7 @@ export const IPC_MODELS = [
   'Other',
 ] as const;
 
-// ===== Communication Protocols =====
+
 export const COMMUNICATION_PROTOCOLS = [
   'POWERLINK',
   'Ethernet',
@@ -101,9 +101,9 @@ export const COMMUNICATION_PROTOCOLS = [
   'Other',
 ] as const;
 
-// ===== B&R Products =====
+
 export const BR_PRODUCTS: BRProduct[] = [
-  // Industrial PCs
+
   { name: 'Automation PC 910', category: 'Industrial PCs', description: 'Compact industrial PC for basic automation tasks', engineeringRole: 'Lightweight control and HMI', usedInProject: false },
   { name: 'Automation PC 2100', category: 'Industrial PCs', description: 'Entry-level industrial PC with scalable performance', engineeringRole: 'Basic machine control, data logging', usedInProject: false },
   { name: 'Automation PC 2200', category: 'Industrial PCs', description: 'Industrial PC with integrated display interface', engineeringRole: 'Visualisation and control', usedInProject: false },
@@ -112,23 +112,23 @@ export const BR_PRODUCTS: BRProduct[] = [
   { name: 'Automation PC 3200', category: 'Industrial PCs', description: 'Premium industrial PC with maximum performance', engineeringRole: 'Demanding applications, AI/ML at edge', usedInProject: false },
   { name: 'Automation PC 4100', category: 'Industrial PCs', description: 'Rack-mounted industrial PC for control cabinet', engineeringRole: 'Central control, SCADA server', usedInProject: false },
   { name: 'Automation PC 50A', category: 'Industrial PCs', description: 'Fanless industrial PC with highest computing power', engineeringRole: 'High-performance computing, digital twin', usedInProject: false },
-  // HMI
+
   { name: 'Automation Panel', category: 'HMI', description: 'Multipurpose HMI panel with touch screen', engineeringRole: 'Operator interface, machine visualization', usedInProject: false },
   { name: 'Power Panel', category: 'HMI', description: 'HMI panel with integrated controller', engineeringRole: 'Combined control and visualization', usedInProject: false },
   { name: 'Mobile Panel', category: 'HMI', description: 'Wireless handheld HMI panel', engineeringRole: 'Mobile operation, maintenance', usedInProject: false },
-  // PLC Systems
+
   { name: 'X20 System', category: 'PLC Systems', description: 'Modular control system for industrial automation', engineeringRole: 'Standard machine control', usedInProject: false },
   { name: 'X90 System', category: 'PLC Systems', description: 'Compact control system for distributed automation', engineeringRole: 'Compact machine control', usedInProject: false },
-  // I/O Systems
+
   { name: 'X20 I/O', category: 'I/O Systems', description: 'Modular I/O system with digital, analog and special modules', engineeringRole: 'Signal acquisition and actuation', usedInProject: false },
   { name: 'X67 I/O', category: 'I/O Systems', description: 'IP67 protected I/O modules for field use', engineeringRole: 'Harsh environment I/O', usedInProject: false },
   { name: 'XV I/O', category: 'I/O Systems', description: 'Valve terminal I/O system', engineeringRole: 'Pneumatic valve control', usedInProject: false },
-  // Vision Systems
+
   { name: 'CX Series', category: 'Vision Systems', description: 'Smart camera series for industrial inspection', engineeringRole: 'Quality inspection, part verification', usedInProject: false },
-  // Safety Technology
+
   { name: 'X20 SafeIO', category: 'Safety Technology', description: 'Safety I/O modules for X20 system', engineeringRole: 'Safety signal processing', usedInProject: false },
   { name: 'SafeDESIGNER', category: 'Safety Technology', description: 'Safety configuration software', engineeringRole: 'Safety program development', usedInProject: false },
-  // Motion Control
+
   { name: 'ACOPOSmicro', category: 'Motion Control', description: 'Compact servo drive for simple motion tasks', engineeringRole: 'Basic positioning, conveyor control', usedInProject: false },
   { name: 'ACOPOS X', category: 'Motion Control', description: 'Multi-axis servo drive system', engineeringRole: 'Multi-axis coordinated motion', usedInProject: false },
   { name: 'ACOPOS M4', category: 'Motion Control', description: '4-axis servo drive with integrated safety', engineeringRole: 'Compact multi-axis applications', usedInProject: false },
@@ -138,31 +138,31 @@ export const BR_PRODUCTS: BRProduct[] = [
   { name: 'ACOPOSremote', category: 'Motion Control', description: 'Decentralized servo drive for field installation', engineeringRole: 'Distributed drive applications', usedInProject: false },
   { name: 'ACOPOSmotor', category: 'Motion Control', description: 'B&R servo motor portfolio', engineeringRole: 'Servo actuation', usedInProject: false },
   { name: 'VFD', category: 'Motion Control', description: 'Variable frequency drives for standard motors', engineeringRole: 'Fan, pump, conveyor control', usedInProject: false },
-  // Mechatronic Systems
+
   { name: 'ACOPOStrak', category: 'Mechatronic Systems', description: 'Linear motor transport system with shuttles', engineeringRole: 'Product transport, flexible routing', usedInProject: false },
   { name: 'ACOPOS 6D', category: 'Mechatronic Systems', description: 'Planar levitation-based transport system', engineeringRole: 'Planar product handling, assembly', usedInProject: false },
   { name: 'SuperTrak', category: 'Mechatronic Systems', description: 'High-speed linear transport system', engineeringRole: 'High-speed product transport', usedInProject: false },
-  // Robotics
+
   { name: 'Codian Delta', category: 'Robotics', description: 'Delta robot for high-speed pick and place', engineeringRole: 'High-speed picking, packaging', usedInProject: false },
   { name: 'Codian SCARA', category: 'Robotics', description: 'SCARA robot for assembly and handling', engineeringRole: 'Assembly, material handling', usedInProject: false },
   { name: 'Codian 6-Axis', category: 'Robotics', description: '6-axis industrial robot', engineeringRole: 'Complex manipulation, welding', usedInProject: false },
   { name: 'Open Robot Mechanics', category: 'Robotics', description: 'Robot mechanics for custom robot integration', engineeringRole: 'Custom automation solutions', usedInProject: false },
-  // Network & Fieldbus
+
   { name: 'POWERLINK', category: 'Network & Fieldbus', description: 'Real-time Ethernet protocol', engineeringRole: 'Deterministic communication', usedInProject: false },
   { name: 'OPC UA', category: 'Network & Fieldbus', description: 'Open platform communication unified architecture', engineeringRole: 'Standardized data exchange', usedInProject: false },
   { name: 'IO-Link', category: 'Network & Fieldbus', description: 'Point-to-point communication for sensors', engineeringRole: 'Smart sensor integration', usedInProject: false },
-  // Industrial IoT
+
   { name: 'IIoT Connector', category: 'Industrial IoT', description: 'Edge connectivity for cloud integration', engineeringRole: 'Cloud data transfer', usedInProject: false },
   { name: 'IIoT Services', category: 'Industrial IoT', description: 'Cloud-based IIoT services', engineeringRole: 'Remote monitoring, analytics', usedInProject: false },
-  // Software
+
   { name: 'Automation Studio', category: 'Software', description: 'Integrated development environment for B&R automation', engineeringRole: 'PLC programming, configuration', usedInProject: false },
   { name: 'Automation Runtime', category: 'Software', description: 'Real-time operating system for B&R controllers', engineeringRole: 'Controller runtime environment', usedInProject: false },
   { name: 'mapp Technology', category: 'Software', description: 'Pre-engineered software components for automation', engineeringRole: 'Rapid application development', usedInProject: false },
   { name: 'Modeling and Simulation', category: 'Software', description: 'Machine simulation and modeling tools', engineeringRole: 'Virtual commissioning', usedInProject: false },
   { name: 'Remote Maintenance', category: 'Software', description: 'Remote access and maintenance tools', engineeringRole: 'Service and support', usedInProject: false },
-  // Process Control
+
   { name: 'APROL', category: 'Process Control', description: 'Process control system for continuous and batch processes', engineeringRole: 'Process automation', usedInProject: false },
-  // Accessories
+
   { name: 'Cables & Connectors', category: 'Accessories', description: 'Industrial-grade cables and connectors', engineeringRole: 'System wiring', usedInProject: false },
   { name: 'Power Supplies', category: 'Accessories', description: 'DIN-rail and panel-mount power supplies', engineeringRole: 'System power distribution', usedInProject: false },
   { name: 'Enclosures', category: 'Accessories', description: 'Industrial enclosures and mounting hardware', engineeringRole: 'Physical installation', usedInProject: false },
@@ -186,7 +186,7 @@ export const PRODUCT_CATEGORIES = [
   'Accessories',
 ] as const;
 
-// ===== Engineering Activities =====
+
 export const ENGINEERING_ACTIVITIES: EngineeringActivity[] = [
   { technology: 'Motion', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'High', estimatedHours: 24 },
   { technology: 'HMI', configuration: true, programming: true, integration: true, testing: true, commissioning: true, potentialComplexity: 'Medium', estimatedHours: 16 },
@@ -203,7 +203,7 @@ export const ENGINEERING_ACTIVITIES: EngineeringActivity[] = [
   { technology: 'Data Logging', configuration: true, programming: true, integration: true, testing: true, commissioning: false, potentialComplexity: 'Low', estimatedHours: 2 },
 ];
 
-// ===== Additional Features List =====
+
 export const ADDITIONAL_FEATURE_OPTIONS = [
   'Recipe Management',
   'Alarm Management',
@@ -224,7 +224,7 @@ export const ADDITIONAL_FEATURE_OPTIONS = [
   'External Device Integration',
 ] as const;
 
-// ===== Wizard Step Labels =====
+
 export const WIZARD_STEPS = [
   'Project',
   'Controller',
@@ -242,22 +242,22 @@ export const WIZARD_STEPS = [
   'Review',
 ] as const;
 
-// ===== Default Protocols =====
+
 export const DEFAULT_PROTOCOLS: CommunicationProtocol[] = COMMUNICATION_PROTOCOLS.map((name) => ({
   name,
   enabled: false,
   devices: 0,
 }));
 
-// ===== Default Additional Features =====
+
 export const DEFAULT_ADDITIONAL_FEATURES: AdditionalFeature[] = ADDITIONAL_FEATURE_OPTIONS.map((name) => ({
   name,
   enabled: false,
   complexity: 'Basic' as const,
 }));
 
-// ===== Helper: create a project config =====
-function makeConfig(overrides: Partial<ProjectConfig> = {}): ProjectConfig {
+
+function makeConfig(overrides: any = {}): ProjectConfig {
   const base: ProjectConfig = {
     project: { name: '', customer: '', machineType: '', industry: '', description: '', requirementClarity: 'Mostly Clear', customerInvolvement: 'Medium', projectVariants: 1, machineStations: 1, complexity: 'Medium' },
     controller: { family: 'X20', quantity: 1, performance: 'Standard', communicationInterfaces: '', redundancyRequired: false, simulationRequired: false, diagnosticsRequired: false },
@@ -273,7 +273,7 @@ function makeConfig(overrides: Partial<ProjectConfig> = {}): ProjectConfig {
     additionalFeatures: DEFAULT_ADDITIONAL_FEATURES.map((f) => ({ ...f })),
     complexity: { hardware: 'Medium', motion: 'Medium', hmi: 'Medium', vision: 'Medium', safety: 'Medium', communication: 'Medium', software: 'Medium', integration: 'Medium', requirement: 'Medium', testing: 'Medium', requirementClarity: 'Mostly Clear', customerChangeFrequency: 'Medium', productVariants: 1, machineStations: 1, reuseLevel: 'Medium' },
   };
-  // Deep merge overrides
+
   const merge = (target: any, source: any) => {
     for (const key of Object.keys(source)) {
       if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
@@ -294,7 +294,7 @@ function enableProtocols(enabled: [string, number][]): CommunicationProtocol[] {
   });
 }
 
-// ===== Sample Projects =====
+
 export const SAMPLE_PROJECTS: Project[] = [
   {
     id: 'BR-2026-001',
@@ -441,7 +441,7 @@ export const SAMPLE_PROJECTS: Project[] = [
   },
 ];
 
-// ===== Sample Project Configuration =====
+
 export const SAMPLE_CONFIG: ProjectConfig = {
   project: {
     name: 'Automated Packaging Machine',
@@ -615,7 +615,7 @@ export const SAMPLE_CONFIG: ProjectConfig = {
   },
 };
 
-// ===== Effort Areas for Summary =====
+
 export const EFFORT_AREAS = [
   { name: 'Motion', driver: 'Number of axes, synchronization requirements' },
   { name: 'HMI', driver: 'Number of screens, complexity level' },

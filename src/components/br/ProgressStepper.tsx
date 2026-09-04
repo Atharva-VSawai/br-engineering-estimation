@@ -113,56 +113,56 @@ function SortableStepItem({
 
 function getStepValidationStatus(step: number, config: ProjectConfig): ValidationStatus {
   switch (step) {
-    case 0: { // Project
+    case 0: {
       const nameFilled = !!(config.project.name && config.project.name.trim());
       const anyFilled = !!config.project.name || !!config.project.customer || !!config.project.machineType || !!config.project.industry || !!config.project.description;
       return nameFilled ? 'complete' : anyFilled ? 'partial' : 'empty';
     }
-    case 1: { // Controller
+    case 1: {
       return config.controller.family ? 'complete' : config.controller.quantity > 1 ? 'partial' : 'empty';
     }
-    case 2: { // I/O
+    case 2: {
       const total = config.io.digitalInputs + config.io.digitalOutputs + config.io.analogInputs + config.io.analogOutputs;
       return total > 0 ? 'complete' : 'empty';
     }
-    case 3: { // Motion
+    case 3: {
       return config.motion.totalAxes > 0 ? 'complete' : 'empty';
     }
-    case 4: { // HMI
+    case 4: {
       return config.hmi.screens > 0 ? 'complete' : 'empty';
     }
-    case 5: { // Vision
+    case 5: {
       if (config.vision.enabled && config.vision.cameras > 0) return 'complete';
       if (config.vision.enabled) return 'partial';
       return 'empty';
     }
-    case 6: { // Safety
+    case 6: {
       if (config.safety.enabled && config.safety.safetyIOCount > 0) return 'complete';
       if (config.safety.enabled) return 'partial';
       return 'empty';
     }
-    case 7: { // Communication
+    case 7: {
       return config.communication.protocols.some((p) => p.enabled) ? 'complete' : 'empty';
     }
-    case 8: { // Mechatronics
+    case 8: {
       return config.mechatronics.type !== 'None' ? 'complete' : 'empty';
     }
-    case 9: { // Robotics
+    case 9: {
       if (config.robotics.enabled && config.robotics.quantity > 0) return 'complete';
       if (config.robotics.enabled) return 'partial';
       return 'empty';
     }
-    case 10: { // IIoT
+    case 10: {
       if (config.iiot.ipcRequired) return 'complete';
       if (config.iiot.iiotRequired) return 'partial';
       return 'empty';
     }
-    case 11: { // Additional Features
+    case 11: {
       return config.additionalFeatures.some((f) => f.enabled) ? 'complete' : 'empty';
     }
-    case 12: // Complexity - always complete
+    case 12:
       return 'complete';
-    case 13: // Review - always complete
+    case 13:
       return 'complete';
     default:
       return 'empty';
@@ -192,7 +192,7 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
 
   return (
     <div className="mb-6">
-      {/* Progress text */}
+      {}
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-muted-foreground">
           Project: <span className="font-medium text-foreground">New Estimate</span>
@@ -202,7 +202,7 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
         </div>
       </div>
 
-      {/* Overall progress bar */}
+      {}
       <div className="h-1 rounded-full bg-muted overflow-hidden mb-3">
         <motion.div
           className="h-full bg-primary rounded-full"
@@ -212,7 +212,7 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
         />
       </div>
 
-      {/* Step indicators - Draggable */}
+      {}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={({ active }) => setActiveStepId(String(active.id))} onDragEnd={handleDragEnd}>
         <SortableContext items={displayOrder.map(String)} strategy={horizontalListSortingStrategy}>
           <div className="group/step flex items-center gap-0 overflow-x-auto pb-2">
@@ -262,7 +262,7 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
         </DragOverlay>
       </DndContext>
 
-      {/* Step labels below on larger screens */}
+      {}
       <div className="hidden xl:flex items-center gap-0 mt-0.5">
         {displayOrder.map((stepIdx, displayIdx) => {
           const label = WIZARD_STEPS[stepIdx];

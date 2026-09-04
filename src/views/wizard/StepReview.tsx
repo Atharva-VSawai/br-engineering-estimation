@@ -104,7 +104,7 @@ export function StepReview() {
         editFields: [
           { key: 'family', label: 'Family', type: 'select', value: c.controller.family, options: CONTROLLER_FAMILIES, onUpdate: (v) => updateController({ family: String(v) }) },
           { key: 'quantity', label: 'Quantity', type: 'number', value: c.controller.quantity, onUpdate: (v) => updateController({ quantity: Number(v) }) },
-          { key: 'performance', label: 'Performance', type: 'select', value: c.controller.performance, options: PERFORMANCE_OPTIONS, onUpdate: (v) => updateController({ performance: String(v) }) },
+          { key: 'performance', label: 'Performance', type: 'select', value: c.controller.performance, options: PERFORMANCE_OPTIONS, onUpdate: (v) => updateController({ performance: v as typeof c.controller.performance }) },
         ],
       },
       {
@@ -354,7 +354,7 @@ export function StepReview() {
         </Button>
       </div>
       <SectionCard title="Engineering Configuration Review" description="Review all configured parameters before generating the estimate summary.">
-        {/* Summary Bar */}
+        {}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-foreground">

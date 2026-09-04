@@ -54,7 +54,7 @@ export function NewEstimatePage() {
   const { wizardStep, setWizardStep, loadSampleConfig, currentPage, config, undo, redo, pushHistory, history, historyIndex, stepOrder, addNotification } = useAppStore();
   const [resetOpen, setResetOpen] = useState(false);
   const [direction, setDirection] = useState(1);
-  // Track direction for step animation
+
   const navigateToStep = useCallback((step: number) => {
     setDirection(step > wizardStep ? 1 : -1);
     setWizardStep(step);
@@ -68,7 +68,7 @@ export function NewEstimatePage() {
   const isWizardActive = currentPage === 'new-estimate';
   const progressPct = Math.round(((currentDisplayPos + 1) / totalSteps) * 100);
 
-  // Configuration Health Score
+
   const healthScore = (() => {
     const ioTotal =
       config.io.digitalInputs + config.io.digitalOutputs +
@@ -110,8 +110,6 @@ export function NewEstimatePage() {
     addNotification({ message: 'Draft saved', detail: `Step ${wizardStep + 1} configuration saved`, icon: 'Check', color: 'text-emerald-500' });
     toast('Draft saved', { description: 'Configuration saved locally.' });
   };
-
-  // Push history snapshot on each step transition
   useEffect(() => {
     pushHistory();
   }, [wizardStep, pushHistory]);
@@ -162,7 +160,7 @@ export function NewEstimatePage() {
         </AnimatePresence>
       </div>
 
-      {/* Gradient divider */}
+      {}
       <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
       <div className="flex items-center justify-between pt-2">
@@ -238,7 +236,7 @@ export function NewEstimatePage() {
         </div>
       </div>
 
-      {/* Keyboard shortcuts hint */}
+      {}
       <div className="flex items-center justify-center gap-4 pb-2">
         <span className="text-sm text-muted-foreground">⌘S Save</span>
         <span className="text-sm text-muted-foreground">← → Navigate</span>
