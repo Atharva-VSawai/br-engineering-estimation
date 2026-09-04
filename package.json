@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "node node_modules/next/dist/bin/next dev -p 3000",
-    "build": "node node_modules/next/dist/bin/next build && node scripts/copy-standalone.mjs",
-    "start": "node scripts/start-standalone.mjs",
+    "build": "node node_modules/next/dist/bin/next build",
+    "start": "node node_modules/next/dist/bin/next start",
     "lint": "node node_modules/eslint/bin/eslint.js .",
     "db:push": "node node_modules/prisma/build/index.js db push --accept-data-loss",
     "db:generate": "node node_modules/prisma/build/index.js generate",
