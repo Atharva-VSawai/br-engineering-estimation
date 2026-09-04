@@ -64,7 +64,6 @@ export function StepIO() {
 
   return (
     <div className="space-y-4">
-      {}
       <div className="rounded-md border border-border bg-muted/30 p-3">
         <div className="flex gap-4 items-end">
           {summaryBars.map((bar) => (
@@ -92,8 +91,6 @@ export function StepIO() {
             </ParamRow>
           ))}
         </div>
-
-        {}
         <div className="mt-6 rounded-lg bg-muted/30 p-4 space-y-2.5">
           <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">I/O Breakdown</h4>
           {ioItems.map((item, index) => (
@@ -114,8 +111,6 @@ export function StepIO() {
           ))}
         </div>
       </SectionCard>
-
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SectionCard title="I/O Complexity Preview">
           <div className="space-y-3">

@@ -54,7 +54,6 @@ export function StepMotion() {
 
   return (
     <div className="space-y-4">
-      {}
       {totalAxes > 0 && (
         <div className="rounded-md border border-border bg-muted/30 p-3">
           <div className="text-sm text-muted-foreground uppercase tracking-wide mb-2">Axis Overview</div>
@@ -120,7 +119,6 @@ export function StepMotion() {
         </SectionCard>
 
         <div className="space-y-4">
-          {}
           <SectionCard title="Motion Architecture" noPadding>
             <div className="flex flex-col items-center gap-0 py-3 px-4">
               {['Controller', 'Motion Control', 'Axis', 'Drive', 'Motor', 'Mechanical System'].map((item, idx, arr) => (

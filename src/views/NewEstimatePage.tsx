@@ -159,8 +159,6 @@ export function NewEstimatePage() {
           </motion.div>
         </AnimatePresence>
       </div>
-
-      {}
       <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
       <div className="flex items-center justify-between pt-2">
@@ -235,8 +233,6 @@ export function NewEstimatePage() {
           </Button>
         </div>
       </div>
-
-      {}
       <div className="flex items-center justify-center gap-4 pb-2">
         <span className="text-sm text-muted-foreground">⌘S Save</span>
         <span className="text-sm text-muted-foreground">← → Navigate</span>

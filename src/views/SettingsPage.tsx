@@ -116,7 +116,6 @@ export function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {}
         <SectionCard
           title="Appearance"
           action={<Palette className="h-4 w-4 text-muted-foreground" />}
@@ -151,8 +150,6 @@ export function SettingsPage() {
             Theme preference is saved in your browser
           </p>
         </SectionCard>
-
-        {}
         <SectionCard
           title="Keyboard Shortcuts"
           description="Use keyboard shortcuts for faster navigation"
@@ -174,8 +171,6 @@ export function SettingsPage() {
             Press ⌘K anywhere to see all shortcuts
           </p>
         </SectionCard>
-
-        {}
         <SectionCard
           title="Application Info"
           action={<Info className="h-4 w-4 text-muted-foreground" />}
@@ -194,8 +189,6 @@ export function SettingsPage() {
             ))}
           </div>
         </SectionCard>
-
-        {}
         <SectionCard
           title="Planned Integrations"
           action={<Code2 className="h-4 w-4 text-muted-foreground" />}
@@ -221,8 +214,6 @@ export function SettingsPage() {
             ))}
           </div>
         </SectionCard>
-
-        {}
         <SectionCard
           title="About B&R Engineering Estimation Tool"
           className="md:col-span-2"

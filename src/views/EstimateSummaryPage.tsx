@@ -363,7 +363,6 @@ export function EstimateSummaryPage() {
 
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      {}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-lg font-bold text-foreground">Engineering Effort Summary</h1>
@@ -390,8 +389,6 @@ export function EstimateSummaryPage() {
           }}><Save className="h-3.5 w-3.5" /> Save</Button>
         </div>
       </div>
-
-      {}
       <SectionCard title="Project Scope" description="Select which project estimates to view">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="flex items-center gap-2.5 shrink-0">
@@ -438,8 +435,6 @@ export function EstimateSummaryPage() {
           )}
         </div>
       </SectionCard>
-
-      {}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.4 }} className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent">
         <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/[0.06] blur-2xl" />
         <div className="p-6 relative">
@@ -474,8 +469,6 @@ export function EstimateSummaryPage() {
           </div>
         </div>
       </motion.div>
-
-      {}
       <AnimatePresence>
         {viewMode === 'all' && projectResults.length > 1 && (
           <motion.div
@@ -528,7 +521,6 @@ export function EstimateSummaryPage() {
                         </TableRow>
                       );
                     })}
-                    {}
                     <TableRow className="border-border bg-muted/30 font-bold">
                       <TableCell className="text-sm text-primary py-2.5">Combined Total</TableCell>
                       <TableCell className="text-sm text-muted-foreground py-2.5 hidden sm:table-cell">{projectResults.length} projects</TableCell>
@@ -545,10 +537,7 @@ export function EstimateSummaryPage() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {}
         <SectionCard title="Effort Distribution" description="Hours by engineering domain" className="lg:col-span-2">
           {effort.totalHours === 0 ? (
             <div className="flex items-center justify-center h-56 text-sm text-muted-foreground">
@@ -597,8 +586,6 @@ export function EstimateSummaryPage() {
             </div>
           )}
         </SectionCard>
-
-        {}
         <SectionCard title="Effort Breakdown" description="Estimated engineering hours by domain" className="lg:col-span-3">
           <div className="space-y-3">
             {effortRows.map((row, index) => (
@@ -624,8 +611,6 @@ export function EstimateSummaryPage() {
           </div>
         </SectionCard>
       </div>
-
-      {}
       {drivers.length > 0 && (
         <SectionCard title="Major Effort Drivers" description="Configuration items contributing most to engineering effort">
           <div className="flex flex-wrap gap-2">
@@ -644,8 +629,6 @@ export function EstimateSummaryPage() {
           </div>
         </SectionCard>
       )}
-
-      {}
       <SectionCard title="Estimated Timeline" description={`Total: ${timeline.totalWeeks} weeks`}>
         <div className="space-y-3">
           {[
@@ -670,8 +653,6 @@ export function EstimateSummaryPage() {
           })}
         </div>
       </SectionCard>
-
-      {}
       <SectionCard title="Risk Assessment" description="Key risk indicators">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {(() => {
@@ -693,8 +674,6 @@ export function EstimateSummaryPage() {
           </div>
         </div>
       </SectionCard>
-
-      {}
       <SectionCard title="Complexity Profile" description="All 10 engineering dimensions">
         <div className="space-y-2">
           {COMPLEXITY_DIMENSIONS.map((dim, index) => {
@@ -709,8 +688,6 @@ export function EstimateSummaryPage() {
           })}
         </div>
       </SectionCard>
-
-      {}
       <SectionCard title="Engineering Areas" description="Potential effort drivers by domain">
         <div className="overflow-x-auto -mx-4 px-4">
           <table className="w-full">
@@ -722,8 +699,6 @@ export function EstimateSummaryPage() {
           </table>
         </div>
       </SectionCard>
-
-      {}
       <SectionCard title="Configuration Completeness" description={`${configuredCount} of ${completeness.length} sections configured`}>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {completeness.map((section) => (
@@ -733,8 +708,6 @@ export function EstimateSummaryPage() {
           </div>
         ))}</div>
       </SectionCard>
-
-      {}
       <SectionCard title="Product Architecture Flow">
         <div className="flex flex-wrap items-center gap-2">{['B&R Product', 'Technology', 'Engineering Function', 'Configuration', 'Programming', 'Integration', 'Testing', 'Commissioning', 'Complexity', 'Engineering Effort'].map((item, idx, arr) => (
           <React.Fragment key={item}><div className="rounded-md border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground">{item}</div>{idx < arr.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}</React.Fragment>

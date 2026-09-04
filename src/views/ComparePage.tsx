@@ -177,7 +177,6 @@ export function ComparePage() {
       transition={{ duration: 0.3 }}
       className="space-y-4"
     >
-      {}
       <div>
         <div className="flex items-center gap-2 mb-1">
           <GitCompareArrows className="h-5 w-5 text-primary" />
@@ -185,8 +184,6 @@ export function ComparePage() {
         </div>
         <p className="text-sm text-muted-foreground">Compare up to 3 projects side by side to evaluate scope, complexity, and technical parameters.</p>
       </div>
-
-      {}
       <div className="flex flex-wrap gap-3">
         {selectedIds.map((id, slotIdx) => {
           const opts = availableOptions(slotIdx);
@@ -222,12 +219,9 @@ export function ComparePage() {
           );
         })}
       </div>
-
-      {}
       {selectedProjects.length < 2 && (
         <SectionCard title="Comparison">
           <div className="relative flex flex-col items-center justify-center py-16 overflow-hidden">
-            {}
             {[...Array(6)].map((_, i) => (
               <motion.div
                 key={i}
@@ -265,8 +259,6 @@ export function ComparePage() {
           </div>
         </SectionCard>
       )}
-
-      {}
       <AnimatePresence>
         {selectedProjects.length >= 2 && (
           <motion.div
@@ -275,7 +267,6 @@ export function ComparePage() {
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3 }}
           >
-            {}
             <div className="grid gap-3 mb-4" style={{ gridTemplateColumns: `repeat(${selectedProjects.length}, minmax(0, 1fr))` }}>
               {selectedProjects.map((p) => (
                 <div
@@ -359,8 +350,6 @@ export function ComparePage() {
                         })}
                       </React.Fragment>
                     ))}
-
-                    {}
                     <tr className="border-t-2 border-border bg-muted/30">
                       <td className="py-2.5 px-3 font-bold text-foreground whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5">
@@ -385,8 +374,6 @@ ${isWinner ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-e
                 </table>
               </div>
             </SectionCard>
-
-            {}
             {selectedProjects.length >= 2 && <ComplexityRadar projects={selectedProjects} />}
           </motion.div>
         )}
@@ -465,7 +452,6 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
     <SectionCard title="Complexity Radar" description="Multi-dimensional complexity comparison across engineering disciplines">
       <div className="flex flex-col items-center gap-4">
         <svg viewBox="0 0 300 300" className="w-full max-w-[300px]">
-          {}
           {ringPoints.map((pts, idx) => (
             <polygon
               key={`ring-${idx}`}
@@ -476,7 +462,6 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={0.5}
             />
           ))}
-          {}
           {axisLines.map((line, idx) => (
             <line
               key={`axis-${idx}`}
@@ -489,7 +474,6 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={0.5}
             />
           ))}
-          {}
           {projectPolygons.map((pts, idx) => (
             <polygon
               key={`project-${idx}`}
@@ -499,7 +483,6 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               strokeWidth={2}
             />
           ))}
-          {}
           {projectPolygons.map((pts, idx) => {
             const points = pts.split(' ');
             return points.map((pt, ptIdx) => {
@@ -530,7 +513,6 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
               </text>
             </g>
           )}
-          {}
           {labelPositions.map(({ dim, x, y }) => (
             <text
               key={dim}
@@ -545,7 +527,6 @@ function ComplexityRadar({ projects }: { projects: Project[] }) {
             </text>
           ))}
         </svg>
-        {}
         <div className="flex flex-wrap justify-center gap-4">
           {projects.map((p, idx) => {
             const c = PROJECT_COLORS[idx % PROJECT_COLORS.length];

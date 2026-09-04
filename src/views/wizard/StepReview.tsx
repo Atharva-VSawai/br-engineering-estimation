@@ -354,7 +354,6 @@ export function StepReview() {
         </Button>
       </div>
       <SectionCard title="Engineering Configuration Review" description="Review all configured parameters before generating the estimate summary.">
-        {}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-foreground">

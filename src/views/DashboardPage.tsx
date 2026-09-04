@@ -211,11 +211,8 @@ export function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {}
         <div className="relative overflow-hidden border border-border/80 rounded-xl bg-gradient-to-r from-primary/[0.07] via-primary/[0.03] to-transparent p-6">
-          {}
           <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, oklch(0.55 0.2 35) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          {}
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-gradient-to-br from-primary/10 to-transparent blur-2xl" />
           <div className="absolute -right-6 bottom-0 h-24 w-24 rounded-full bg-gradient-to-tl from-primary/5 to-transparent blur-xl" />
           <Settings2 className="h-28 w-28 text-primary/[0.05] absolute right-8 top-1/2 -translate-y-1/2" />
@@ -236,10 +233,7 @@ export function DashboardPage() {
             </div>
           </div>
         </div>
-        {}
         <div className="h-3 -mt-1.5 bg-gradient-to-b from-muted/30 to-transparent rounded-b-lg pointer-events-none" />
-
-        {}
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
@@ -294,16 +288,12 @@ export function DashboardPage() {
             )}
           </div>
         </motion.div>
-
-        {}
         <div>
           <h1 className="text-lg font-bold text-foreground">Engineering Estimation Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             Configure the B&R automation system and estimate engineering effort.
           </p>
         </div>
-
-        {}
         <DndContext sensors={statSensors} collisionDetection={closestCenter} onDragEnd={handleStatDragEnd}>
           <SortableContext items={statOrder.map((i) => String(i))} strategy={rectSortingStrategy}>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -367,8 +357,6 @@ export function DashboardPage() {
             ) : null}
           </DragOverlay>
         </DndContext>
-
-        {}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -429,11 +417,7 @@ export function DashboardPage() {
             )}
           </SectionCard>
         </motion.div>
-
-
-        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {}
           <SectionCard title="Quick Actions" description="Get started with your engineering estimate">
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
@@ -453,11 +437,8 @@ export function DashboardPage() {
               </Button>
             </div>
           </SectionCard>
-
-          {}
           <SectionCard title="Complexity Distribution" description="Projects by complexity level">
             <div className="space-y-3">
-              {}
               <div className="flex h-8 rounded-md overflow-hidden">
                 {totalProjects === 0 ? (
                   <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground bg-muted">
@@ -480,7 +461,6 @@ export function DashboardPage() {
                   })
                 )}
               </div>
-              {}
               <div className="flex flex-wrap gap-x-4 gap-y-1.5">
                 {ALL_LEVELS.map((level) => (
                   <div key={level} className="flex items-center gap-1.5">
@@ -494,8 +474,6 @@ export function DashboardPage() {
             </div>
           </SectionCard>
         </div>
-
-        {}
         <SectionCard title="Project Templates" description="Start from a pre-configured template">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div
@@ -550,8 +528,6 @@ export function DashboardPage() {
             </div>
           </div>
         </SectionCard>
-
-        {}
         <SectionCard title="Recent Projects" description="All B&R automation estimation projects">
           <div className="overflow-x-auto -mx-4 px-4">
             <Table>
@@ -630,8 +606,6 @@ export function DashboardPage() {
             </Table>
           </div>
         </SectionCard>
-
-        {}
         <SectionCard title="Recent Activity" description="Latest actions and events">
           <div>
             {recentActivity.map((item, idx) => (

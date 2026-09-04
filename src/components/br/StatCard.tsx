@@ -71,11 +71,9 @@ export function StatCard({ label, value, sublabel, icon, accentColor, sparkline 
 
   return (
     <Card className="relative border-border bg-card group transition-all duration-300 ease-out hover:shadow-lg hover:shadow-primary/[0.06] hover:border-primary/25 hover:-translate-y-1 hover:scale-[1.02] overflow-hidden">
-      {}
       {accentColor && (
         <div className={`absolute top-0 left-4 right-4 h-0.5 rounded-full ${accentColor}`} />
       )}
-      {}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       <CardContent className="p-5 relative">
         <div className="flex items-start justify-between">

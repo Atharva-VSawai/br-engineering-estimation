@@ -99,11 +99,8 @@ export function ArchitecturePage() {
       <SectionCard title="System Architecture Diagram" noPadding>
         <div className="py-8 px-4">
           <div className="flex flex-col items-center gap-1.5 text-sm">
-            {}
             <ArchBlockItem item={ARCH_ITEMS[0]} index={0} isActive={activeMap['HMI']} />
             <ConnectingLine index={0} isActive={activeMap['HMI']} />
-
-            {}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -117,8 +114,6 @@ export function ArchitecturePage() {
               <ArchBlockItem item={ARCH_ITEMS[3]} index={3} isActive={activeMap['Safety']} />
             </motion.div>
             <ConnectingLine index={3} isActive={activeMap['Safety']} />
-
-            {}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -130,22 +125,14 @@ export function ArchitecturePage() {
               <ArchBlockItem item={ARCH_ITEMS[6]} index={6} isActive={activeMap['Communication']} />
             </motion.div>
             <ConnectingLine index={6} isActive={activeMap['Communication']} />
-
-            {}
             <ArchBlockItem item={ARCH_ITEMS[7]} index={7} isActive={activeMap['Drives']} />
             <ConnectingLine index={7} isActive={activeMap['Drives']} />
-
-            {}
             <ArchBlockItem item={ARCH_ITEMS[8]} index={8} isActive={activeMap['Motors']} />
             <ConnectingLine index={8} isActive={activeMap['Motors']} />
-
-            {}
             <ArchBlockItem item={ARCH_ITEMS[9]} index={9} isActive={activeMap['Machine Mechanics']} />
           </div>
         </div>
       </SectionCard>
-
-      {}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'ACOPOStrak', desc: 'Linear transport system with independent movers', color: 'border-orange-200 dark:border-orange-700/40 bg-orange-50/50 dark:bg-orange-950/30', active: mechatronicsActive },

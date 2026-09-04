@@ -204,7 +204,6 @@ export function EngineeringActivitiesPage() {
             return (
               <DndContext sensors={effortSensors} collisionDetection={closestCenter} onDragStart={({ active }) => setActiveEffortId(Number(active.id))} onDragEnd={handleEffortDragEnd}>
                 <div className="space-y-4">
-                  {}
                   <div className="h-8 rounded-md overflow-hidden flex">
                     {orderedEffort.map((cat) => {
                       const pct = totalHours > 0 ? (cat.hours / totalHours) * 100 : 0;
@@ -221,7 +220,6 @@ export function EngineeringActivitiesPage() {
                       );
                     })}
                   </div>
-                  {}
                   <SortableContext items={effortOrder.map(String)} strategy={rectSortingStrategy}>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <AnimatePresence mode="popLayout">
@@ -259,7 +257,6 @@ export function EngineeringActivitiesPage() {
                       </div>
                     ) : null}
                   </DragOverlay>
-                  {}
                   <p className="text-sm font-semibold text-foreground">
                     Total Estimated Effort: {totalHours} hours
                   </p>

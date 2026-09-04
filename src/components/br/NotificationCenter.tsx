@@ -46,7 +46,6 @@ interface NotificationCenterProps {
 export function NotificationCenter({ open, onClose, unreadCount, notifications, onMarkAllRead }: NotificationCenterProps) {
   return (
     <>
-      {}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -59,8 +58,6 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
           />
         )}
       </AnimatePresence>
-
-      {}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -70,7 +67,6 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
             transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="fixed top-0 right-0 z-50 h-full w-80 border-l border-border bg-card shadow-xl flex flex-col"
           >
-            {}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <h2 className="text-base font-semibold text-foreground">Notifications</h2>
               <div className="flex items-center gap-2">
@@ -87,8 +83,6 @@ export function NotificationCenter({ open, onClose, unreadCount, notifications, 
                 </Button>
               </div>
             </div>
-
-            {}
             <div className="flex-1 overflow-y-auto">
               {notifications.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-8 text-center">

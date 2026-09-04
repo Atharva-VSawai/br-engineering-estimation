@@ -192,7 +192,6 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
 
   return (
     <div className="mb-6">
-      {}
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm text-muted-foreground">
           Project: <span className="font-medium text-foreground">New Estimate</span>
@@ -201,8 +200,6 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
           Progress: <span className="font-medium text-foreground">{currentDisplayPos + 1} / {WIZARD_STEPS.length}</span>
         </div>
       </div>
-
-      {}
       <div className="h-1 rounded-full bg-muted overflow-hidden mb-3">
         <motion.div
           className="h-full bg-primary rounded-full"
@@ -211,8 +208,6 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
           transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
-
-      {}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={({ active }) => setActiveStepId(String(active.id))} onDragEnd={handleDragEnd}>
         <SortableContext items={displayOrder.map(String)} strategy={horizontalListSortingStrategy}>
           <div className="group/step flex items-center gap-0 overflow-x-auto pb-2">
@@ -261,8 +256,6 @@ export function ProgressStepper({ currentStep, onStepClick }: ProgressStepperPro
           ) : null}
         </DragOverlay>
       </DndContext>
-
-      {}
       <div className="hidden xl:flex items-center gap-0 mt-0.5">
         {displayOrder.map((stepIdx, displayIdx) => {
           const label = WIZARD_STEPS[stepIdx];

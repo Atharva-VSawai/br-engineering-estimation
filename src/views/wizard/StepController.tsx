@@ -76,8 +76,6 @@ export function StepController() {
           </div>
         </SectionCard>
       </div>
-
-      {}
       <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50/50 p-3">
         <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
         <p className="text-sm text-amber-800 leading-relaxed">

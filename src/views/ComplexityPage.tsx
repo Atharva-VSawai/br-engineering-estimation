@@ -190,11 +190,9 @@ export function ComplexityPage() {
 
       <SectionCard title="Overall Complexity Assessment">
         <div className="flex flex-col sm:flex-row items-center gap-8">
-          {}
           <div className="flex flex-col items-center shrink-0">
             <div className="relative">
               <svg width={140} height={140} viewBox="0 0 140 140">
-                {}
                 <path
                   d={bgPath}
                   fill="none"
@@ -202,7 +200,6 @@ export function ComplexityPage() {
                   strokeWidth={strokeW}
                   strokeLinecap="round"
                 />
-                {}
                 {fgPath && (
                   <motion.path
                     d={fgPath}
@@ -235,8 +232,6 @@ export function ComplexityPage() {
               {scoreLabel}
             </div>
           </div>
-
-          {}
           <div className="flex-1 w-full">
             <div className="rounded-md border border-border overflow-hidden">
               <table className="w-full">
